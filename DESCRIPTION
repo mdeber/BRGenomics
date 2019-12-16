@@ -1,0 +1,51 @@
+Package: BRGenomics
+Type: Package
+Title: Tools for the Efficient Analysis of High-Resolution Genomics Data
+Version: 0.99.0
+Authors@R: person("Mike", "DeBerardine", email = "mike.deberardine@gmail.com", 
+    role = c("aut", "cre"))
+Description: This package provides useful and efficient utilites for the 
+    analysis of high-resolution genomic data using standard Bioconductor 
+    methods and classes.
+License: Artistic-2.0
+Encoding: UTF-8
+LazyData: FALSE
+RoxygenNote: 7.0.2
+Depends:
+    GenomicRanges,
+    GenomicFeatures,
+    BiocParallel
+Imports:
+    rtracklayer,
+    stats4,
+    BiocGenerics,
+    parallel,
+    S4Vectors,
+    IRanges,
+    AnnotationDbi,
+    GenomeInfoDb
+Suggests:
+    BiocStyle,
+    knitr,
+    rmarkdown,
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    TxDb.Mmusculus.UCSC.mm10.knownGene,
+    TxDb.Mmusculus.UCSC.mm9.knownGene,
+    TxDb.Dmelanogaster.UCSC.dm6.ensGene,
+    TxDb.Dmelanogaster.UCSC.dm3.ensGene
+Enhances:
+    DESeq2
+biocViews:
+    Software,
+    DataImport,
+    PROseq,
+    RNAseq,
+    ATACseq,
+    NETseq,
+    ChIPseq,
+    CutAndRun,
+    Transcription,
+    GeneRegulation,
+    Normalization
+VignetteBuilder: knitr
