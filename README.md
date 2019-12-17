@@ -1,8 +1,20 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-To install:
+# BRGenomics
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+Efficient tools for the analysis of high-resolution genomics data in R.
+
+## Installation
+
+Install development version from
+[GitHub](https://github.com/mdeber/BRGenomics) with:
 
 ``` r
+# install.packages("devtools")
 devtools::install_github("mdeber/BRGenomics")
 ```
