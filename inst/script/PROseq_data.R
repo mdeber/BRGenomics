@@ -1,4 +1,4 @@
-#' Drosophila S2 cell PRO-seq, chr2L
+#' Drosophila S2 cell PRO-seq, chr4
 #'
 #' GEO Accession: GSM1032758
 #' Run: SRR611828
