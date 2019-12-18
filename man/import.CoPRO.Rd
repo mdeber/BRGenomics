@@ -43,3 +43,6 @@ sequenced molecule.
 md.import.CoPRO("~/LacZ_RNAi_plus.bedGraph",
 "~/LacZ_RNAi_minus.bedGraph", "dm6")
 }
+\author{
+Mike DeBerardine
+}

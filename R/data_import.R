@@ -3,6 +3,13 @@
 ### ------------------------------------------------------------------------- #
 ###
 
+.check_intscore <- function(gr) {
+    if (all( round(score(gr) %% 1, 3) == 0 ))
+        score(gr) <- as.integer(score(gr))
+    gr
+}
+
+
 #' Import PRO-seq (or similar) bigWig files
 #'
 #' This function imports plus/minus pairs of bigWig files containing
@@ -21,6 +28,7 @@
 #' @return Imports a GRanges object containing base-pair resolution data, with
 #'   the \code{score} metadata column indicating readcounts at each base. All
 #'   ranges are of width = 1.
+#' @author Mike DeBerardine
 #' @export
 #' @examples md.import.PROseq("~/LacZ_RNAi_plus.bw", "~/LacZ_RNAi_minus.bw", "dm6")
 import.PROseq <- function(plus_file,
@@ -41,7 +49,7 @@ import.PROseq <- function(plus_file,
     suppressWarnings( gr <- c(p_gr, m_gr) )
 
     # scores are imported as doubles by default; if whole numbers, make integers
-    if (all(score(gr) %% 1 == 0))  score(gr) <- as.integer(score(gr))
+    gr <- .check_intscore(gr)
 
     # Make the width of each range equal to 1
     gr <- makeGRangesBPres(gr)
@@ -78,6 +86,7 @@ import.PROseq <- function(plus_file,
 #' @return Imports a GRanges object containing entire strand-specific reads.
 #'   Each range is unique, and the \code{score} metadata column indicates the
 #'   number of identical reads (which share the same 5' and 3' ends).
+#' @author Mike DeBerardine
 #' @export
 #' @examples md.import.CoPRO("~/LacZ_RNAi_plus.bedGraph",
 #' "~/LacZ_RNAi_minus.bedGraph", "dm6")
@@ -98,7 +107,7 @@ import.CoPRO <- function(plus_file,
     suppressWarnings(gr <- c(p_bg, m_bg)) # combine into 1 GRanges object
 
     # scores are imported as doubles by default; if whole numbers, make integers
-    if (all(score(gr) %% 1 == 0))  score(gr) <- as.integer(score(gr))
+    gr <- .check_intscore(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
@@ -127,6 +136,7 @@ import.CoPRO <- function(plus_file,
 #'   kept.
 #'
 #' @return Imports a GRanges object
+#' @author Mike DeBerardine
 #' @export
 import.bw_trim <- function(file,
                            genome = NULL,
@@ -136,6 +146,9 @@ import.bw_trim <- function(file,
                            keep_nonstandard = FALSE) {
 
     gr <- rtracklayer::import.bw(file)
+
+    # scores are imported as doubles by default; if whole numbers, make integers
+    gr <- .check_intscore(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
@@ -164,9 +177,8 @@ import.bw_trim <- function(file,
 #'   kept.
 #'
 #' @return A GRanges object, including metadata for unique identifiers.
+#' @author Mike DeBerardine
 #' @export
-#'
-#' @seealso \code{\link{md.import.genes.ucsc}}
 importTxsUCSC <- function(genome,
                           keep_X = TRUE,
                           keep_Y = TRUE,
@@ -219,9 +231,8 @@ importTxsUCSC <- function(genome,
 #'   kept.
 #'
 #' @return A GRanges object, including metadata for unique identifiers.
+#' @author Mike DeBerardine
 #' @export
-#'
-#' @seealso \code{\link{md.import.txs.ucsc}}
 importGenesUCSC <- function(genome,
                             keep_X = TRUE,
                             keep_Y = TRUE,

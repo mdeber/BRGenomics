@@ -4,7 +4,7 @@
 
 ## for output messages, removes newlines and leading spaces from strings
 
-.nicemsg <- function(...) strwrap(..., prefix = " ", initial = "")
+.nicemsg <- function(...) strwrap(sprintf(...), prefix = " ", initial = "")
 
 
 ## superimposes evenly spaced bins over a vector, and performs FUN on them

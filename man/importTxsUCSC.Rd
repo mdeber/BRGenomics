@@ -27,6 +27,6 @@ A GRanges object, including metadata for unique identifiers.
 \description{
 
 }
-\seealso{
-\code{\link{md.import.genes.ucsc}}
+\author{
+Mike DeBerardine
 }

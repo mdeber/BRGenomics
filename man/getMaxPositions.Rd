@@ -44,3 +44,6 @@ For each signal-containing region of interest, find the single site with the
 most signal. Sites can be found at base-pair resolution, or defined for
 larger bins.
 }
+\author{
+Mike DeBerardine
+}

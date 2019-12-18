@@ -14,3 +14,6 @@ Splits up all ranges in \code{gr} to be each 1 basepair wide. All information
 is preserved, including all metadata. To wit, \code{length(output.gr) =
 sum(width(dataset.gr))}.
 }
+\author{
+Mike DeBerardine
+}

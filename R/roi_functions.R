@@ -27,6 +27,7 @@
 #'
 #' @return A GRanges object that may be shorter than \code{genelist} due to loss
 #'   of short ranges.
+#' @author Mike DeBerardine
 #' @export
 genebodies <- function(genelist,
                        start = 300,
@@ -85,10 +86,6 @@ genebodies <- function(genelist,
 
 
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Modify regions according to signal
-###
-
 
 
 #' Find sites with max signal in regions of interest
@@ -117,6 +114,7 @@ genebodies <- function(genelist,
 #'   regions} have signal (e.g. as could happen if running this function on a
 #'   single region), the function will return an empty GRanges object with
 #'   intact metadata columns.
+#' @author Mike DeBerardine
 #' @export
 getMaxPositions <- function(regions.gr,
                             dataset.gr,
@@ -203,6 +201,7 @@ getMaxPositions <- function(regions.gr,
 #'
 #' @return A GRanges object of length \code{length(regions.gr) *
 #'   regions_quantile}.
+#' @author Mike DeBerardine
 #' @export
 subsetRegionsBySignal <- function(regions.gr,
                                   dataset.gr,

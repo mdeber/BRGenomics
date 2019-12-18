@@ -45,3 +45,6 @@ divided by genebody signal counts. If \code{length.normalize = TRUE}
 \code{genebodies.gr} are divided by their respective range widths (region
 lengths) before pausing indices are calculated.
 }
+\author{
+Mike DeBerardine
+}

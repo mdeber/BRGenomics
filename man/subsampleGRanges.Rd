@@ -17,9 +17,9 @@ given.}
 
 \item{field}{}
 }
-\value{
-
-}
 \description{
 Currently only works if signal is integer
+}
+\author{
+Mike DeBerardine
 }

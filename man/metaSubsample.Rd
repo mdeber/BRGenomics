@@ -68,3 +68,6 @@ Dataframe containing x-values, means, lower quantiles, upper
 \description{
 Iterative Subsampling for Metaplotting
 }
+\author{
+Mike DeBerardine
+}

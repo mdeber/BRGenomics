@@ -21,3 +21,6 @@ Returns a vector the same length as \code{regions.gr} containing
 \description{
 Count signal (e.g. read coverage) of data in each region of interest.
 }
+\author{
+Mike DeBerardine
+}

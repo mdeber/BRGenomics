@@ -41,3 +41,6 @@ A GRanges object of length \code{length(regions.gr) *
 Subsets regions based on signal in a dataset, taking only the top quantile of
 regions.
 }
+\author{
+Mike DeBerardine
+}

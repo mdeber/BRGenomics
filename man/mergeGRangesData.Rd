@@ -24,3 +24,6 @@ each site.
 \seealso{
 \code{\link{md.import.bigWigs}}
 }
+\author{
+Mike DeBerardine
+}

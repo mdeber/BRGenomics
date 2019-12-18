@@ -47,3 +47,6 @@ of the \code{end} parameter. Currently, there's no way to set the ranges to
 continue a fixed distance past the original end sites when \code{fix =
 "start"}.
 }
+\author{
+Mike DeBerardine
+}

@@ -31,6 +31,6 @@ single range for each annotated gene. Currently supports hg38, hg19, mm10,
 mm9, dm6, and dm3. This script filters non-standard and mitochondrial
 chromosomes.
 }
-\seealso{
-\code{\link{md.import.txs.ucsc}}
+\author{
+Mike DeBerardine
 }

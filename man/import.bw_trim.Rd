@@ -34,3 +34,6 @@ General function for importing a single bigWig file as a GRanges object. The
 added functionality over \code{rtracklayer::import.bw} is in trimming odd
 chromosomes.
 }
+\author{
+Mike DeBerardine
+}

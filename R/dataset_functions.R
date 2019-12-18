@@ -11,6 +11,8 @@
 #'
 #' @param gr A disjoint GRanges object.
 #'
+#' @author Mike DeBerardine
+#'
 #' @export
 makeGRangesBPres <- function(gr) {
     # Make all widths = 1
@@ -38,6 +40,8 @@ makeGRangesBPres <- function(gr) {
 #' @param field The name of the field that contains readcounts. If no metadata
 #'   field contains readcounts, and each range represents a single read, set to
 #'   NULL.
+#'
+#' @author Mike DeBerardine
 #'
 #' @export
 getStrandedCoverage <- function(gr, field = "score") {
@@ -90,9 +94,8 @@ getStrandedCoverage <- function(gr, field = "score") {
 #' @param prop Proportion of total signal to subsample.
 #' @param field
 #'
-#' @return
+#' @author Mike DeBerardine
 #' @export
-#'
 #' @examples
 subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score") {
     if (!xor(missing(n), missing(prop))) {
@@ -153,6 +156,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score")
 #' @return A single GRange object containing all sites of the input objects, and
 #'   the sum of all scores at all sites.
 #'
+#' @author Mike DeBerardine
 #' @export
 #'
 #' @seealso \code{\link{md.import.bigWigs}}

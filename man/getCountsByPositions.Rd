@@ -34,3 +34,6 @@ A matrix containing a row for each range in regions.gr, and a column
 \description{
 Get signal count matrix within regions of interest
 }
+\author{
+Mike DeBerardine
+}

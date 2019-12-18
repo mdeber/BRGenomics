@@ -39,6 +39,7 @@
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   of these dataframes).
+#' @author Mike DeBerardine
 #' @export
 metaSubsampleMatrix <- function(counts.mat,
                                 binsize = 1,
@@ -162,6 +163,7 @@ metaSubsampleMatrix <- function(counts.mat,
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   of these dataframes).
+#' @author Mike DeBerardine
 #' @export
 metaSubsample <- function(dataset.gr,
                           regions.gr,
@@ -228,7 +230,7 @@ metaSubsample <- function(dataset.gr,
 #' region-of-interest) into \code{nbins_scaled} number of equally-sized bins,
 #' and obtaining signal counts in each bin, divided by the size of the bin for
 #' that particular region-of-interest. Non-length-scaled subsampling (as would
-#' be done using \code{md.meta.subsample}) is performed on the named arguments
+#' be done using \code{metaSubsample}) is performed on the named arguments
 #' \code{linear_regions_start.gr} and \code{linear_regions_end.gr}. The output
 #' is constructed in the order \code{linear_regions_start.gr}, unnamed scaled
 #' regions (in order given), and then \code{linear_regions_end.gr}, with
@@ -296,9 +298,10 @@ metaSubsample <- function(dataset.gr,
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   output dataframes). X-values correspond to bins based on the input regions
 #'   given and the specified binsizes to use.
+#' @author Mike DeBerardine
 #' @export
 #'
-#' @examples md.meta.scaled_subsample(my_proseq_data, genes.early_genebodies,
+#' @examples metaSubsampleScaled(my_proseq_data, genes.early_genebodies,
 #' genes.late_genebodies,
 #' linear_regions_start.gr = genes.promoter_proximal,
 #' linear_regions_end.gr = genes.cps_proximal,

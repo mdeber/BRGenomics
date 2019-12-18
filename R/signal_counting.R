@@ -11,6 +11,7 @@
 #'
 #' @return Returns a vector the same length as \code{regions.gr} containing
 #'   signal found in each range.
+#' @author Mike DeBerardine
 #' @export
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score") {
     hits <- findOverlaps(regions.gr, dataset.gr)
@@ -39,6 +40,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score") {
 #'
 #' @return A matrix containing a row for each range in regions.gr, and a column
 #'   for each bin.
+#' @author Mike DeBerardine
 #' @export
 getCountsByPositions <- function(dataset.gr,
                                  regions.gr,
@@ -105,6 +107,7 @@ getCountsByPositions <- function(dataset.gr,
 #'
 #' @return A vector of length given by the length of the genelist (or possibly
 #'   shorter if \code{remove_empty = TRUE}).
+#' @author Mike DeBerardine
 #' @export
 getPausingIndices <- function(dataset.gr,
                               promoters.gr,

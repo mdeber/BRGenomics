@@ -20,3 +20,6 @@ Computes strand-specific coverage signal, and returns a GRanges object with
 signal in the "score" metadata column. Function also works for
 non-strand-specific data.
 }
+\author{
+Mike DeBerardine
+}

@@ -101,7 +101,7 @@ Length-scaled metaplot subsampling involves dividing each range (e.g. each
 region-of-interest) into \code{nbins_scaled} number of equally-sized bins,
 and obtaining signal counts in each bin, divided by the size of the bin for
 that particular region-of-interest. Non-length-scaled subsampling (as would
-be done using \code{md.meta.subsample}) is performed on the named arguments
+be done using \code{metaSubsample}) is performed on the named arguments
 \code{linear_regions_start.gr} and \code{linear_regions_end.gr}. The output
 is constructed in the order \code{linear_regions_start.gr}, unnamed scaled
 regions (in order given), and then \code{linear_regions_end.gr}, with
@@ -121,9 +121,12 @@ and the final \code{nbins_linear_end} x-values will correspond to
 equally-sized bins in \code{linear_regions_end.gr}.
 }
 \examples{
-md.meta.scaled_subsample(my_proseq_data, genes.early_genebodies,
+metaSubsampleScaled(my_proseq_data, genes.early_genebodies,
 genes.late_genebodies,
 linear_regions_start.gr = genes.promoter_proximal,
 linear_regions_end.gr = genes.cps_proximal,
 nbins_scaled = 500, nbins_linear_end = 500)
+}
+\author{
+Mike DeBerardine
 }
