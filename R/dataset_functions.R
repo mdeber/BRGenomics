@@ -199,10 +199,15 @@ mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     width_check <- vapply(data_in,
                           function(x) length(unique(width(x))),
                           FUN.VALUE = numeric(1))
-    if (any(width_check > 1))
+    if (any(width_check > 1)) {
+        warning(.nicemsg("One or more inputs are not single-width GRanges,
+                         objects. Will coerce them using
+                         makeGRangesBPres()..."),
+                immediate. = TRUE)
         data_in <- mclapply(data_in,
                             makeGRangesBPres,
                             mc.cores = ncores)
+    }
 
     # merge input GRanges
     gr <- data_in[[1]]
