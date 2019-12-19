@@ -11,17 +11,41 @@
 #'
 #' @param gr A disjoint GRanges object.
 #'
-#' @author Mike DeBerardine
+#' Note that this function doesn't perform any transformation on the metadata
+#' in the input; for any ranges of width > 1, the metadata is simply copied
+#' to the daughters of that range (whose widths are all equal to 1).
 #'
+#' This function is intended to work on datasets at single-base resolution. Data
+#' of this type is often formatted as a bigWig file, and any data imported from
+#' a bigWig file by rtracklayer is suitable for processing. bigWig files will
+#' typically use run-length compression on the data signal (the 'score'
+#' column), such that when imported by rtracklayer, adjacent bases sharing the
+#' same signal will combined into a single range. The base-pair resolution
+#' GRanges objects produced by this function remove this compression, resulting
+#' in each index (each range) of the GRanges object addressing a single genomic
+#' position.
+#'
+#' To properly use base-pair resolution information, the user should be
+#' selecting a single-base from each read, which can be accomplished using
+#' GenomicRanges::resize(). Then, single-base coverage can be calculated using
+#' getStrandedCoverage.
+#'
+#' @author Mike DeBerardine
 #' @export
-makeGRangesBPres <- function(gr) {
+makeGRangesBPres <- function(dataset.gr) {
+
+    if (!isDisjoint(dataset.gr)) {
+        stop(.nicemsg("Input dataset.gr is not disjoint. See documentation"))
+        return(geterrmessage())
+    }
+
     # Make all widths = 1
-    gr_bp <- GRanges(GPos(gr))
+    gr_bp <- GRanges(GPos(dataset.gr))
 
     # Add back all metadata
-    hits <- findOverlaps(gr, gr_bp) # find corresponding indices
-    mcols(gr_bp) <- mcols(gr)[hits@from, ]
-    names(mcols(gr_bp)) <- names(mcols(gr))
+    hits <- findOverlaps(dataset.gr, gr_bp) # find corresponding indices
+    mcols(gr_bp) <- mcols(dataset.gr)[hits@from, ]
+    names(mcols(gr_bp)) <- names(mcols(dataset.gr))
 
     return(sort(gr_bp))
 }
@@ -32,7 +56,8 @@ makeGRangesBPres <- function(gr) {
 #'
 #' Computes strand-specific coverage signal, and returns a GRanges object with
 #' signal in the "score" metadata column. Function also works for
-#' non-strand-specific data.
+#' non-strand-specific data. Note that output is not automatically converted
+#' into a "basepair-resolution" GRanges object.
 #'
 #' @param dataset.gr A GRanges object either containing ranges for each read, or
 #'   one in which readcounts for individual ranges are contained in metadata
@@ -130,7 +155,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score")
 
     # avoid expanding GRanges, and sample associated indices
     idx <- rep(seq_along(dataset.gr), times = signal_counts)
-    gr_sample <- dataset.gr[sample(idx_all, n)]
+    gr_sample <- dataset.gr[sample(idx, n)]
     gr_out <- unique(gr_sample)
     mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
 

@@ -12,11 +12,11 @@ Encoding: UTF-8
 LazyData: FALSE
 RoxygenNote: 7.0.2
 Depends:
-    GenomicRanges,
+    rtracklayer,
     GenomicFeatures,
     BiocParallel
 Imports:
-    rtracklayer,
+    GenomicRanges,
     stats4,
     BiocGenerics,
     parallel,
@@ -33,7 +33,8 @@ Suggests:
     TxDb.Mmusculus.UCSC.mm10.knownGene,
     TxDb.Mmusculus.UCSC.mm9.knownGene,
     TxDb.Dmelanogaster.UCSC.dm6.ensGene,
-    TxDb.Dmelanogaster.UCSC.dm3.ensGene
+    TxDb.Dmelanogaster.UCSC.dm3.ensGene,
+    testthat
 Enhances:
     DESeq2
 biocViews:
