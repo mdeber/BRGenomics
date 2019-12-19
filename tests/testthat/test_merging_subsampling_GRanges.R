@@ -1,4 +1,5 @@
 Context("Random subsampling GRanges data")
+library(BRGenomics)
 data("PROseq")
 
 set.seed(11)
