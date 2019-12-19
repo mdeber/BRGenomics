@@ -32,3 +32,20 @@
 #' }
 #' @source GEO Accession GSM1032758, run SRR611828.
 "PROseq_paired"
+
+
+#' Ensembl transcripts for Drosophila melanogaster, dm6, chromosome 4.
+#'
+#' Transcripts obtained from annotation package
+#' TxDb.Dmelanogaster.UCSC.dm6.ensGene, which was in turn made by the
+#' Bioconductor Core Team from UCSC resources on 2019-04-25. Metadata columns
+#' were obtained from "TXNAME" and "GENEID" columns. Data exported from
+#' the TxDb package using GenomicFeatures version 1.35.11 on 2019-12-19.
+#'
+#' @format A GRanges object with 339 ranges and 2 metadata columns:
+#' \describe{
+#'   \item{tx_name}{Flybase unique identifiers for transcripts}
+#'   \item{gene_id}{FLybase unique identifiers for the associated genes}
+#' }
+#' @source TxDb.Dmelanogaster.UCSC.dm6.ensGene version 3.4.6
+"txs_dm6_chr4"
