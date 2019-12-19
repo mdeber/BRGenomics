@@ -66,6 +66,11 @@ genebodies <- function(genelist,
         return(geterrmessage())
     }
 
+    if (any(as.character(strand(genelist)) == "*")) {
+        warning("Unstranded ranges were found and removed from genelist")
+        genelist <- subset(genelist, strand != "*")
+    }
+
     # Filter genelist based on min_window
 
     if (fix_start == "start") {
@@ -133,11 +138,11 @@ genebodies <- function(genelist,
 #'   intact metadata columns.
 #' @author Mike DeBerardine
 #' @export
-getMaxPositions <- function(regions.gr,
-                            dataset.gr,
-                            binsize = 1,
-                            field = "score",
-                            keep.score = F) {
+getMaxSitesBySignal <- function(regions.gr,
+                                dataset.gr,
+                                binsize = 1,
+                                field = "score",
+                                keep.score = F) {
 
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
@@ -169,27 +174,27 @@ getMaxPositions <- function(regions.gr,
         # remove last bins (if remainder in widths/binsize)
         countslist <- lapply(1:nrow(mat),
                              function(i) mat[ i, seq_len(bins_i[i]) ])
-        max.tiles <- vapply(countslist, which.max, FUN.VALUE = integer(1))
-        max.scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
+        max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
+        max_scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
     } else {
-        max.tiles <- apply(mat, 1, which.max)
-        max.scores <- apply(mat, 1, max)
+        max_pos <- apply(mat, 1, which.max)
+        max_scores <- apply(mat, 1, max)
     }
 
     # Make new GRanges object with only max site for each gene
     regions.max.gr <- regions.gr
 
     if (binsize == 1) {
-        bin_centers <- max.tiles
+        bin_centers <- max_pos
     } else {
-        bin_centers <- floor(binsize / 2) + ( binsize * (max.tiles - 1) )
+        bin_centers <- floor(binsize / 2) + ( binsize * (max_pos - 1) )
     }
 
     regions.max.gr <- GenomicRanges::promoters(regions.gr, 0, bin_centers)
     regions.max.gr <- GenomicRanges::resize(regions.max.gr, 1, fix = "end")
 
     if (keep.score) {
-        regions.max.gr$MaxSiteScore <- max.scores
+        regions.max.gr$MaxSiteScore <- max_scores
     }
 
     return(regions.max.gr)
