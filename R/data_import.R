@@ -39,6 +39,8 @@ import.PROseq <- function(plus_file,
                           keep_M = FALSE,
                           keep_nonstandard = FALSE) {
 
+    # make possible to import only plus or minus
+
     # import bw as GRanges objects
     p_gr <- rtracklayer::import.bw(plus_file)
     m_gr <- rtracklayer::import.bw(minus_file)
