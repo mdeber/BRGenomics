@@ -20,7 +20,7 @@ test_that("Subsamplied reproduced using set.seed", {
 
 # Merging GRanges ---------------------------------------------------------
 
-Context("Merging GRanges data")
+context("Merging GRanges data")
 ps_breaks <- seq(1, length(PROseq), floor(0.25*length(PROseq)))
 PROseq$quartile <- findInterval(seq_along(PROseq),
                                 ps_breaks,
