@@ -18,7 +18,8 @@ one in which readcounts for individual ranges are contained in metadata
 \description{
 Computes strand-specific coverage signal, and returns a GRanges object with
 signal in the "score" metadata column. Function also works for
-non-strand-specific data.
+non-strand-specific data. Note that output is not automatically converted
+into a "basepair-resolution" GRanges object.
 }
 \author{
 Mike DeBerardine

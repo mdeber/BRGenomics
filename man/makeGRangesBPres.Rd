@@ -4,10 +4,29 @@
 \alias{makeGRangesBPres}
 \title{Make base-pair resolution GRanges object}
 \usage{
-makeGRangesBPres(gr)
+makeGRangesBPres(dataset.gr)
 }
 \arguments{
-\item{gr}{A disjoint GRanges object.}
+\item{gr}{A disjoint GRanges object.
+
+Note that this function doesn't perform any transformation on the metadata
+in the input; for any ranges of width > 1, the metadata is simply copied
+to the daughters of that range (whose widths are all equal to 1).
+
+This function is intended to work on datasets at single-base resolution. Data
+of this type is often formatted as a bigWig file, and any data imported from
+a bigWig file by rtracklayer is suitable for processing. bigWig files will
+typically use run-length compression on the data signal (the 'score'
+column), such that when imported by rtracklayer, adjacent bases sharing the
+same signal will combined into a single range. The base-pair resolution
+GRanges objects produced by this function remove this compression, resulting
+in each index (each range) of the GRanges object addressing a single genomic
+position.
+
+To properly use base-pair resolution information, the user should be
+selecting a single-base from each read, which can be accomplished using
+GenomicRanges::resize(). Then, single-base coverage can be calculated using
+getStrandedCoverage.}
 }
 \description{
 Splits up all ranges in \code{gr} to be each 1 basepair wide. All information
