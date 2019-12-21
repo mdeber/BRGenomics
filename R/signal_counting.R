@@ -7,21 +7,31 @@
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
 #' @param regions.gr A GRanges object containing all the regions of interest.
-#' @param field The metadata field of \code{dataset.gr} to be counted.
+#' @param field The metadata field of \code{dataset.gr} to be counted. If
+#'   \code{length(field) > 1}, a dataframe is returned containing the counts for
+#'   each region in each field.
 #'
 #' @return Returns a vector the same length as \code{regions.gr} containing
 #'   signal found in each range.
 #' @author Mike DeBerardine
 #' @export
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score") {
-    hits <- findOverlaps(regions.gr, dataset.gr)
-    counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
-                        by = list(hits@from),
-                        FUN = sum)
-    names(counts) <- c("gene.idx", "signal")
-    counts.all <- rep(0, length(regions.gr)) # to include genes without hits
-    counts.all[counts$gene.idx] <- counts$signal
-    return(counts.all)
+    if (length(field) == 1) {
+        hits <- findOverlaps(regions.gr, dataset.gr)
+        counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
+                            by = list(hits@from),
+                            FUN = sum)
+        names(counts) <- c("gene.idx", "signal")
+        counts.all <- rep(0, length(regions.gr)) # include regions without hits
+        counts.all[counts$gene.idx] <- counts$signal
+        return(counts.all)
+    } else {
+        counts <- lapply(field, function(i) getCountsByRegions(dataset.gr,
+                                                               regions.gr,
+                                                               field = i))
+        names(counts) <- field
+        return(as.data.frame(counts))
+    }
 }
 
 
