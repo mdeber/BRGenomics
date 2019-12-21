@@ -8,18 +8,18 @@ ps_p_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
 ps_m_file <- system.file("extdata", "PROseq_dm6_chr4_minus.bw",
                          package = "BRGenomics")
 
-testthat("PROseq files are found", {
+test_that("PROseq files are found", {
     expect_true(length(ps_p_file) > 1)
     expect_true(length(ps_m_file) > 1)
 })
 
 ps <- import.PROseq(ps_p_file, ps_m_file, "dm6")
 
-testthat("PROseq files import", {
+test_that("PROseq files import", {
     expect_is(ps, "GRanges")
 })
 
-testthat("Imported PROseq formatted correctly", {
+test_that("Imported PROseq formatted correctly", {
     expect_equal(genome(ps), "dm6")
     expect_true(all(width(ps) == 1))
     expect_equal(length(ps), 47533)
@@ -36,19 +36,19 @@ paired_p_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bedGraph",
 paired_m_file <- system.file("extdata", "PROseq_dm6_chr4_minus.bedGraph",
                              package = "BRGenomics")
 
-testthat("Paired PROseq files are found", {
+test_that("Paired PROseq files are found", {
     expect_true(length(paired_p_file) > 1)
     expect_true(length(paired_m_file) > 1)
 })
 
 ps_paired <- import.CoPRO(paired_p_file, paired_m_file, "dm6")
 
-testthat("Paired PROseq files import", {
+test_that("Paired PROseq files import", {
     expect_is(ps_paired, "GRanges")
 })
 
 
-testthat("Paired PROseq formatted correctly", {
+test_that("Paired PROseq formatted correctly", {
     expect_equal(genome(ps_paired), "dm6")
     expect_equal(length(ps_paired), 52464)
     expect_equal(sum(score(ps_paired)), 73011)
