@@ -10,7 +10,7 @@ test_that("Subsampling produces GRanges", {
 })
 
 test_that("Subsampling gives correct signal count", {
-    expect_equal(floor(sum(score(PROseq))), sum(score(ps_tenth)))
+    expect_equal(floor(0.1*sum(score(PROseq))), sum(score(ps_tenth)))
 })
 
 test_that("Subsamplied reproduced using set.seed", {
@@ -41,7 +41,7 @@ test_that("Merging is non-destructive", {
 ps_10ranges <- PROseq[seq(1, 100, 10)] # ensure disjoint when resized below
 
 test_that("Merging non-single-width GRanges produces warning", {
-    expect_warning(mergeGRangesData(PROseq, resize(ps_ranges, 2)))
+    expect_warning(mergeGRangesData(PROseq, resize(ps_10ranges, 2)))
 })
 
 test_that("Merging sums signals in overlaps", {
