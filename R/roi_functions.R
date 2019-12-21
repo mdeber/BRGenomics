@@ -158,20 +158,22 @@ getMaxPositionsBySignal <- function(regions.gr,
         multi_width <- TRUE
         # currently faster to simply expand all regions for initial counting
         widths <- width(regions.gr) # store widths
-        regions.gr <- resize(regions.gr, max(width(regions.gr)))
+        suppressWarnings(
+            regions.gr <- resize(regions.gr, max(width(regions.gr)))
+        )
     }
 
     mat <- getCountsByPositions(dataset.gr = dataset.gr,
                                 regions.gr = regions.gr,
                                 binsize = binsize,
                                 field = field,
-                                remove.empty = FALSE)
+                                remove_empty = FALSE)
 
     # Get vector with max bin for each gene, and another for the scores therein
 
     if (multi_width) {
         bins_i <- floor(widths / binsize) # number of bins within each region
-        # remove last bins (if remainder in widths/binsize)
+        # remove last bins (if widths/binsize gives remainder)
         countslist <- lapply(1:nrow(mat),
                              function(i) mat[ i, seq_len(bins_i[i]) ])
         max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
