@@ -138,11 +138,11 @@ genebodies <- function(genelist,
 #'   intact metadata columns.
 #' @author Mike DeBerardine
 #' @export
-getMaxSitesBySignal <- function(regions.gr,
-                                dataset.gr,
-                                binsize = 1,
-                                field = "score",
-                                keep.score = F) {
+getMaxPositionsBySignal <- function(regions.gr,
+                                    dataset.gr,
+                                    binsize = 1,
+                                    field = "score",
+                                    keep.score = F) {
 
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
