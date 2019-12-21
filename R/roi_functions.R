@@ -204,60 +204,66 @@ getMaxPositionsBySignal <- function(regions.gr,
 
 
 
-#' Subset regions of interest by highest signal
+#' Subset regions of interest by quantiles of overlapping signal
 #'
-#' Subsets regions based on signal in a dataset, taking only the top quantile of
-#' regions.
+#' @description A convenience function to subset regions of interest by the
+#'   amount of signal they contain, according to their quantile (i.e. their
+#'   signal ranks).
 #'
 #' @param regions.gr A GRanges object containing regions of interest.
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
-#' @param regions_quantile The proportion of regions.gr to return, e.g. if
-#'   \code{regions_quantile = 0.2}, the top 20\% of regions by signal are
-#'   returned.
+#' @param quantiles A value pair giving the lower quantile and upper quantile of
+#'   regions to keep. Regions with signal quantiles below than the lower
+#'   quantile are removed, while regions with signal quantiles above the upper
+#'   quantile are removed. Quantiles must be in range \code{(0, 1)}. An empty
+#'   GRanges object is returned if \code{lower quantile == 1} or \code{upper
+#'   quantile == 0}.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param order_by_rank Logical indicating if genes should be returned in order
-#'   of their expression. If \code{FALSE} (the default), genes are sorted by
-#'   their positions.
+#' @param order_by_rank If \code{TRUE}, the output regions are sorted based on
+#'   the amount of signal contained (in decreasing order). If \code{FALSE} (the
+#'   default), genes are sorted by their positions.
 #' @param density A logical indicating whether signal counts should be
 #'   normalized to the width of ranges in \code{regions.gr}. By default, the
 #'   function only considers the total signal in each range.
 #'
-#' @return A GRanges object of length \code{length(regions.gr) *
-#'   regions_quantile}.
+#' @details Typical uses may include removing the 5% of genes with the lowest
+#'   signal (\code{lower_quantile = 0.05}) and the 5% with the highest signal
+#'   (\code{upper_quantile = 0.95}), or returning the middle 50% of genes by
+#'   signal (\code{lower_quantile = 0.25}, \code{upper_quantile = 0.75}). If
+#'   \code{lower_quantile = 0} and \code{upper_quantile = 1}, all regions are
+#'   returned, but the returned regions will be sorted by position, or by score
+#'   if \code{order_by_rank = TRUE}.
+#'
+#' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
+#'   - lower_quantile)}.
 #' @author Mike DeBerardine
 #' @export
 subsetRegionsBySignal <- function(regions.gr,
                                   dataset.gr,
-                                  regions_quantile,
+                                  quantiles = c(0.5, 1),
                                   field = "score",
                                   order_by_rank = FALSE,
                                   density = FALSE) {
-    # number of genes to return
-    num.genes <- floor(regions_quantile * length(regions.gr))
 
-    # find signal in genes
-    hits <- findOverlaps(regions.gr, dataset.gr)
-    signal.df <- aggregate(mcols(dataset.gr)[[field]][hits@to],
-                           by = list(hits@from),
-                           FUN = sum)
-    names(signal.df) <- c("gene", "signal")
+    if (quantiles[1] == 1 | quantiles[2] == 0)  return(regions.gr[0])
 
-    if (density == TRUE) {
-        signal.df$signal <- signal.df$signal / width(regions.gr[signal.df$gene])
-    }
+    signal_counts <- getCountsByRegions(dataset.gr = dataset.gr,
+                                        regions.gr = regions.gr,
+                                        field = field)
 
-    # sort by signal, and return only the top num.genes
-    signal.df <- signal.df[ order(signal.df$signal, decreasing = T), ]
-    top.regions.gr <- regions.gr[ signal.df$gene[seq_len(num.genes)] ]
+    if (density == TRUE)  signal_counts <- signal_counts / width(regions.gr)
+
+    idx_rank <- order(signal_counts) # increasing
+
+    bounds <- quantile(seq_along(regions.gr), quantiles)
+    idx <- window(idx_rank, bounds[1], bounds[2])
 
     if (order_by_rank) {
-        return(top.regions.gr)
+        return(rev(regions.gr[idx]))
     } else {
-        return(sort(top.regions.gr))
+        return(sort(regions.gr[idx]))
     }
 }
-
-
 
 

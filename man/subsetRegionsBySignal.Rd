@@ -2,12 +2,12 @@
 % Please edit documentation in R/roi_functions.R
 \name{subsetRegionsBySignal}
 \alias{subsetRegionsBySignal}
-\title{Subset regions of interest by highest signal}
+\title{Subset regions of interest by quantiles of overlapping signal}
 \usage{
 subsetRegionsBySignal(
   regions.gr,
   dataset.gr,
-  regions_quantile,
+  quantiles = c(0.5, 1),
   field = "score",
   order_by_rank = FALSE,
   density = FALSE
@@ -19,27 +19,40 @@ subsetRegionsBySignal(
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
 (typically in the "score" field).}
 
-\item{regions_quantile}{The proportion of regions.gr to return, e.g. if
-\code{regions_quantile = 0.2}, the top 20\% of regions by signal are
-returned.}
+\item{quantiles}{A value pair giving the lower quantile and upper quantile of
+regions to keep. Regions with signal quantiles below than the lower
+quantile are removed, while regions with signal quantiles above the upper
+quantile are removed. Quantiles must be in range \code{(0, 1)}. An empty
+GRanges object is returned if \code{lower quantile == 1} or \code{upper
+quantile == 0}.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
 
-\item{order_by_rank}{Logical indicating if genes should be returned in order
-of their expression. If \code{FALSE} (the default), genes are sorted by
-their positions.}
+\item{order_by_rank}{If \code{TRUE}, the output regions are sorted based on
+the amount of signal contained (in decreasing order). If \code{FALSE} (the
+default), genes are sorted by their positions.}
 
 \item{density}{A logical indicating whether signal counts should be
 normalized to the width of ranges in \code{regions.gr}. By default, the
 function only considers the total signal in each range.}
 }
 \value{
-A GRanges object of length \code{length(regions.gr) *
-  regions_quantile}.
+A GRanges object of length \code{length(regions.gr) * (upper_quantile
+  - lower_quantile)}.
 }
 \description{
-Subsets regions based on signal in a dataset, taking only the top quantile of
-regions.
+A convenience function to subset regions of interest by the
+  amount of signal they contain, according to their quantile (i.e. their
+  signal ranks).
+}
+\details{
+Typical uses may include removing the 5% of genes with the lowest
+  signal (\code{lower_quantile = 0.05}) and the 5% with the highest signal
+  (\code{upper_quantile = 0.95}), or returning the middle 50% of genes by
+  signal (\code{lower_quantile = 0.25}, \code{upper_quantile = 0.75}). If
+  \code{lower_quantile = 0} and \code{upper_quantile = 1}, all regions are
+  returned, but the returned regions will be sorted by position, or by score
+  if \code{order_by_rank = TRUE}.
 }
 \author{
 Mike DeBerardine
