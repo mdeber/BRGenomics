@@ -110,26 +110,40 @@ getStrandedCoverage <- function(gr, field = "score") {
 
 #' Randomly subsample reads from GRanges dataset
 #'
-#' Currently only works if signal is integer
+#' Random subsampling is not performed on ranges, but on reads. Readcounts
+#' should be given as a metadata field (usually "score"), and should normally be
+#' integers. If normalized readcounts are given, an attempt will be made to
+#' infer the normalization factor based on the least-common-multiple of the
+#' signal found in the specified field.
 #'
 #' @param dataset.gr A GRanges object in which signal (e.g. readcounts) are
 #'   contained within metadata.
 #' @param n Number of reads to subsample. Either \code{n} or \code{prop} can be
 #'   given.
 #' @param prop Proportion of total signal to subsample.
-#' @param field
+#' @param field The metadata field of \code{dataset.gr} that contains readcounts
+#'   for reach position. If each range represents a single read, set \code{field
+#'   = NULL}
 #'
 #' @author Mike DeBerardine
 #' @export
 #' @examples
-subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score") {
+subsampleGRanges <- function(dataset.gr,
+                             n = NULL,
+                             prop = NULL,
+                             field = "score") {
+
     if (!xor(missing(n), missing(prop))) {
         msg <- "Must give either 'n' or 'prop' for subsampling, but not both."
         stop(message = msg)
         return(geterrmessage())
     }
 
-    signal_counts <- mcols(dataset.gr)[[field]]
+    if (is.null(field)) {
+        signal_counts <- rep(1, length(dataset.gr))
+    } else {
+        signal_counts <- mcols(dataset.gr)[[field]]
+    }
 
     if (all( round(signal_counts, 3) %% 1 == 0 )) {
         normed_signal <- FALSE
@@ -138,15 +152,14 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score")
         lcm <- min(signal_counts)
         unnorm_signal <- signal_counts / lcm
         if (!all( round(unnorm_signal, 3) %% 1 == 0 )) {
-            msg <- .nicemsg("Signal given in 'field' are not whole numbers,
-                            and unable to infer a normalization factor.")
-            stop(message = msg)
+            stop(message = .nicemsg("Signal given in 'field' are not whole
+                                    numbers, and unable to infer a normalization
+                                    factor."))
             return(geterrmessage())
         } else {
-            msg <- .nicemsg("Signal given in 'field' are not whole numbers.
-                            A normalization factor was inferred based on
-                            the least common multiple.")
-            warning(msg)
+            warning(.nicemsg("Signal given in 'field' are not whole numbers. A
+                             normalization factor was inferred based on the
+                             least common multiple."))
             signal_counts <- round(unnorm_signal)
         }
     }
@@ -156,8 +169,13 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score")
     # avoid expanding GRanges, and sample associated indices
     idx <- rep(seq_along(dataset.gr), times = signal_counts)
     gr_sample <- dataset.gr[sample(idx, n)]
-    gr_out <- unique(gr_sample)
-    mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
+
+    if (is.null(field)) {
+        gr_out <- gr_sample
+    } else {
+        gr_out <- unique(gr_sample)
+        mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
+    }
 
     if (normed_signal) {
         mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm

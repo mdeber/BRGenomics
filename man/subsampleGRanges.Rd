@@ -15,10 +15,16 @@ given.}
 
 \item{prop}{Proportion of total signal to subsample.}
 
-\item{field}{}
+\item{field}{The metadata field of \code{dataset.gr} that contains readcounts
+for reach position. If each range represents a single read, set \code{field
+= NULL}}
 }
 \description{
-Currently only works if signal is integer
+Random subsampling is not performed on ranges, but on reads. Readcounts
+should be given as a metadata field (usually "score"), and should normally be
+integers. If normalized readcounts are given, an attempt will be made to
+infer the normalization factor based on the least-common-multiple of the
+signal found in the specified field.
 }
 \author{
 Mike DeBerardine
