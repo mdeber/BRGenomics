@@ -4,7 +4,12 @@
 \alias{getCountsByRegions}
 \title{Signal counts in regions of interest}
 \usage{
-getCountsByRegions(dataset.gr, regions.gr, field = "score")
+getCountsByRegions(
+  dataset.gr,
+  regions.gr,
+  field = "score",
+  ncores = detectCores()
+)
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
