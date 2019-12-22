@@ -3,6 +3,21 @@
 ### -------------------------------------------------------------------------
 ###
 
+.get_unnamed_names <- function(fun_call) {
+    # must be: fun_call = match.call()
+    # if arguments were named by user (i.e. x = data_x, ...), use those names;
+    #   otherwise use the names of the objects
+    dim_names <- as.list(fun_call)[-1]
+    if (!is.null(names(dim_names))) {
+        dim_names <- dim_names[names(dim_names) != "quantiles"]
+        # if quantiles the only named argument, or not all named, don't return
+        if (all(nchar(names(dim_names)) > 1)) {
+            return(names(dim_names))
+        }
+    }
+    return(as.character(dim_names))
+}
+
 
 #' N-dimensional binning of data by quantiles
 #'
@@ -32,8 +47,10 @@ binNdimensions <- function(..., quantiles = 10) {
 
     # check input data and convert to dataframe
     input_classes <- vapply(data_in, class, FUN.VALUE = character(1))
-    if (all(input_classes) %in% c("list", "numeric")) {
+    if (all(input_classes %in% c("list", "numeric"))) {
         data <- as.data.frame( lapply(data_in, unlist) )
+
+        dim_names <- .get_unnamed_names(match.call())
 
     } else if (any(input_classes == "data.frame")) {
         if (length(data_in) > 1) {
@@ -43,19 +60,22 @@ binNdimensions <- function(..., quantiles = 10) {
         }
         data <- data_in[[1]]
 
+        dim_names <- names(data)
+
     } else {
         if (length(data_in) == 1) {
-            warning(.nicemsg("Attempting to coerce input of class %s into a
-                             dataframe. User should verify this operation is
-                             valid.", input_classes[[1]]))
             data <- as.data.frame(data_in[[1]])
+            warning(.nicemsg("Coerced input of class %s into a
+                             dataframe.", input_classes[[1]]))
+            dim_names <- names(data)
+
         } else {
-            warning(.nicemsg("Attempting to coerce a list of input of class(es)
-                             %s into a dataframe. User should verify this
-                             operation is valid.",
+            data <- as.data.frame(lapply(data_in, as.vector))
+            warning(.nicemsg("Coerced a list of input of class(es)
+                             %s into a dataframe.",
                              Reduce(function(...) paste(..., sep = ","),
                                     input_classes)))
-            data <- as.data.frame(lapply(data_in, as.vector))
+            dim_names <- .get_unnamed_names(match.call())
         }
     }
 
@@ -70,11 +90,14 @@ binNdimensions <- function(..., quantiles = 10) {
     }
 
     # get bin divisions for each dimension, evenly spaced from min to max values
-    seqRange <- function(x, y) seq(min(x), max(x), length = y)
+    seqRange <- function(x, y) seq(min(Filter(is.finite, x)),
+                                   max(Filter(is.finite, x)),
+                                   length = y)
     bin_seqs <- mapply(seqRange, data, quantiles, SIMPLIFY = FALSE)
 
     # get bin indices for each datapoint along each dimension
     bin_idx <- mapply(findInterval, data, bin_seqs, SIMPLIFY = FALSE)
+    names(bin_idx) <- paste("bin", dim_names)
 
     as.data.frame(bin_idx)
 }
