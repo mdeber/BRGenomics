@@ -7,9 +7,11 @@
 binNdimensions(..., quantiles = 10)
 }
 \arguments{
-\item{...}{A single dataframe, or any number of lists or
-vectors containing different measurements across the same samples. If lists
-or vectors are given, they must all have the same lengths.}
+\item{...}{A single dataframe, or any number of lists or vectors containing
+different measurements across the same datapoints. If a dataframe is given,
+columns should correspond to measurements (dimensions). If lists or
+vectors are given, they must all have the same lengths. Other input classes
+will be coerced into a single dataframe.}
 
 \item{quantiles}{Either a number giving the number of quantiles to use for
 all dimensions (default = 10), or a vector containing the number of
@@ -21,9 +23,14 @@ A dataframe containing indices in \code{1:quantiles} for each
 }
 \description{
 This function takes in data along 1 or more dimensions, and for each
-dimension evenly divides the data in evenly-sized quantiles from the minimum
-value to the maximum value. For each input data point, indices are returned
-giving the bin in each dimension.
+dimension the data is divided into evenly-sized quantiles from the minimum
+value to the maximum value, and bin numbers are returned. For instance, if
+each index of the input data were a gene, the input dimensions would be
+various quantitative measures of that gene, e.g. expression level, number of
+exons, length, etc. If plotted in cartesian coordinates, each gene would be a
+single datapoint, and each measurement would be a separate dimension. The bin
+numbers for each datapoint in each dimension are returned in a dataframe,
+with a column for each dimension and a row for each index.
 }
 \author{
 Mike DeBerardine

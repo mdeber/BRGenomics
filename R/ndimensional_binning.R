@@ -3,15 +3,18 @@
 ### -------------------------------------------------------------------------
 ###
 
-.get_unnamed_names <- function(fun_call) {
-    # must be: fun_call = match.call()
-    # if arguments were named by user (i.e. x = data_x, ...), use those names;
-    #   otherwise use the names of the objects
-    dim_names <- as.list(fun_call)[-1]
+.get_unnamed_names <- function(...) {
+    # This function returns a character vector providing names for unnamed args
+    #   passed to a parent function. If arguments were named by user (i.e.
+    #   x = data_x, ...), it uses those names; but otherwise uses the names of
+    #   the objects themselves.
+    # This function excludes the named argument "quantiles", as currently it's
+    #   only called from the n-dimensional binning function in this package
+    dim_names <- as.list( match.call(call = sys.call(sys.parent(1))) )[-1]
     if (!is.null(names(dim_names))) {
         dim_names <- dim_names[names(dim_names) != "quantiles"]
         # if quantiles the only named argument, or not all named, don't return
-        if (all(nchar(names(dim_names)) > 1)) {
+        if (all(nchar(names(dim_names)) > 0)) {
             return(names(dim_names))
         }
     }
@@ -19,16 +22,24 @@
 }
 
 
+
 #' N-dimensional binning of data by quantiles
 #'
 #' This function takes in data along 1 or more dimensions, and for each
-#' dimension evenly divides the data in evenly-sized quantiles from the minimum
-#' value to the maximum value. For each input data point, indices are returned
-#' giving the bin in each dimension.
+#' dimension the data is divided into evenly-sized quantiles from the minimum
+#' value to the maximum value, and bin numbers are returned. For instance, if
+#' each index of the input data were a gene, the input dimensions would be
+#' various quantitative measures of that gene, e.g. expression level, number of
+#' exons, length, etc. If plotted in cartesian coordinates, each gene would be a
+#' single datapoint, and each measurement would be a separate dimension. The bin
+#' numbers for each datapoint in each dimension are returned in a dataframe,
+#' with a column for each dimension and a row for each index.
 #'
-#' @param ... A single dataframe, or any number of lists or
-#'   vectors containing different measurements across the same samples. If lists
-#'   or vectors are given, they must all have the same lengths.
+#' @param ... A single dataframe, or any number of lists or vectors containing
+#'   different measurements across the same datapoints. If a dataframe is given,
+#'   columns should correspond to measurements (dimensions). If lists or
+#'   vectors are given, they must all have the same lengths. Other input classes
+#'   will be coerced into a single dataframe.
 #' @param quantiles Either a number giving the number of quantiles to use for
 #'   all dimensions (default = 10), or a vector containing the number of
 #'   quantiles to use for each dimension of input data given.
@@ -49,8 +60,7 @@ binNdimensions <- function(..., quantiles = 10) {
     input_classes <- vapply(data_in, class, FUN.VALUE = character(1))
     if (all(input_classes %in% c("list", "numeric"))) {
         data <- as.data.frame( lapply(data_in, unlist) )
-
-        dim_names <- .get_unnamed_names(match.call())
+        dim_names <- .get_unnamed_names()
 
     } else if (any(input_classes == "data.frame")) {
         if (length(data_in) > 1) {
@@ -59,7 +69,6 @@ binNdimensions <- function(..., quantiles = 10) {
             return(geterrmessage())
         }
         data <- data_in[[1]]
-
         dim_names <- names(data)
 
     } else {
@@ -75,7 +84,7 @@ binNdimensions <- function(..., quantiles = 10) {
                              %s into a dataframe.",
                              Reduce(function(...) paste(..., sep = ","),
                                     input_classes)))
-            dim_names <- .get_unnamed_names(match.call())
+            dim_names <- .get_unnamed_names()
         }
     }
 
