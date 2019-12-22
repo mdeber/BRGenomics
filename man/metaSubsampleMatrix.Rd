@@ -8,7 +8,7 @@ metaSubsampleMatrix(
   counts.mat,
   binsize = 1,
   first_output_xval = 1,
-  sample_name = deparse(substitute(dataset.gr)),
+  sample_name = deparse(substitute(counts.mat)),
   n_iter = 1000,
   prop_subsample = 0.1,
   lower = 0.125,
