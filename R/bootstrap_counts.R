@@ -184,6 +184,30 @@ metaSubsample <- function(dataset.gr,
         return(geterrmessage())
     }
 
+    if (length(field) > 1) {
+        ## reset seed, or get user's seed, and store to sample the same
+        ## ranges for each field
+        if (!exists(".Random.seed") | is.null(.Random.seed)) set.seed(NULL)
+        seed <- .Random.seed
+
+        # get and alter arguments
+        fun_args <- as.list(match.call())[-1]
+        fun_args$ncores <- 1
+        fun_args$remove_empty <- FALSE
+
+        dflist <- mclapply(field,
+                           function(i) {
+                               .Random.seed <- seed
+                               fun_args$field <- i
+                               do.call(metaSubsample, fun_args)
+                           },
+                           mc.cores = ncores)
+        names(dflist) <- field
+        return(dflist)
+    }
+
+    if (remove_empty)  regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
+
     # Get signal in each bin of each gene
     # -> Matrix of dim = (ngenes, nbins)
     signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
@@ -206,8 +230,12 @@ metaSubsample <- function(dataset.gr,
     # fix x-values to match bins, and binsize-normalize the returned values
     if (binsize != 1) {
         nbins <- nrow(metamat)
-        metamat$x <- seq(0.5*binsize, nbins*binsize - 0.5*binsize, binsize) + first_output_xval
-        metamat[, c("mean", "lower", "upper")] <- metamat[, c("mean", "lower", "upper")] / binsize
+        binstart <- 0.5*binsize
+        binstep <- nbins*binsize - 0.5*binsize
+        metamat$x <- seq(binstart, binstep, binsize) + first_output_xval
+
+        y_vals <- c("mean", "lower", "upper")
+        metamat[, y_vals] <- metamat[, y_vals] / binsize
     }
 
     return(metamat)
