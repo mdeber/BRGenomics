@@ -166,8 +166,7 @@ getMaxPositionsBySignal <- function(regions.gr,
     mat <- getCountsByPositions(dataset.gr = dataset.gr,
                                 regions.gr = regions.gr,
                                 binsize = binsize,
-                                field = field,
-                                remove_empty = FALSE)
+                                field = field)
 
     # Get vector with max bin for each gene, and another for the scores therein
 
