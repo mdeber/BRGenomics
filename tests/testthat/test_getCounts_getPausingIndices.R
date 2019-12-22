@@ -85,6 +85,11 @@ test_that("can get NA-padded counts matrix for multi-width regions", {
     expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
 })
 
+test_that("error on incorrect simplify argument", {
+    expect_error(getCountsByPositions(PROseq, txs_dm6_chr4,
+                                      simplify_multi_widths = "notright"))
+})
+
 
 test_that("can perform arbitrary binning operations on count matrix", {
     binsums <- getCountsByPositions(PROseq, txs_pr, binsize = 10,
@@ -125,5 +130,9 @@ test_that("error if regions.pr not matching regions.gb", {
     expect_error(getPausingIndices(PROseq, txs_pr, txs_gb[1:10]))
 })
 
+test_that("remove_empty works", {
+    pidx_re <- getPausingIndices(PROseq, txs_pr, txs_gb, remove_empty = TRUE)
+    expect_equal(length(pidx_re), 252)
+})
 
 

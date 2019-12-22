@@ -28,7 +28,7 @@ test_that("Single bigWig can be imported", {
     expect_equal(c(genome(bw), use.names = FALSE), "dm6")
     expect_equal(length(bw), 16587)
     expect_is(bw$score, "integer")
-    expect_true(all(as.character(strand(ps)) == "*"))
+    expect_true(all(as.character(strand(bw)) == "*"))
 })
 
 
