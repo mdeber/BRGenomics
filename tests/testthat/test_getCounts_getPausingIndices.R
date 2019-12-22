@@ -34,6 +34,7 @@ test_that("signal counts work over multiple metadata fields", {
 
 
 # getCountsByPositions ----------------------------------------------------
+
 context("Counting signal at positions within regions")
 
 txs_pr <- promoters(txs_dm6_chr4, 0, 100)
@@ -108,6 +109,7 @@ test_that("can perform arbitrary binning operations on count matrix", {
 
 
 # Calculating pause indices -----------------------------------------------
+
 context("Calculating pausing indices")
 
 txs_gb <- flank(txs_pr, 500, start = FALSE)

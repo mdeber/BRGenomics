@@ -11,7 +11,7 @@ paired_3p_cov <- getStrandedCoverage(paired_3p_ends)
 test_that("Stranded coverage makes stranded GRanges", {
     expect_is(paired_3p_cov, "GRanges")
     expect_is(getStrandedCoverage(PROseq_paired), "GRanges")
-    expect_true(all(strand(paired_3p_cov) %in% c("+", "-")))
+    expect_true(all(as.character(strand(paired_3p_cov)) %in% c("+", "-")))
 })
 
 test_that("Stranded coverage output not single-width", {
