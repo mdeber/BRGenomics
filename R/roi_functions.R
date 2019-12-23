@@ -216,8 +216,8 @@ getMaxPositionsBySignal <- function(regions.gr,
 #'   regions to keep. Regions with signal quantiles below than the lower
 #'   quantile are removed, while regions with signal quantiles above the upper
 #'   quantile are removed. Quantiles must be in range \code{(0, 1)}. An empty
-#'   GRanges object is returned if \code{lower quantile == 1} or \code{upper
-#'   quantile == 0}.
+#'   GRanges object is returned if \code{lower quantile = 1} or \code{upper
+#'   quantile = 0}.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
 #' @param order_by_rank If \code{TRUE}, the output regions are sorted based on
 #'   the amount of signal contained (in decreasing order). If \code{FALSE} (the
@@ -254,7 +254,6 @@ subsetRegionsBySignal <- function(regions.gr,
     if (density == TRUE)  signal_counts <- signal_counts / width(regions.gr)
 
     idx_rank <- order(signal_counts) # increasing
-
     bounds <- quantile(seq_along(regions.gr), quantiles)
     idx <- window(idx_rank, bounds[1], bounds[2])
 

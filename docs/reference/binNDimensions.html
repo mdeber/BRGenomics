@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>N-dimensional binning of data by quantiles — binNDimensions • BRGenomics</title>
+<title>N-dimensional binning of data by quantiles — binNdimensions • BRGenomics</title>
 
 
 <!-- jquery -->
@@ -35,11 +35,16 @@
 
 
 
-<meta property="og:title" content="N-dimensional binning of data by quantiles — binNDimensions" />
+<meta property="og:title" content="N-dimensional binning of data by quantiles — binNdimensions" />
 <meta property="og:description" content="This function takes in data along 1 or more dimensions, and for each
-dimension evenly divides the data in evenly-sized quantiles from the minimum
-to the maximum value. For each input data point, indices are returned giving
-its bin." />
+dimension the data is divided into evenly-sized quantiles from the minimum
+value to the maximum value, and bin numbers are returned. For instance, if
+each index of the input data were a gene, the input dimensions would be
+various quantitative measures of that gene, e.g. expression level, number of
+exons, length, etc. If plotted in cartesian coordinates, each gene would be a
+single datapoint, and each measurement would be a separate dimension. The bin
+numbers for each datapoint in each dimension are returned in a dataframe,
+with a column for each dimension and a row for each index." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -105,38 +110,46 @@ its bin." />
     <div class="page-header">
     <h1>N-dimensional binning of data by quantiles</h1>
     
-    <div class="hidden name"><code>binNDimensions.Rd</code></div>
+    <div class="hidden name"><code>binNdimensions.Rd</code></div>
     </div>
 
     <div class="ref-description">
     <p>This function takes in data along 1 or more dimensions, and for each
-dimension evenly divides the data in evenly-sized quantiles from the minimum
-to the maximum value. For each input data point, indices are returned giving
-its bin.</p>
+dimension the data is divided into evenly-sized quantiles from the minimum
+value to the maximum value, and bin numbers are returned. For instance, if
+each index of the input data were a gene, the input dimensions would be
+various quantitative measures of that gene, e.g. expression level, number of
+exons, length, etc. If plotted in cartesian coordinates, each gene would be a
+single datapoint, and each measurement would be a separate dimension. The bin
+numbers for each datapoint in each dimension are returned in a dataframe,
+with a column for each dimension and a row for each index.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>binNDimensions</span>(<span class='no'>...</span>, <span class='kw'>quantiles</span> <span class='kw'>=</span> <span class='fl'>10</span>)</pre>
+    <pre class="usage"><span class='fu'>binNdimensions</span>(<span class='no'>...</span>, <span class='kw'>quantiles</span> <span class='kw'>=</span> <span class='fl'>10</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>...</th>
-      <td><p>Input data can be a single dataframe or any number of lists or
-vectors containing different measurements across the same samples.</p></td>
+      <td><p>A single dataframe, or any number of lists or vectors containing
+different measurements across the same datapoints. If a dataframe is given,
+columns should correspond to measurements (dimensions). If lists or
+vectors are given, they must all have the same lengths. Other input classes
+will be coerced into a single dataframe.</p></td>
     </tr>
     <tr>
       <th>quantiles</th>
       <td><p>Either a number giving the number of quantiles to use for
-all dimensions (default = 10), or a vector containing the number of quantiles
-to use for each dimension of input data given.</p></td>
+all dimensions (default = 10), or a vector containing the number of
+quantiles to use for each dimension of input data given.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A dataframe containing indices in <code>1:quantiles</code> for each
-datapoint in each dimension.</p>
+  datapoint in each dimension.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -146,6 +159,8 @@ datapoint in each dimension.</p>
       <li><a href="#value">Value</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Merge base-pair resolution GRanges objects — mergeGRangesData • BRGenomics</title>
+<title>Ensembl transcripts for Drosophila melanogaster, dm6, chromosome 4. — txs_dm6_chr4 • BRGenomics</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,12 @@
 
 
 
-<meta property="og:title" content="Merge base-pair resolution GRanges objects — mergeGRangesData" />
-<meta property="og:description" content="Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the score metadata column contains coverage information at
-each site." />
+<meta property="og:title" content="Ensembl transcripts for Drosophila melanogaster, dm6, chromosome 4. — txs_dm6_chr4" />
+<meta property="og:description" content="Transcripts obtained from annotation package
+TxDb.Dmelanogaster.UCSC.dm6.ensGene, which was in turn made by the
+Bioconductor Core Team from UCSC resources on 2019-04-25. Metadata columns
+were obtained from &quot;TXNAME&quot; and &quot;GENEID&quot; columns. Data exported from
+the TxDb package using GenomicFeatures version 1.35.11 on 2019-12-19." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,44 +104,41 @@ each site." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Merge base-pair resolution GRanges objects</h1>
+    <h1>Ensembl transcripts for Drosophila melanogaster, dm6, chromosome 4.</h1>
     
-    <div class="hidden name"><code>mergeGRangesData.Rd</code></div>
+    <div class="hidden name"><code>txs_dm6_chr4.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the <code>score</code> metadata column contains coverage information at
-each site.</p>
+    <p>Transcripts obtained from annotation package
+TxDb.Dmelanogaster.UCSC.dm6.ensGene, which was in turn made by the
+Bioconductor Core Team from UCSC resources on 2019-04-25. Metadata columns
+were obtained from "TXNAME" and "GENEID" columns. Data exported from
+the TxDb package using GenomicFeatures version 1.35.11 on 2019-12-19.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mergeGRangesData</span>(<span class='no'>...</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>())</pre>
+    <pre class="usage"><span class='no'>txs_dm6_chr4</span></pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>...</th>
-      <td><p>Any number of GRanges objects in which signal (e.g. readcounts)
-are contained within metadata.</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
-    <p>A single GRange object containing all sites of the input objects, and
-  the sum of all scores at all sites.</p>
+    <p>A GRanges object with 339 ranges and 2 metadata columns:</p><dl class='dl-horizontal'>
+  <dt>tx_name</dt><dd><p>Flybase unique identifiers for transcripts</p></dd>
+  <dt>gene_id</dt><dd><p>FLybase unique identifiers for the associated genes</p></dd>
+
+</dl>
+    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
+
+    <p>TxDb.Dmelanogaster.UCSC.dm6.ensGene version 3.4.6</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
+      <li><a href="#format">Format</a></li>
+      <li><a href="#source">Source</a></li>
     </ul>
 
-    <h2>Author</h2>
-    <p>Mike DeBerardine</p>
   </div>
 </div>
 

@@ -38,7 +38,8 @@
 <meta property="og:title" content="Get strand-specific coverage — getStrandedCoverage" />
 <meta property="og:description" content="Computes strand-specific coverage signal, and returns a GRanges object with
 signal in the &quot;score&quot; metadata column. Function also works for
-non-strand-specific data." />
+non-strand-specific data. Note that output is not automatically converted
+into a &quot;basepair-resolution&quot; GRanges object." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -110,25 +111,26 @@ non-strand-specific data." />
     <div class="ref-description">
     <p>Computes strand-specific coverage signal, and returns a GRanges object with
 signal in the "score" metadata column. Function also works for
-non-strand-specific data.</p>
+non-strand-specific data. Note that output is not automatically converted
+into a "basepair-resolution" GRanges object.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getStrandedCoverage</span>(<span class='no'>gr</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>)</pre>
+    <pre class="usage"><span class='fu'>getStrandedCoverage</span>(<span class='no'>dataset.gr</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>field</th>
-      <td><p>The name of the field that contains readcounts. If no metadata
-field contains readcounts, and each range represents a single read, set to
-NULL.</p></td>
-    </tr>
-    <tr>
       <th>dataset.gr</th>
       <td><p>A GRanges object either containing ranges for each read, or
 one in which readcounts for individual ranges are contained in metadata
 (typically in the "score" field).</p></td>
+    </tr>
+    <tr>
+      <th>field</th>
+      <td><p>The name of the field that contains readcounts. If no metadata
+field contains readcounts, and each range represents a single read, set to
+NULL.</p></td>
     </tr>
     </table>
 
@@ -140,6 +142,8 @@ one in which readcounts for individual ranges are contained in metadata
       <li><a href="#arguments">Arguments</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

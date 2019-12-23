@@ -114,7 +114,8 @@ metaSubsampleMatrix <- function(counts.mat,
         upper <- NF * apply(binavg_mat, 1, quantile, upper, names = F)
     }
 
-    # Also return x-values and sample names for plotting; x-values centered in bins
+    # Also return x-values and sample names for plotting;
+    #   x-values centered in bins
     if (binsize == 1) {
         x <- seq(0, nbins - 1) + first_output_xval
     } else {
@@ -134,8 +135,8 @@ metaSubsampleMatrix <- function(counts.mat,
 #' Iterative Subsampling for Metaplotting
 #'
 #' This function performs bootstrap subsampling of mean readcounts at different
-#' positions within regions of interest. Mean signal counts can be estimated
-#' at base-pair resolution, or smoothed over larger bins.
+#' positions within regions of interest. Mean signal counts can be estimated at
+#' base-pair resolution, or smoothed over larger bins.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the \code{"score"} field).
@@ -154,7 +155,7 @@ metaSubsampleMatrix <- function(counts.mat,
 #'   \code{1000}.
 #' @param prop_subsample The proportion of the ranges in \code{regions.gr} (e.g.
 #'   the proportion of genes) to subsample in each iteration. The default is
-#'   \code{0.1} (10%)..
+#'   \code{0.1} (10 percent).
 #' @param lower The lower quantile of subsampled signal means to return. The
 #'   default is \code{0.125} (12.5th percentile).
 #' @param upper The upper quantile of subsampled signal means to return. The
@@ -350,8 +351,10 @@ metaSubsample <- function(dataset.gr,
 #                                 linear_regions_start.gr = NULL,
 #                                 linear_regions_end.gr = NULL,
 #                                 nbins_scaled = 100,
-#                                 nbins_linear_start = unique(width(linear_regions_start.gr)),
-#                                 nbins_linear_end = unique(width(linear_regions_end.gr)),
+#                                 nbins_linear_start =
+# unique(width(linear_regions_start.gr)),
+#                                 nbins_linear_end =
+# unique(width(linear_regions_end.gr)),
 #                                 sample_name = deparse(substitute(dataset.gr)),
 #                                 n_iter = 1000,
 #                                 prop_subsample = 0.1,

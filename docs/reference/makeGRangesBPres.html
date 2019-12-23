@@ -113,14 +113,30 @@ is preserved, including all metadata. To wit, <code>length(output.gr) =
 sum(width(dataset.gr))</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>makeGRangesBPres</span>(<span class='no'>gr</span>)</pre>
+    <pre class="usage"><span class='fu'>makeGRangesBPres</span>(<span class='no'>dataset.gr</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>gr</th>
-      <td><p>A disjoint GRanges object.</p></td>
+      <td><p>A disjoint GRanges object.</p>
+<p>Note that this function doesn't perform any transformation on the metadata
+in the input; for any ranges of width &gt; 1, the metadata is simply copied
+to the daughters of that range (whose widths are all equal to 1).</p>
+<p>This function is intended to work on datasets at single-base resolution. Data
+of this type is often formatted as a bigWig file, and any data imported from
+a bigWig file by rtracklayer is suitable for processing. bigWig files will
+typically use run-length compression on the data signal (the 'score'
+column), such that when imported by rtracklayer, adjacent bases sharing the
+same signal will combined into a single range. The base-pair resolution
+GRanges objects produced by this function remove this compression, resulting
+in each index (each range) of the GRanges object addressing a single genomic
+position.</p>
+<p>To properly use base-pair resolution information, the user should be
+selecting a single-base from each read, which can be accomplished using
+GenomicRanges::resize(). Then, single-base coverage can be calculated using
+getStrandedCoverage.</p></td>
     </tr>
     </table>
 
@@ -132,6 +148,8 @@ sum(width(dataset.gr))</code>.</p>
       <li><a href="#arguments">Arguments</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

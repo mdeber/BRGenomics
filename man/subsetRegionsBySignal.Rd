@@ -23,8 +23,8 @@ subsetRegionsBySignal(
 regions to keep. Regions with signal quantiles below than the lower
 quantile are removed, while regions with signal quantiles above the upper
 quantile are removed. Quantiles must be in range \code{(0, 1)}. An empty
-GRanges object is returned if \code{lower quantile == 1} or \code{upper
-quantile == 0}.}
+GRanges object is returned if \code{lower quantile = 1} or \code{upper
+quantile = 0}.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
 

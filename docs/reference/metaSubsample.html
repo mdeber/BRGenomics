@@ -36,7 +36,9 @@
 
 
 <meta property="og:title" content="Iterative Subsampling for Metaplotting — metaSubsample" />
-<meta property="og:description" content="Iterative Subsampling for Metaplotting" />
+<meta property="og:description" content="This function performs bootstrap subsampling of mean readcounts at different
+positions within regions of interest. Mean signal counts can be estimated at
+base-pair resolution, or smoothed over larger bins." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -106,7 +108,9 @@
     </div>
 
     <div class="ref-description">
-    <p>Iterative Subsampling for Metaplotting</p>
+    <p>This function performs bootstrap subsampling of mean readcounts at different
+positions within regions of interest. Mean signal counts can be estimated at
+base-pair resolution, or smoothed over larger bins.</p>
     </div>
 
     <pre class="usage"><span class='fu'>metaSubsample</span>(
@@ -131,7 +135,7 @@
     <tr>
       <th>dataset.gr</th>
       <td><p>A GRanges object in which signal is contained in metadata
-(typically in the "score" field).</p></td>
+(typically in the <code>"score"</code> field).</p></td>
     </tr>
     <tr>
       <th>regions.gr</th>
@@ -152,27 +156,30 @@ are returned, which are provided as a convenience.</p></td>
     </tr>
     <tr>
       <th>sample_name</th>
-      <td><p>Defaults to the name of <code>dataset.gr</code>.</p></td>
+      <td><p>Defaults to the name of <code>dataset.gr</code>. This is
+included in the output as a convenience for row-binding outputs from
+different samples.</p></td>
     </tr>
     <tr>
       <th>n_iter</th>
       <td><p>Number of random subsampling iterations to perform. Default is
-1000.</p></td>
+<code>1000</code>.</p></td>
     </tr>
     <tr>
       <th>prop_subsample</th>
-      <td><p>The proportion of the ranges in regions.gr (e.g. the
-proportion of genes) to subsample in each iteration. The default is 0.1.</p></td>
+      <td><p>The proportion of the ranges in <code>regions.gr</code> (e.g.
+the proportion of genes) to subsample in each iteration. The default is
+<code>0.1</code> (10 percent).</p></td>
     </tr>
     <tr>
       <th>lower</th>
       <td><p>The lower quantile of subsampled signal means to return. The
-default is 0.125 (12.5th percentile).</p></td>
+default is <code>0.125</code> (12.5th percentile).</p></td>
     </tr>
     <tr>
       <th>upper</th>
       <td><p>The upper quantile of subsampled signal means to return. The
-default is 0.875 (85.5th percentile).</p></td>
+default is <code>0.875</code> (85.5th percentile).</p></td>
     </tr>
     <tr>
       <th>NF</th>
@@ -189,9 +196,9 @@ should be removed from the analysis.</p></td>
     </tr>
     <tr>
       <th>ncores</th>
-      <td><p>Number of cores to use for parallel computation. As of writing,
-parallel processing doesn't show any benefit for short computation times
-(e.g. &lt;1 minute for our typical experience on a laptop).</p></td>
+      <td><p>Number of cores to use for parallel computation. No parallel
+processing is used by default, as there's no performance benefit for
+typical usage with short computation times.</p></td>
     </tr>
     </table>
 
@@ -209,6 +216,8 @@ parallel processing doesn't show any benefit for short computation times
       <li><a href="#value">Value</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

@@ -113,8 +113,10 @@
   <span class='no'>dataset.gr</span>,
   <span class='no'>regions.gr</span>,
   <span class='kw'>binsize</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>bin_FUN</span> <span class='kw'>=</span> <span class='no'>sum</span>,
+  <span class='kw'>simplify_multi_widths</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"list"</span>, <span class='st'>"pad zero"</span>, <span class='st'>"pad NA"</span>),
   <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
-  <span class='kw'>remove_empty</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+  <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>()
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -136,29 +138,53 @@ All ranges must have the same width!</p></td>
 <code>regions.gr</code>. Note that counts will <em>not</em> be length-normalized.</p></td>
     </tr>
     <tr>
-      <th>field</th>
-      <td><p>The metadata field of <code>dataset.gr</code> to be counted.</p></td>
+      <th>bin_FUN</th>
+      <td><p>If <code>binsize &gt; 1</code>, the function used to aggregate the
+signal at each base within each bin. The default is to sum the signal in
+each bin, but any function operating on a numeric vector can be used.</p></td>
     </tr>
     <tr>
-      <th>remove_empty</th>
-      <td><p>Logical indicating whether regions without signal should
-be removed.</p></td>
+      <th>simplify_multi_widths</th>
+      <td><p>A string indicating the output format if the
+ranges in <code>regions.gr</code> have variable widths. Default = <code>"list"</code>.
+See details below.</p></td>
+    </tr>
+    <tr>
+      <th>field</th>
+      <td><p>The metadata field of <code>dataset.gr</code> to be counted. If
+<code>length(field) &gt; 1</code>, the output is a list whose elements contain the
+output for generated each field.</p></td>
+    </tr>
+    <tr>
+      <th>ncores</th>
+      <td><p>Multiple cores can only be used if <code>length(field) &gt; 1</code>.</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>A matrix containing a row for each range in regions.gr, and a column
-  for each bin.</p>
+    <p>If the widths of all ranges in <code>regions.gr</code> are equal, a matrix
+  is returned containing a row for each range in <code>regions.gr</code>, and a
+  column for each bin. For input <code>regions.gr</code> with varying widths,
+  setting <code>simplify_multi_widths = "list"</code> will output a list of
+  variable-length vectors, with each vector corresponding to an input region.
+  If <code>simplify_multi_widths = "pad zero"</code> or <code>simplify_multi_widths
+  = "pad NA"</code>, the output is a matrix containing a row for each range in
+  <code>regions.gr</code>, and a column for each position in each range. The number
+  of columns is determined by the largest range in <code>regions.gr</code>, and
+  columns corresponding to positions outside of each range are either set to
+  <code>0</code> or <code>NA</code>, depending on the argument.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
+      <li><a href="#details">Details</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

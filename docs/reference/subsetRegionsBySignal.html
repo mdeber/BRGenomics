@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Subset regions of interest by highest signal — subsetRegionsBySignal • BRGenomics</title>
+<title>Subset regions of interest by quantiles of overlapping signal — subsetRegionsBySignal • BRGenomics</title>
 
 
 <!-- jquery -->
@@ -35,9 +35,10 @@
 
 
 
-<meta property="og:title" content="Subset regions of interest by highest signal — subsetRegionsBySignal" />
-<meta property="og:description" content="Subsets regions based on signal in a dataset, taking only the top quantile of
-regions." />
+<meta property="og:title" content="Subset regions of interest by quantiles of overlapping signal — subsetRegionsBySignal" />
+<meta property="og:description" content="A convenience function to subset regions of interest by the
+  amount of signal they contain, according to their quantile (i.e. their
+  signal ranks)." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -101,20 +102,21 @@ regions." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Subset regions of interest by highest signal</h1>
+    <h1>Subset regions of interest by quantiles of overlapping signal</h1>
     
     <div class="hidden name"><code>subsetRegionsBySignal.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Subsets regions based on signal in a dataset, taking only the top quantile of
-regions.</p>
+    <p>A convenience function to subset regions of interest by the
+  amount of signal they contain, according to their quantile (i.e. their
+  signal ranks).</p>
     </div>
 
     <pre class="usage"><span class='fu'>subsetRegionsBySignal</span>(
   <span class='no'>regions.gr</span>,
   <span class='no'>dataset.gr</span>,
-  <span class='no'>regions_quantile</span>,
+  <span class='kw'>quantiles</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.5</span>, <span class='fl'>1</span>),
   <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
   <span class='kw'>order_by_rank</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>density</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
@@ -133,10 +135,13 @@ regions.</p>
 (typically in the "score" field).</p></td>
     </tr>
     <tr>
-      <th>regions_quantile</th>
-      <td><p>The proportion of regions.gr to return, e.g. if
-<code>regions_quantile = 0.2</code>, the top 20% of regions by signal are
-returned.</p></td>
+      <th>quantiles</th>
+      <td><p>A value pair giving the lower quantile and upper quantile of
+regions to keep. Regions with signal quantiles below than the lower
+quantile are removed, while regions with signal quantiles above the upper
+quantile are removed. Quantiles must be in range <code>(0, 1)</code>. An empty
+GRanges object is returned if <code>lower quantile = 1</code> or <code>upper
+quantile = 0</code>.</p></td>
     </tr>
     <tr>
       <th>field</th>
@@ -144,9 +149,9 @@ returned.</p></td>
     </tr>
     <tr>
       <th>order_by_rank</th>
-      <td><p>Logical indicating if genes should be returned in order
-of their expression. If <code>FALSE</code> (the default), genes are sorted by
-their positions.</p></td>
+      <td><p>If <code>TRUE</code>, the output regions are sorted based on
+the amount of signal contained (in decreasing order). If <code>FALSE</code> (the
+default), genes are sorted by their positions.</p></td>
     </tr>
     <tr>
       <th>density</th>
@@ -158,8 +163,17 @@ function only considers the total signal in each range.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A GRanges object of length <code>length(regions.gr) *
-  regions_quantile</code>.</p>
+    <p>A GRanges object of length <code>length(regions.gr) * (upper_quantile
+  - lower_quantile)</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Typical uses may include removing the 5<!-- % of genes with the lowest -->
+  signal (<code>lower_quantile = 0.05</code>) and the 5<!-- % with the highest signal -->
+  (<code>upper_quantile = 0.95</code>), or returning the middle 50<!-- % of genes by -->
+  signal (<code>lower_quantile = 0.25</code>, <code>upper_quantile = 0.75</code>). If
+  <code>lower_quantile = 0</code> and <code>upper_quantile = 1</code>, all regions are
+  returned, but the returned regions will be sorted by position, or by score
+  if <code>order_by_rank = TRUE</code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -167,8 +181,11 @@ function only considers the total signal in each range.</p></td>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
+      <li><a href="#details">Details</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

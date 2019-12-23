@@ -109,7 +109,12 @@
     <p>Count signal (e.g. read coverage) of data in each region of interest.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getCountsByRegions</span>(<span class='no'>dataset.gr</span>, <span class='no'>regions.gr</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>)</pre>
+    <pre class="usage"><span class='fu'>getCountsByRegions</span>(
+  <span class='no'>dataset.gr</span>,
+  <span class='no'>regions.gr</span>,
+  <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
+  <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>()
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -125,7 +130,13 @@
     </tr>
     <tr>
       <th>field</th>
-      <td><p>The metadata field of <code>dataset.gr</code> to be counted.</p></td>
+      <td><p>The metadata field of <code>dataset.gr</code> to be counted. If
+<code>length(field) &gt; 1</code>, a dataframe is returned containing the counts for
+each region in each field.</p></td>
+    </tr>
+    <tr>
+      <th>ncores</th>
+      <td><p>Multiple cores can only be used if <code>length(field) &gt; 1</code>.</p></td>
     </tr>
     </table>
 
@@ -142,6 +153,8 @@
       <li><a href="#value">Value</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

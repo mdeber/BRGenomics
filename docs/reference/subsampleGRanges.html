@@ -36,7 +36,11 @@
 
 
 <meta property="og:title" content="Randomly subsample reads from GRanges dataset — subsampleGRanges" />
-<meta property="og:description" content="Currently only works if signal is integer" />
+<meta property="og:description" content="Random subsampling is not performed on ranges, but on reads. Readcounts
+should be given as a metadata field (usually &quot;score&quot;), and should normally be
+integers. If normalized readcounts are given, an attempt will be made to
+infer the normalization factor based on the least-common-multiple of the
+signal found in the specified field." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -106,7 +110,11 @@
     </div>
 
     <div class="ref-description">
-    <p>Currently only works if signal is integer</p>
+    <p>Random subsampling is not performed on ranges, but on reads. Readcounts
+should be given as a metadata field (usually "score"), and should normally be
+integers. If normalized readcounts are given, an attempt will be made to
+infer the normalization factor based on the least-common-multiple of the
+signal found in the specified field.</p>
     </div>
 
     <pre class="usage"><span class='fu'>subsampleGRanges</span>(<span class='no'>dataset.gr</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>prop</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>)</pre>
@@ -130,14 +138,11 @@ given.</p></td>
     </tr>
     <tr>
       <th>field</th>
-      <td></td>
+      <td><p>The metadata field of <code>dataset.gr</code> that contains readcounts
+for reach position. If each range represents a single read, set <code>field
+= NULL</code></p></td>
     </tr>
     </table>
-
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    
-
 
 
   </div>
@@ -145,9 +150,10 @@ given.</p></td>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
     </ul>
 
+    <h2>Author</h2>
+    <p>Mike DeBerardine</p>
   </div>
 </div>
 

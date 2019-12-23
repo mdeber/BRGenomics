@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Merge base-pair resolution GRanges objects — mergeGRangesData • BRGenomics</title>
+<title>Automate batch calls to getDESeqResults — getDESeqResultsInBatch • BRGenomics</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,9 @@
 
 
 
-<meta property="og:title" content="Merge base-pair resolution GRanges objects — mergeGRangesData" />
-<meta property="og:description" content="Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the score metadata column contains coverage information at
-each site." />
+<meta property="og:title" content="Automate batch calls to getDESeqResults — getDESeqResultsInBatch" />
+<meta property="og:description" content="This function can automate the generation numerous pairwise DESeq2
+comparisons using several logical schemes." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,33 +101,40 @@ each site." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Merge base-pair resolution GRanges objects</h1>
+    <h1>Automate batch calls to getDESeqResults</h1>
     
-    <div class="hidden name"><code>mergeGRangesData.Rd</code></div>
+    <div class="hidden name"><code>getDESeqResultsInBatch.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the <code>score</code> metadata column contains coverage information at
-each site.</p>
+    <p>This function can automate the generation numerous pairwise DESeq2
+comparisons using several logical schemes.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mergeGRangesData</span>(<span class='no'>...</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>())</pre>
+    <pre class="usage"><span class='fu'>getDESeqResultsInBatch</span>(
+  <span class='no'>dds</span>,
+  <span class='kw'>sizeFactors</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>0.05</span>,
+  <span class='kw'>anchor</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>permutations</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>additional_comparisons</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>()
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>...</th>
-      <td><p>Any number of GRanges objects in which signal (e.g. readcounts)
-are contained within metadata.</p></td>
+      <th>ncores</th>
+      <td></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A single GRange object containing all sites of the input objects, and
-  the sum of all scores at all sites.</p>
+    
+
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -138,8 +144,6 @@ are contained within metadata.</p></td>
       <li><a href="#value">Value</a></li>
     </ul>
 
-    <h2>Author</h2>
-    <p>Mike DeBerardine</p>
   </div>
 </div>
 

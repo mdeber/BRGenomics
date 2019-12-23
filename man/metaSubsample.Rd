@@ -44,7 +44,7 @@ different samples.}
 
 \item{prop_subsample}{The proportion of the ranges in \code{regions.gr} (e.g.
 the proportion of genes) to subsample in each iteration. The default is
-\code{0.1} (10%)..}
+\code{0.1} (10 percent).}
 
 \item{lower}{The lower quantile of subsampled signal means to return. The
 default is \code{0.125} (12.5th percentile).}
@@ -70,8 +70,8 @@ Dataframe containing x-values, means, lower quantiles, upper
 }
 \description{
 This function performs bootstrap subsampling of mean readcounts at different
-positions within regions of interest. Mean signal counts can be estimated
-at base-pair resolution, or smoothed over larger bins.
+positions within regions of interest. Mean signal counts can be estimated at
+base-pair resolution, or smoothed over larger bins.
 }
 \author{
 Mike DeBerardine

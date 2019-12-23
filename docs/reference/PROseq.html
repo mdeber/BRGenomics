@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Merge base-pair resolution GRanges objects — mergeGRangesData • BRGenomics</title>
+<title>PRO-seq data from Drosophila S2 cells — PROseq • BRGenomics</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,8 @@
 
 
 
-<meta property="og:title" content="Merge base-pair resolution GRanges objects — mergeGRangesData" />
-<meta property="og:description" content="Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the score metadata column contains coverage information at
-each site." />
+<meta property="og:title" content="PRO-seq data from Drosophila S2 cells — PROseq" />
+<meta property="og:description" content="PRO-seq data of Drosophila S2 cells, chromosome 4." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,44 +100,44 @@ each site." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Merge base-pair resolution GRanges objects</h1>
+    <h1>PRO-seq data from Drosophila S2 cells</h1>
     
-    <div class="hidden name"><code>mergeGRangesData.Rd</code></div>
+    <div class="hidden name"><code>PROseq.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the <code>score</code> metadata column contains coverage information at
-each site.</p>
+    <p>PRO-seq data of Drosophila S2 cells, chromosome 4.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mergeGRangesData</span>(<span class='no'>...</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>())</pre>
+    <pre class="usage"><span class='no'>PROseq</span></pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>...</th>
-      <td><p>Any number of GRanges objects in which signal (e.g. readcounts)
-are contained within metadata.</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
-    <p>A single GRange object containing all sites of the input objects, and
-  the sum of all scores at all sites.</p>
+    <p>A disjoint GRanges object with 47533 ranges with 1 metadata column:</p><dl class='dl-horizontal'>
+  <dt>score</dt><dd><p>coverage of PRO-seq read 3'-ends</p></dd>
+  ...
+
+</dl>
+    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
+
+    <p>GEO Accession GSM1032758, run SRR611828.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis (2013).
+Precise Maps of RNA Polymerase Reveal How Promoters Direct Initiation and
+Pausing. Science, 339(6122), 950–953.
+<a href='https://doi.org/10.1126/science.1229386'>https://doi.org/10.1126/science.1229386</a></p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
+      <li><a href="#format">Format</a></li>
+      <li><a href="#source">Source</a></li>
+      <li><a href="#details">Details</a></li>
     </ul>
 
-    <h2>Author</h2>
-    <p>Mike DeBerardine</p>
   </div>
 </div>
 

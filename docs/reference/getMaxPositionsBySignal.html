@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Merge base-pair resolution GRanges objects — mergeGRangesData • BRGenomics</title>
+<title>Find sites with max signal in regions of interest — getMaxPositionsBySignal • BRGenomics</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,10 @@
 
 
 
-<meta property="og:title" content="Merge base-pair resolution GRanges objects — mergeGRangesData" />
-<meta property="og:description" content="Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the score metadata column contains coverage information at
-each site." />
+<meta property="og:title" content="Find sites with max signal in regions of interest — getMaxPositionsBySignal" />
+<meta property="og:description" content="For each signal-containing region of interest, find the single site with the
+most signal. Sites can be found at base-pair resolution, or defined for
+larger bins." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,33 +102,66 @@ each site." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Merge base-pair resolution GRanges objects</h1>
+    <h1>Find sites with max signal in regions of interest</h1>
     
-    <div class="hidden name"><code>mergeGRangesData.Rd</code></div>
+    <div class="hidden name"><code>getMaxPositionsBySignal.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the <code>score</code> metadata column contains coverage information at
-each site.</p>
+    <p>For each signal-containing region of interest, find the single site with the
+most signal. Sites can be found at base-pair resolution, or defined for
+larger bins.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mergeGRangesData</span>(<span class='no'>...</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>())</pre>
+    <pre class="usage"><span class='fu'>getMaxPositionsBySignal</span>(
+  <span class='no'>regions.gr</span>,
+  <span class='no'>dataset.gr</span>,
+  <span class='kw'>binsize</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
+  <span class='kw'>keep.score</span> <span class='kw'>=</span> <span class='no'>F</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>...</th>
-      <td><p>Any number of GRanges objects in which signal (e.g. readcounts)
-are contained within metadata.</p></td>
+      <th>regions.gr</th>
+      <td><p>A GRanges object containing regions of interest.</p></td>
+    </tr>
+    <tr>
+      <th>dataset.gr</th>
+      <td><p>A GRanges object in which signal is contained in metadata
+(typically in the "score" field).</p></td>
+    </tr>
+    <tr>
+      <th>binsize</th>
+      <td><p>The size of bin in which to calculate signal scores.</p></td>
+    </tr>
+    <tr>
+      <th>field</th>
+      <td><p>The metadata field of <code>dataset.gr</code> to be counted.</p></td>
+    </tr>
+    <tr>
+      <th>keep.score</th>
+      <td><p>Logical indicating if the signal value at the max site
+should be reported. If set to <code>TRUE</code>, the values are kept as a new
+metadata column in <code>regions.gr</code>.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A single GRange object containing all sites of the input objects, and
-  the sum of all scores at all sites.</p>
+    <p>Output is a GRanges object with regions.gr metadata, but each range
+  only contains the site within each <code>regions.gr</code> range that had the
+  most signal. If <code>binsize != 1</code>, a single site is still returned, but
+  its position is set to the center of the bin. If the binsize is even, the
+  site is rounded to be closer to the beginning of the range. If
+  <code>keep.score = TRUE</code>, then the output will also have metadata for score
+  at the max site. The output is <em>not</em> necessarily same length as
+  <code>regions.gr</code>, as regions without signal are not returned. If <em>no
+  regions</em> have signal (e.g. as could happen if running this function on a
+  single region), the function will return an empty GRanges object with
+  intact metadata columns.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
