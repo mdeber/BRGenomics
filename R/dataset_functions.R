@@ -69,9 +69,9 @@ makeGRangesBPres <- function(dataset.gr) {
 #' @author Mike DeBerardine
 #'
 #' @export
-getStrandedCoverage <- function(gr, field = "score") {
+getStrandedCoverage <- function(dataset.gr, field = "score") {
 
-    if (!(field %in% names(mcols(gr)))) {
+    if (!(field %in% names(mcols(dataset.gr)))) {
         msg <- .nicemsg("The given value for 'field' is not found in mcols(gr).
                         If no field contains signal counts for each range,
                         set field = NULL")
@@ -79,9 +79,9 @@ getStrandedCoverage <- function(gr, field = "score") {
         return(geterrmessage())
     }
 
-    p_gr <- subset(gr, strand == "+")
-    m_gr <- subset(gr, strand == "-")
-    n_gr <- subset(gr, strand == "*")
+    p_gr <- subset(dataset.gr, strand == "+")
+    m_gr <- subset(dataset.gr, strand == "-")
+    n_gr <- subset(dataset.gr, strand == "*")
 
     if (is.null(field)) {
         p_cov <- coverage(p_gr)
@@ -192,17 +192,14 @@ subsampleGRanges <- function(dataset.gr,
 #' be 1, and the \code{score} metadata column contains coverage information at
 #' each site.
 #'
-#' @param dataset.gr A GRanges object fitting the above description.
-#' @param ... One or more additional GRanges objects also fitting the above
-#'   description.
+#' @param ... Any number of GRanges objects in which signal (e.g. readcounts)
+#'   are contained within metadata.
 #'
 #' @return A single GRange object containing all sites of the input objects, and
 #'   the sum of all scores at all sites.
 #'
 #' @author Mike DeBerardine
 #' @export
-#'
-#' @seealso \code{\link{md.import.bigWigs}}
 mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     data_in <- list(...)
 

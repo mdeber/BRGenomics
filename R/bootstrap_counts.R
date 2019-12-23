@@ -133,8 +133,12 @@ metaSubsampleMatrix <- function(counts.mat,
 
 #' Iterative Subsampling for Metaplotting
 #'
+#' This function performs bootstrap subsampling of mean readcounts at different
+#' positions within regions of interest. Mean signal counts can be estimated
+#' at base-pair resolution, or smoothed over larger bins.
+#'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
-#'   (typically in the "score" field).
+#'   (typically in the \code{"score"} field).
 #' @param regions.gr A GRanges object containing intervals over which to
 #'   metaplot. All ranges must have the same width.
 #' @param binsize The size of bin (number of columns, e.g. basepairs) to use for
@@ -143,22 +147,25 @@ metaSubsampleMatrix <- function(counts.mat,
 #'   if regions.gr begins at 50 bases upstream of the TSS, set
 #'   \code{first_output_xval = -50}. This number only affects the x-values that
 #'   are returned, which are provided as a convenience.
-#' @param sample_name Defaults to the name of \code{dataset.gr}.
+#' @param sample_name Defaults to the name of \code{dataset.gr}. This is
+#'   included in the output as a convenience for row-binding outputs from
+#'   different samples.
 #' @param n_iter Number of random subsampling iterations to perform. Default is
-#'   1000.
-#' @param prop_subsample The proportion of the ranges in regions.gr (e.g. the
-#'   proportion of genes) to subsample in each iteration. The default is 0.1.
+#'   \code{1000}.
+#' @param prop_subsample The proportion of the ranges in \code{regions.gr} (e.g.
+#'   the proportion of genes) to subsample in each iteration. The default is
+#'   \code{0.1} (10%)..
 #' @param lower The lower quantile of subsampled signal means to return. The
-#'   default is 0.125 (12.5th percentile).
+#'   default is \code{0.125} (12.5th percentile).
 #' @param upper The upper quantile of subsampled signal means to return. The
-#'   default is 0.875 (85.5th percentile).
+#'   default is \code{0.875} (85.5th percentile).
 #' @param NF Optional normalization factor by which to multiply the counts.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
 #' @param remove_empty A logical indicating whether regions without signal
 #'   should be removed from the analysis.
-#' @param ncores Number of cores to use for parallel computation. As of writing,
-#'   parallel processing doesn't show any benefit for short computation times
-#'   (e.g. <1 minute for our typical experience on a laptop).
+#' @param ncores Number of cores to use for parallel computation. No parallel
+#'   processing is used by default, as there's no performance benefit for
+#'   typical usage with short computation times.
 #'
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple

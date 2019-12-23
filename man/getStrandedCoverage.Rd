@@ -4,16 +4,16 @@
 \alias{getStrandedCoverage}
 \title{Get strand-specific coverage}
 \usage{
-getStrandedCoverage(gr, field = "score")
+getStrandedCoverage(dataset.gr, field = "score")
 }
 \arguments{
-\item{field}{The name of the field that contains readcounts. If no metadata
-field contains readcounts, and each range represents a single read, set to
-NULL.}
-
 \item{dataset.gr}{A GRanges object either containing ranges for each read, or
 one in which readcounts for individual ranges are contained in metadata
 (typically in the "score" field).}
+
+\item{field}{The name of the field that contains readcounts. If no metadata
+field contains readcounts, and each range represents a single read, set to
+NULL.}
 }
 \description{
 Computes strand-specific coverage signal, and returns a GRanges object with

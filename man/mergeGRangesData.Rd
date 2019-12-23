@@ -7,10 +7,8 @@
 mergeGRangesData(..., field = "score", ncores = detectCores())
 }
 \arguments{
-\item{...}{One or more additional GRanges objects also fitting the above
-description.}
-
-\item{dataset.gr}{A GRanges object fitting the above description.}
+\item{...}{Any number of GRanges objects in which signal (e.g. readcounts)
+are contained within metadata.}
 }
 \value{
 A single GRange object containing all sites of the input objects, and
@@ -20,9 +18,6 @@ A single GRange object containing all sites of the input objects, and
 Merges 2 or more GRanges objects. For each object, the range widths must all
 be 1, and the \code{score} metadata column contains coverage information at
 each site.
-}
-\seealso{
-\code{\link{md.import.bigWigs}}
 }
 \author{
 Mike DeBerardine
