@@ -83,6 +83,7 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             field = "score",
                             ncores = detectCores(),
                             quiet = FALSE) {
+    require(DESeq2)
 
     if (is.null(sample_names)) {
         stop(message = .nicemsg("sample_names are required, but none were
@@ -180,6 +181,30 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 ## Helper functions
 ##
 
+.check_contrast_args <- function(args) {
+    nvec <- "contrast.numer" %in% names(args)
+    dvec <- "contrast.denom" %in% names(args)
+    clist <- !is.null(args$comparisons.list)
+
+    if (!xor(clist, nvec & dvec)) {
+        stop(message = .nicemsg("Either provide both contrast.numer and
+                                contrast.denom, or provide comparisons.list,
+                                but not both"))
+        return(geterrmessage())
+    }
+}
+
+.check_list <- function(comparisons.list) {
+    class_ok <- .class_check(comparisons.list)
+    lengths_ok <- all(lengths(comparisons.list) == 2)
+    if (!(class_ok & lengths_ok)) {
+        stop(message = .nicemsg("comparisons.list provided as input, but
+                                it's not a list of length = 2 character
+                                vectors"))
+        return(geterrmessage())
+    }
+}
+
 .class_check <- function(comparisons) {
     if (!is.list(comparisons)) return(FALSE)
     classes <- vapply(comparisons, class, FUN.VALUE = character(1))
@@ -187,15 +212,15 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
     return(FALSE)
 }
 
-.length_check <- function(comparisons) {
-    lens <- lengths(comparisons)
-    if (all(lens == 2)) return(TRUE)
-    return(FALSE)
+.when_sf <- function(dds, sizeFactors) {
+    len_match <- length(sizeFactors) == nrow(dds@colData)
+    if (is.null(sizeFactors)) return("never")
+    if (len_match) return("early")
+    return("late")
 }
 
 .exist_sizeFactors <- function(dds) {
-    if ( !is.null(sizeFactors(dds)) & !(all(sizeFactors(dds) == 1)) )
-        return(TRUE)
+    if (!is.null(sizeFactors(dds))) return(TRUE)
     return(FALSE)
 }
 
@@ -214,6 +239,74 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
     user_args <- as.expression(user_args)
     user_args <- user_args[!names(user_args) %in% exclude]
     return(as.list(c(rqd_args, user_args)))
+}
+
+# Function dispatched by getDESeqResults
+.get_deseq_results <- function(dds,
+                               contrast.numer,
+                               contrast.denom,
+                               sizeFactors = NULL,
+                               alpha = 0.1,
+                               args_DESeq = NULL,
+                               args_results = NULL,
+                               ncores = detectCores(),
+                               quiet = FALSE) {
+
+    # Subset for pairwise comparison
+    dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
+    dds$condition <- factor(dds$condition) # remove unused levels
+
+    # try to apply sizeFactors that weren't the same size as original dds
+    when_sf <- .when_sf(dds, sizeFactors)
+    exist_sf <- .exist_sizeFactors(dds)
+
+    if (when_sf == "late") {
+        stop(message = .nicemsg("Length of sizeFactors not equal to number of
+                                samples in dds nor the number of samples in
+                                comparison group"))
+        return(geterrmessage())
+    }
+
+    if (when_sf == "early") {
+        if (exist_sf & !quiet)
+            warning("Overwriting previous sizeFactors", immediate. = TRUE)
+        sizeFactors(dds) <- sizeFactors
+    }
+
+    #---------------#
+    # Call DESeq()
+    #---------------#
+
+    # Get args; only use parent function 'quiet' arg if not in args_DESeq
+    args_DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
+                              user_args = args_DESeq,
+                              exclude = c("object", "parallel"))
+    if (!"quiet" %in% names(args_DESeq))
+        args_DESeq <- .merge_args(args_DESeq, list(quiet = quiet))
+
+    dds <- do.call(DESeq, args_DESeq)
+
+    #---------------#
+    # Call results()
+    #---------------#
+
+    # Get args
+    args_results <- .merge_args(expression(object = dds,
+                                           contrast = c("condition",
+                                                        contrast.numer,
+                                                        contrast.denom),
+                                           alpha = alpha),
+                                args_results,
+                                exclude = c("object", "contrast",
+                                            "alpha", "parallel"))
+    if (quiet) {
+        suppressWarnings(suppressMessages(
+            res <- do.call(results, args_results)
+        ))
+    } else {
+        res <- do.call(results, args_results)
+    }
+    return(res)
 }
 
 
@@ -291,135 +384,52 @@ getDESeqResults <- function(dds,
                             args_results = NULL,
                             ncores = detectCores(),
                             quiet = FALSE) {
+    require(DESeq2)
 
-    # Check input comparisons
-    if ( !xor(missing(comparisons.list), (missing(contrast.numer) &
-                                          missing(contrast.denom))) ) {
-        stop(message = .nicemsg("Either provide both contrast.numer and
-                                contrast.denom, or provide comparisons.list,
-                                but not both"))
-        return(geterrmessage())
+    # check only one set of contrast args used
+    # and, if given, check format of contrasts.list
+    .check_contrast_args(as.list(match.call()[-1]))
+    if (!is.null(comparisons.list)) .check_list(comparisons.list)
+
+    # determine if/when to apply sizeFactors, and whether dds already has them
+    when_sf <- .when_sf(dds, sizeFactors)
+    exist_sf <- .exist_sizeFactors(dds)
+
+    # apply early NFs; return error if late apply and multiple comparisons
+    if (when_sf == "early") {
+        if (exist_sf & !quiet)
+            warning("Overwriting previous sizeFactors", immediate. = TRUE)
+        sizeFactors(dds) <- sizeFactors
+        sizeFactors <- NULL
     }
 
-    # If comparisons.list used, check format
-    if (!missing(comparisons.list)) {
-        class_ok <- .class_check(comparisons.list)
-        lengths_ok <- .length_check(comparisons.list)
-        if (!(class_ok & lengths_ok)) {
-            stop(message = .nicemsg("comparisons.list provided as input, but
-                                    it's not a list of length = 2 character
-                                    vectors"))
-            return(geterrmessage())
-        }
-    }
+    if (is.null(comparisons.list)) {
 
-    # Recursive call for use of comparisons.list for one comparison
-    #   (some different sizeFactor logic for single vs. multiple comparisons)
-    if (length(comparisons.list) == 1) {
-        getDESeqResults(
-            dds = dds,
-            contrast.numer = compares[1], contrast.denom = compares[2],
-            comparisons.list = NULL, sizeFactors = sizeFactors, alpha = alpha,
-            args_DESeq = args_DESeq, args_results = args_results,
+        res <- .get_deseq_results(
+            dds, contrast.numer, contrast.denom, sizeFactors = sizeFactors,
+            alpha = alpha, args_DESeq = args_DESeq, args_results = args_results,
             ncores = ncores, quiet = quiet
         )
-        return(res)
-    }
-
-    # If sizeFactors given, try to apply them
-    try_late_sf <- FALSE # initialize
-    if (!is.null(sizeFactors)) {
-        SFs_match_len <- length(sizeFactors) == nrow(dds@colData)
-        found_SFs <- .exist_sizeFactors(dds)
-
-        if (SFs_match_len) {
-            if (found_SFs) warning("Overwriting previous sizeFactors",
-                                   immediate. = TRUE)
-            sizeFactors(dds) <- sizeFactors
-        } else if (is.null(comparisons.list)) {
-            try_late_sf <- TRUE # try to apply sizeFactors later
-        } else {
-            stop(message = .nicemsg("Length of sizeFactors not equal to
-                                    number of samples in dds"))
-            return(geterrmessage())
-        }
-    }
-
-    # single comparison
-    if (missing(comparisons.list)) {
-
-        # Subset for pairwise comparison
-        dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
-        dds$condition <- factor(dds$condition) # remove unused levels
-
-        # try to apply sizeFactors that weren't the same size as original dds
-        if (try_late_sf) {
-            SFs_match_len <- length(sizeFactors) == nrow(dds@colData)
-            if (SFs_match_len) {
-                if (found_SFs) warning("Overwriting previous sizeFactors",
-                                       immediate. = TRUE)
-                sizeFactors(dds) <- sizeFactors
-            } else {
-                stop(message = .nicemsg("Length of sizeFactors not equal to
-                                        number of samples in dds nor the number
-                                        of samples in comparison group"))
-                return(geterrmessage())
-            }
-        }
-
-        # Get call for delayed DESeq() call
-        args_DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
-                                  user_args = args_DESeq,
-                                  exclude = c("object", "parallel"))
-
-        # Get call for delayed results() call
-        args_results <- .merge_args(expression(object = dds,
-                                               contrast = c("condition",
-                                                            contrast.numer,
-                                                            contrast.denom),
-                                               alpha = alpha),
-                                    args_results,
-                                    exclude = c("object", "contrast",
-                                                "alpha", "parallel"))
-        # Make calls
-        #   For quietness:
-        #       Always quiet if recursive;
-        #       Default to args_DESeq in call to DESeq();
-        #       Then use quiet argument in user's call to getDESeqResults;
-
-        dreaming <- exists('recurse_token', parent.frame()) # is this recursive?
-
-        if (dreaming) {
-            args_DESeq <- .merge_args(expression(quiet = TRUE),
-                                      args_DESeq, exclude = "quiet")
-        } else if (!"quiet" %in% names(args_DESeq)) {
-            args_DESeq <- .merge_args(args_DESeq,
-                                      list(quiet = quiet))
-        }
-        dds <- do.call(DESeq, args_DESeq)
-
-        if (quiet) {
-            suppressWarnings(suppressMessages(
-                res <- do.call(results, args_results)
-            ))
-        } else {
-            res <- do.call(results, args_results)
-        }
         return(res)
 
     } else {
 
-        # recursive call
-        recurse_token <- TRUE # will be found in recursive call
-        comparisons <- mclapply(comparisons.list, {
-            function(x) getDESeqResults(dds = dds,
-                                        contrast.numer = x[1],
-                                        contrast.denom = x[2],
-                                        sizeFactors = NULL,
-                                        alpha = alpha,
-                                        ncores = 1,
-                                        quiet = TRUE)
-        }, mc.cores = ncores)
+        if (length(comparisons.list) > 1)  {
+            if (when_sf == "late") {
+                stop(message = .nicemsg("Length of sizeFactors not equal to
+                                        number of samples in dds"))
+                return(geterrmessage())
+            }
+            sizeFactors <- NULL
+        }
+
+        args_DESeq <- args_DESeq[names(args_DESeq) != "quiet"]
+        comparisons <- mclapply(comparisons.list, function(x) {
+            .get_deseq_results(
+                dds, x[1], x[2], sizeFactors = sizeFactors, alpha = alpha,
+                args_DESeq = args_DESeq, args_results = args_results,
+                ncores = 1, quiet = TRUE
+            )}, mc.cores = ncores)
 
         names(comparisons) <- vapply(comparisons.list,
                                      function(x) paste0(x[1], "_vs_", x[2]),
