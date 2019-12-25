@@ -72,9 +72,9 @@ makeGRangesBPres <- function(dataset.gr) {
 getStrandedCoverage <- function(dataset.gr, field = "score") {
 
     if (!(field %in% names(mcols(dataset.gr)))) {
-        msg <- .nicemsg("The given value for 'field' is not found in mcols(gr).
-                        If no field contains signal counts for each range,
-                        set field = NULL")
+        msg <- .nicemsg("The given value for 'field' is not found in
+                        mcols(dataset.gr). If no field contains signal counts
+                        for each range, set field = NULL")
         stop(message = msg)
         return(geterrmessage())
     }
@@ -93,16 +93,20 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
         n_cov <- coverage(n_gr, weight = mcols(n_gr)[[field]])
     }
 
-    p_cov <- GRanges(p_cov, seqinfo = seqinfo(gr))
-    m_cov <- GRanges(m_cov, seqinfo = seqinfo(gr))
-    n_cov <- GRanges(n_cov, seqinfo = seqinfo(gr))
+    p_cov <- GRanges(p_cov, seqinfo = seqinfo(dataset.gr))
+    m_cov <- GRanges(m_cov, seqinfo = seqinfo(dataset.gr))
+    n_cov <- GRanges(n_cov, seqinfo = seqinfo(dataset.gr))
 
     # Adding strand info in GRanges() causes error if GRanges object is empty
     strand(p_cov) <- "+"
     strand(m_cov) <- "-"
     strand(n_cov) <- "*"
 
-    cov_gr <- subset(c(p_cov, m_cov, n_cov), score != 0)
+    p_cov <- subset(p_cov, score != 0)
+    m_cov <- subset(m_cov, score != 0)
+    n_cov <- subset(n_cov, score != 0)
+
+    cov_gr <- c(p_cov, m_cov, n_cov)
     return(sort(cov_gr))
 }
 
