@@ -41,6 +41,23 @@ test_that("subsetted genelist has expected breaks", {
     expect_true(min(counts_high) >= max(counts_low))
 })
 
+test_that("subsetting by density", {
+    density_high <- subsetRegionsBySignal(test_regions,
+                                          dataset.gr = PROseq,
+                                          quantiles = c(0.5, 1),
+                                          density = TRUE)
+    expect_false(all(width(out_high) == width(density_high)))
+})
+
+test_that("ordering by rank", {
+    ordered_high <- subsetRegionsBySignal(test_regions,
+                                          dataset.gr = PROseq,
+                                          quantiles = c(0.5, 1),
+                                          order_by_rank = TRUE)
+    expect_true(all(order(out_high) == seq_along(ordered_high)))
+    expect_false(all(order(ordered_high) == seq_along(ordered_high)))
+})
+
 test_that("subsetting from quantiles (0,1) returns full genelist", {
     out <- subsetRegionsBySignal(test_regions,
                                  dataset.gr = PROseq,
