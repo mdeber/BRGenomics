@@ -16,29 +16,37 @@
 
 #' Extract Genebodies
 #'
-#' Analagous to \code{\link[GenomicRanges:promoters]{GenomicRanges::promoters}},
-#' this function returns ranges that start and end downstream of the TSS. When
-#' \code{fix = "start"}, the function behaves differently depending on the sign
-#' of the \code{end} parameter. Currently, there's no way to set the ranges to
-#' continue a fixed distance past the original end sites when \code{fix =
-#' "start"}.
+#' This function returns ranges that are defined relative to the strand-specific
+#' start and end sites of regions of interest (usually genes). Unlike
+#' \code{\link[GenomicRanges:promoters]{GenomicRanges::promoters}}, distances
+#' can be upstream or downstream based on the sign, and both the start and end
+#' of the returned regions can be defined in terms of either the start of end
+#' site of the input ranges. For example, \code{genebodies(txs, -50, 150,
+#' fix_end = "start")} is equivalent to \code{promoters(txs, 50, 150)}. The
+#' default arguments return ranges that begin 300 bases downstream of the
+#' original start positions, and end 300 bases upstream of the original end
+#' positions.
 #'
 #' @param genelist A GRanges object containing genes of interest.
-#' @param start When \code{fix = "start"}, the distance downstream of the TSS
-#'   where the new ranges should begin.
-#' @param end Where the ranges should end. When \code{end = 0}, the returned
-#'   ranges keep the original end sites. When \code{end < 0}, the new ranges
-#'   will end \code{abs(end)} number of bases before the original end site. When
-#'   \code{end > 0} and \code{fix = "start"}, the new ends are fixed to
-#'   \code{end} number of bases from the \emph{original} start site.
-#' @param min.window The minimum size of a returned genebody length, after
-#'   accounting for \code{start} and \code{end} parameters.
-#' @param fix If set to "end", function will return ranges centered around the
-#'   end of the ranges. Negative values for \code{start} will begin the output
-#'   ranges a fixed distance before the end of the input ranges; positive values
-#'   will begin the ranges after the ends of the input ranges. The behavior of
-#'   \code{end} is the same as for \code{start}, and errors will be returned if
-#'   \code{end < start}.
+#' @param start Depending on \code{fix_start}, the distance from either the
+#'   strand-specific start or end site to begin the returned ranges. If
+#'   positive, the returned range will begin downstream of the reference
+#'   position; negative numbers are used to return sites upstream of the
+#'   reference. Set \code{start = 0} to return the reference position.
+#' @param end Identical to the \code{start} argument, but defines the
+#'   strand-specific end position of returned ranges. \code{end} must be
+#'   downstream of \code{start}.
+#' @param fix_start The reference point to use for defining the strand-specific
+#'   start positions of returned ranges, either \code{"start"} or \code{"end"}.
+#' @param fix_end The reference point to use for defining the strand-specific
+#'   end positions of returned ranges, either \code{"start"} or \code{"end"}.
+#'   Cannot be set to \code{"start"} if \code{fix_start = "end"}.
+#' @param min_window When \code{fix_start = "start"} and \code{fix_end = "end"},
+#'   \code{min_window} defines the minimum size (width) of a returned range.
+#'   However, when \code{fix_end = fix_start}, all returned ranges have the same
+#'   width, and \code{min_window} filters the input ranges based on the size
+#'   of the excluded region downstream (when \code{fix_end = "start"}) or
+#'   upstream (when \code{fix_start = "end"}) of the returned region.
 #'
 #' @return A GRanges object that may be shorter than \code{genelist} due to loss
 #'   of short ranges.
