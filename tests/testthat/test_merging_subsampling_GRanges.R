@@ -17,6 +17,44 @@ test_that("Subsamplied reproduced using set.seed", {
     expect_equal(length(ps_tenth), 6397)
 })
 
+test_that("can subsample with field = NULL", {
+    reads <- rep(PROseq, times = PROseq$score)
+    score(reads) <- NULL
+    reads_tenth <- subsampleGRanges(reads, prop = 0.1, field = NULL)
+    expect_is(reads_tenth, "GRanges")
+    expect_equivalent(mcols(reads), mcols(reads_tenth))
+    expect_equal(length(reads_tenth), floor(0.1*length(reads)))
+    expect_error(subsampleGRanges(reads, prop = 0.1))
+})
+
+test_that("can subsample when simple normalization factor was applied", {
+    norm_ps <- PROseq
+    score(norm_ps) <- 0.89 * score(norm_ps)
+    expect_warning(subsampleGRanges(norm_ps, prop = 0.1))
+
+    set.seed(11)
+    norm_tenth <- suppressWarnings(subsampleGRanges(norm_ps, prop = 0.1))
+
+    expect_equal(length(norm_tenth), length(ps_tenth))
+    expect_equivalent(0.89*ps_tenth$score, norm_tenth$score)
+})
+
+test_that("error when incorrect input arguments", {
+    expect_error(subsampleGRanges(PROseq))
+    expect_error(subsampleGRanges(PROseq, prop = 0.1, n = 7415))
+})
+
+test_that("error when non-simple normalization", {
+    breakpoint <- floor(0.5*length(PROseq))
+    norm_1 <- PROseq[1:breakpoint]
+    norm_2 <- PROseq[(breakpoint+1):length(PROseq)]
+    score(norm_1) <- 0.75*norm_1$score
+    score(norm_2) <- 0.50*norm_2$score
+    norm_mix <- c(norm_1, norm_2)
+
+    expect_error(subsampleGRanges(norm_mix, prop = 0.1))
+})
+
 
 # Merging GRanges ---------------------------------------------------------
 
