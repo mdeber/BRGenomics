@@ -62,5 +62,15 @@ test_that("Max sites found with multi-width input", {
     expect_equivalent(start(out)[1:4], c(1296, 42799, 45916, 60310))
 })
 
+test_that("Max signals found in larger bins", {
+    out <- getMaxPositionsBySignal(regions.gr = test_regions,
+                                   dataset.gr = PROseq,
+                                   binsize = 10)
+    expect_equal(length(out), length(test_regions)) # all have signal
+    expect_equivalent(start(out)[1:4], c(1293, 42798, 45918, 60911))
+})
+
+
+
 
 
