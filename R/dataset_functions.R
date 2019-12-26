@@ -71,7 +71,7 @@ makeGRangesBPres <- function(dataset.gr) {
 #' @export
 getStrandedCoverage <- function(dataset.gr, field = "score") {
 
-    if (!(field %in% names(mcols(dataset.gr)))) {
+    if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
         msg <- .nicemsg("The given value for 'field' is not found in
                         mcols(dataset.gr). If no field contains signal counts
                         for each range, set field = NULL")
@@ -79,37 +79,26 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
         return(geterrmessage())
     }
 
-    p_gr <- subset(dataset.gr, strand == "+")
-    m_gr <- subset(dataset.gr, strand == "-")
-    n_gr <- subset(dataset.gr, strand == "*")
-
-    if (is.null(field)) {
-        p_cov <- coverage(p_gr)
-        m_cov <- coverage(m_gr)
-        n_cov <- coverage(n_gr)
-    } else {
-        p_cov <- coverage(p_gr, weight = mcols(p_gr)[[field]])
-        m_cov <- coverage(m_gr, weight = mcols(m_gr)[[field]])
-        n_cov <- coverage(n_gr, weight = mcols(n_gr)[[field]])
-    }
-
-    p_cov <- GRanges(p_cov, seqinfo = seqinfo(dataset.gr))
-    m_cov <- GRanges(m_cov, seqinfo = seqinfo(dataset.gr))
-    n_cov <- GRanges(n_cov, seqinfo = seqinfo(dataset.gr))
-
-    # Adding strand info in GRanges() causes error if GRanges object is empty
-    strand(p_cov) <- "+"
-    strand(m_cov) <- "-"
-    strand(n_cov) <- "*"
-
-    p_cov <- subset(p_cov, score != 0)
-    m_cov <- subset(m_cov, score != 0)
-    n_cov <- subset(n_cov, score != 0)
+    p_cov <- .get_stranded_cov(dataset.gr, "+", field)
+    m_cov <- .get_stranded_cov(dataset.gr, "-", field)
+    n_cov <- .get_stranded_cov(dataset.gr, "*", field)
 
     cov_gr <- c(p_cov, m_cov, n_cov)
     return(sort(cov_gr))
 }
 
+.get_stranded_cov <- function(dataset.gr, strand_i, field) {
+    gr <- subset(dataset.gr, strand == strand_i)
+    if (is.null(field)) {
+        cv <- coverage(gr)
+    } else {
+        cv <- coverage(gr, weight = mcols(gr)[[field]])
+    }
+
+    cv_gr <- GRanges(cv, seqinfo = seqinfo(dataset.gr))
+    strand(cv_gr) <- strand_i
+    subset(cv_gr, score != 0)
+}
 
 
 #' Randomly subsample reads from GRanges dataset
