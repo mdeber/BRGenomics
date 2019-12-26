@@ -63,3 +63,23 @@ test_that("Length filtering & region sizes correct for fixes = end, end", {
                      FUN.VALUE = integer(1))
     expect_true(all(widths == 1))
 })
+
+test_that("errors on invalid inputs", {
+    expect_error(genebodies(txs_dm6_chr4, 0, 500, fix_start = "typo"))
+    expect_error(genebodies(txs_dm6_chr4, 0, 500,
+                 fix_start = "end", fix_end = "start"))
+    expect_error(genebodies(txs_dm6_chr4, 200, 100, fix_end = "start"))
+})
+
+test_that("unstranded ranges filtered, and warning given", {
+    unst_range <- txs_dm6_chr4[1:10]
+    strand(unst_range) <- "*"
+    expect_warning(genebodies(c(txs_dm6_chr4, unst_range)))
+    expect_equivalent(genebodies(txs_dm6_chr4),
+                      suppressWarnings(genebodies(c(txs_dm6_chr4, unst_range))))
+})
+
+
+
+
+
