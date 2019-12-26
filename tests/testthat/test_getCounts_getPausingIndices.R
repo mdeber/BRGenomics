@@ -71,7 +71,7 @@ test_that("can get list from multi-width counts matrix", {
 
 test_that("can get 0-padded counts matrix for multi-width regions", {
     padmat <- getCountsByPositions(PROseq, txs_dm6_chr4,
-                                   simplify_multi_widths = "pad zero")
+                                   simplify_multi_widths = "pad 0")
     expect_is(padmat, "matrix")
     expect_equivalent(dim(padmat),
                       c(length(txs_dm6_chr4), max(width(txs_dm6_chr4))))

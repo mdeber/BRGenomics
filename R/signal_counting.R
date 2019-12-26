@@ -43,17 +43,20 @@ getCountsByRegions <- function(dataset.gr,
 
 
 
-#' Get signal count matrix within regions of interest
+#' Get signal counts at each position within regions of interest
+#'
+#' Generate a matrix containing a row for each region of interest, and
+#' columns for each position (each base if \code{binsize = 1}) within each
+#' region.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
 #' @param regions.gr A GRanges object containing all the regions of interest.
-#'   All ranges must have the same width!
 #' @param binsize Size of bins (in bp) to use for counting within each range of
 #'   \code{regions.gr}. Note that counts will \emph{not} be length-normalized.
 #' @param bin_FUN If \code{binsize > 1}, the function used to aggregate the
-#'   signal at each base within each bin. The default is to sum the signal in
-#'   each bin, but any function operating on a numeric vector can be used.
+#'   signal within each bin. By default, the signal is summed, but any function
+#'   operating on a numeric vector can be used.
 #' @param simplify_multi_widths A string indicating the output format if the
 #'   ranges in \code{regions.gr} have variable widths. Default = \code{"list"}.
 #'   See details below.
@@ -67,12 +70,12 @@ getCountsByRegions <- function(dataset.gr,
 #'   column for each bin. For input \code{regions.gr} with varying widths,
 #'   setting \code{simplify_multi_widths = "list"} will output a list of
 #'   variable-length vectors, with each vector corresponding to an input region.
-#'   If \code{simplify_multi_widths = "pad zero"} or \code{simplify_multi_widths
-#'   = "pad NA"}, the output is a matrix containing a row for each range in
-#'   \code{regions.gr}, and a column for each position in each range. The number
-#'   of columns is determined by the largest range in \code{regions.gr}, and
-#'   columns corresponding to positions outside of each range are either set to
-#'   \code{0} or \code{NA}, depending on the argument.
+#'   If \code{simplify_multi_widths = "pad 0"} or \code{"pad NA"}, the output
+#'   is a matrix containing a row for each range in \code{regions.gr}, and a
+#'   column for each position in each range. The number of columns is determined
+#'   by the largest range in \code{regions.gr}, and columns corresponding to
+#'   positions outside of each range are either set to \code{0} or \code{NA},
+#'   depending on the argument.
 #'
 #' @author Mike DeBerardine
 #' @export
@@ -81,7 +84,7 @@ getCountsByPositions <- function(dataset.gr,
                                  binsize = 1,
                                  bin_FUN = sum,
                                  simplify_multi_widths = c("list",
-                                                           "pad zero",
+                                                           "pad 0",
                                                            "pad NA"),
                                  field = "score",
                                  ncores = detectCores()) {
@@ -110,7 +113,7 @@ getCountsByPositions <- function(dataset.gr,
 
         # check 'simplify_multi_widths' argument
         if (missing(simplify_multi_widths))  simplify_multi_widths <- "list"
-        if (!simplify_multi_widths %in% c("list", "pad zero", "pad NA")) {
+        if (!simplify_multi_widths %in% c("list", "pad 0", "pad NA")) {
             stop(message = .nicemsg("regions.gr has multiple widths, but an
                                     invalid argument for simplify_multi_widths
                                     was given. See documentation"))
@@ -159,7 +162,7 @@ getCountsByPositions <- function(dataset.gr,
             arridx_pad <- t(arridx_pad) # sapply/vapply cbinds the rows
             arridx_pad <- which(arridx_pad, arr.ind = TRUE)
 
-            if (simplify_multi_widths == "pad zero") {
+            if (simplify_multi_widths == "pad 0") {
                 mat[arridx_pad] <- 0
             } else {
                 mat[arridx_pad] <- NA
