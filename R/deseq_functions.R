@@ -213,9 +213,8 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 }
 
 .when_sf <- function(dds, sizeFactors) {
-    len_match <- length(sizeFactors) == nrow(dds@colData)
     if (is.null(sizeFactors)) return("never")
-    if (len_match) return("early")
+    if (length(sizeFactors) == nrow(dds@colData)) return("early")
     return("late")
 }
 
@@ -245,12 +244,12 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 .get_deseq_results <- function(dds,
                                contrast.numer,
                                contrast.denom,
-                               sizeFactors = NULL,
-                               alpha = 0.1,
-                               args_DESeq = NULL,
-                               args_results = NULL,
-                               ncores = detectCores(),
-                               quiet = FALSE) {
+                               sizeFactors,
+                               alpha,
+                               args_DESeq,
+                               args_results,
+                               ncores,
+                               quiet) {
 
     # Subset for pairwise comparison
     dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]

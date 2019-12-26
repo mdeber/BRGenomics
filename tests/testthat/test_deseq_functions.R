@@ -165,6 +165,19 @@ test_that("error if size factors the wrong length", {
                                  sizeFactors = rep(1, 5)))
 })
 
+# quiet is only working for list of length 1; the rest get results output...
+
+test_that("warning if overwriting size factors", {
+    dds_sf <- dds
+    sizeFactors(dds_sf) <- rep(1, 6)
+    expect_warning(getDESeqResults(dds_sf, "B", "A", sizeFactors = rep(1, 6)),
+                   quiet = TRUE)
+    expect_warning(getDESeqResults(dds_sf, "B", "A", sizeFactors = rep(1, 4)),
+                   quiet = TRUE)
+    expect_warning(getDESeqResults(dds_sf, comparisons.list = list(c("B", "A")),
+                                   sizeFactors = rep(1, 6)))
+})
+
 test_that("arguments can be passed to DESeq call", {
     res_alt <- getDESeqResults(dds,
                                contrast.numer = "A",
