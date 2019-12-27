@@ -36,12 +36,16 @@
 
 
 <meta property="og:title" content="Extract Genebodies — genebodies" />
-<meta property="og:description" content="Analagous to GenomicRanges::promoters,
-this function returns ranges that start and end downstream of the TSS. When
-fix = &quot;start&quot;, the function behaves differently depending on the sign
-of the end parameter. Currently, there's no way to set the ranges to
-continue a fixed distance past the original end sites when fix =
-&quot;start&quot;." />
+<meta property="og:description" content="This function returns ranges that are defined relative to the strand-specific
+start and end sites of regions of interest (usually genes). Unlike
+GenomicRanges::promoters, distances
+can be upstream or downstream based on the sign, and both the start and end
+of the returned regions can be defined in terms of either the start of end
+site of the input ranges. For example, genebodies(txs, -50, 150,
+fix_end = &quot;start&quot;) is equivalent to promoters(txs, 50, 150). The
+default arguments return ranges that begin 300 bases downstream of the
+original start positions, and end 300 bases upstream of the original end
+positions." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -111,12 +115,16 @@ continue a fixed distance past the original end sites when fix =
     </div>
 
     <div class="ref-description">
-    <p>Analagous to <code><a href='https://rdrr.io/pkg/GenomicRanges/man/intra-range-methods.html'>GenomicRanges::promoters</a></code>,
-this function returns ranges that start and end downstream of the TSS. When
-<code>fix = "start"</code>, the function behaves differently depending on the sign
-of the <code>end</code> parameter. Currently, there's no way to set the ranges to
-continue a fixed distance past the original end sites when <code>fix =
-"start"</code>.</p>
+    <p>This function returns ranges that are defined relative to the strand-specific
+start and end sites of regions of interest (usually genes). Unlike
+<code><a href='https://rdrr.io/pkg/GenomicRanges/man/intra-range-methods.html'>GenomicRanges::promoters</a></code>, distances
+can be upstream or downstream based on the sign, and both the start and end
+of the returned regions can be defined in terms of either the start of end
+site of the input ranges. For example, <code>genebodies(txs, -50, 150,
+fix_end = "start")</code> is equivalent to <code>promoters(txs, 50, 150)</code>. The
+default arguments return ranges that begin 300 bases downstream of the
+original start positions, and end 300 bases upstream of the original end
+positions.</p>
     </div>
 
     <pre class="usage"><span class='fu'>genebodies</span>(
@@ -137,30 +145,37 @@ continue a fixed distance past the original end sites when <code>fix =
     </tr>
     <tr>
       <th>start</th>
-      <td><p>When <code>fix = "start"</code>, the distance downstream of the TSS
-where the new ranges should begin.</p></td>
+      <td><p>Depending on <code>fix_start</code>, the distance from either the
+strand-specific start or end site to begin the returned ranges. If
+positive, the returned range will begin downstream of the reference
+position; negative numbers are used to return sites upstream of the
+reference. Set <code>start = 0</code> to return the reference position.</p></td>
     </tr>
     <tr>
       <th>end</th>
-      <td><p>Where the ranges should end. When <code>end = 0</code>, the returned
-ranges keep the original end sites. When <code>end &lt; 0</code>, the new ranges
-will end <code><a href='https://rdrr.io/r/base/MathFun.html'>abs(end)</a></code> number of bases before the original end site. When
-<code>end &gt; 0</code> and <code>fix = "start"</code>, the new ends are fixed to
-<code>end</code> number of bases from the <em>original</em> start site.</p></td>
+      <td><p>Identical to the <code>start</code> argument, but defines the
+strand-specific end position of returned ranges. <code>end</code> must be
+downstream of <code>start</code>.</p></td>
     </tr>
     <tr>
-      <th>min.window</th>
-      <td><p>The minimum size of a returned genebody length, after
-accounting for <code>start</code> and <code>end</code> parameters.</p></td>
+      <th>fix_start</th>
+      <td><p>The reference point to use for defining the strand-specific
+start positions of returned ranges, either <code>"start"</code> or <code>"end"</code>.</p></td>
     </tr>
     <tr>
-      <th>fix</th>
-      <td><p>If set to "end", function will return ranges centered around the
-end of the ranges. Negative values for <code>start</code> will begin the output
-ranges a fixed distance before the end of the input ranges; positive values
-will begin the ranges after the ends of the input ranges. The behavior of
-<code>end</code> is the same as for <code>start</code>, and errors will be returned if
-<code>end &lt; start</code>.</p></td>
+      <th>fix_end</th>
+      <td><p>The reference point to use for defining the strand-specific
+end positions of returned ranges, either <code>"start"</code> or <code>"end"</code>.
+Cannot be set to <code>"start"</code> if <code>fix_start = "end"</code>.</p></td>
+    </tr>
+    <tr>
+      <th>min_window</th>
+      <td><p>When <code>fix_start = "start"</code> and <code>fix_end = "end"</code>,
+<code>min_window</code> defines the minimum size (width) of a returned range.
+However, when <code>fix_end = fix_start</code>, all returned ranges have the same
+width, and <code>min_window</code> filters the input ranges based on the size
+of the excluded region downstream (when <code>fix_end = "start"</code>) or
+upstream (when <code>fix_start = "end"</code>) of the returned region.</p></td>
     </tr>
     </table>
 
@@ -168,6 +183,9 @@ will begin the ranges after the ends of the input ranges. The behavior of
 
     <p>A GRanges object that may be shorter than <code>genelist</code> due to loss
   of short ranges.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/GenomicRanges/man/intra-range-methods.html'>intra-range-methods</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -175,6 +193,7 @@ will begin the ranges after the ends of the input ranges. The behavior of
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
+      <li><a href="#see-also">See also</a></li>
     </ul>
 
     <h2>Author</h2>

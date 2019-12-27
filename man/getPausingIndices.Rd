@@ -10,40 +10,49 @@ getPausingIndices(
   genebodies.gr,
   field = "score",
   length_normalize = TRUE,
-  remove_empty = FALSE
+  remove_empty = FALSE,
+  ncores = detectCores()
 )
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
 (typically in the "score" field).}
 
-\item{promoters.gr}{A GRanges object containing all the regions of interest.
-The sum of all signal counts within is the pause index numerator.}
+\item{promoters.gr}{A GRanges object containing promoter-proximal regions of
+interest.}
 
-\item{genebodies.gr}{A GRanges object containing all the regions of interest.
-The sum of all signal counts within is the pause index denominator.}
+\item{genebodies.gr}{A GRanges object containing genebody regions of
+interest.}
 
-\item{field}{The metadata field of \code{dataset.gr} to be counted, i.e. that
-contains the readcounts of interest.}
+\item{field}{The metadata field of \code{dataset.gr} to be counted. If
+\code{length(field) > 1}, a dataframe is returned containing the pausing
+indices for each region in each field.}
 
 \item{length_normalize}{A logical indicating if signal counts within regions
-of interest should be length normalized. The default is TRUE, which is
-recommended, especially if input regions don't all have the same width.}
+of interest should be length normalized. The default is \code{TRUE}, which
+is recommended, especially if input regions don't all have the same width.}
 
-\item{remove_empty}{A logical indicating if genes without any signal should
-be removed. The default is FALSE.}
+\item{remove_empty}{A logical indicating if genes without any signal in
+\code{promoters.gr} should be removed. No genes are filtered by default.}
+
+\item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
 \value{
 A vector of length given by the length of the genelist (or possibly
-  shorter if \code{remove_empty = TRUE}).
+  shorter if \code{remove_empty = TRUE}). If \code{length(field) > 1}, a
+  dataframe is returned, containing a column for each field.
 }
 \description{
 Pausing index (PI) is calculated for each gene (within matched
-\code{promoters.gr} and \code{genebodies.gr}) as promoter signal counts
-divided by genebody signal counts. If \code{length.normalize = TRUE}
-(recommended), the signal counts within each range in \code{promoters.gr} and
-\code{genebodies.gr} are divided by their respective range widths (region
-lengths) before pausing indices are calculated.
+\code{promoters.gr} and \code{genebodies.gr}) as promoter-proximal (or pause
+region) signal counts divided by genebody signal counts. If
+\code{length.normalize = TRUE} (recommended), the signal counts within each
+range in \code{promoters.gr} and \code{genebodies.gr} are divided by their
+respective range widths (region lengths) before pausing indices are
+calculated.
+}
+\seealso{
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 }
 \author{
 Mike DeBerardine

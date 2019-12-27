@@ -54,6 +54,9 @@ Typical uses may include removing the 5% of genes with the lowest
   returned, but the returned regions will be sorted by position, or by score
   if \code{order_by_rank = TRUE}.
 }
+\seealso{
+\code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
+}
 \author{
 Mike DeBerardine
 }

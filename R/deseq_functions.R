@@ -8,7 +8,7 @@
 #   may have fixed by stopping setting names(regions.gr) <- gene_names;
 #   replaced with rownames(counts.mat)
 
-# can speed up this function by (?) using the duplicated function that will pull
+# can speed up this up using the duplicated function that will pull
 # out the repeated gene names; so can avoid calling function on whole genelist
 
 
@@ -60,7 +60,7 @@
 #'   each gene in the resulting \code{DESeqDataSet} object's \code{rowRanges}.
 #'
 #' @section A note on DESeq2 sizeFactors: DESeq2 \code{sizeFactors} are
-#'   sample-specific normalization that are applied by division, i.e.
+#'   sample-specific normalization factors that are applied by division, i.e.
 #'   \eqn{counts_{norm,i}=counts_i / sizeFactor_i}{normcounts_i = counts_i /
 #'   sizeFactor_i}. This is in contrast to normalization factors as defined in
 #'   this package (and commonly elsewhere), which are applied by multiplication.
@@ -72,9 +72,10 @@
 #' @export
 #'
 #' @author Mike DeBerardine
-#' @seealso \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}},
+#' @seealso \code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
 #'   \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}},
 #'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}}
+#'
 getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             regions.gr,
                             sample_names = names(dataset.list),
@@ -369,9 +370,9 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 #'   condition.
 #'
 #' @author Mike DeBerardine
-#' @seealso \code{\link[DESeq2:results]{DESeq2::results}},
+#' @seealso \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
 #'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
-#'   \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}}
+#'   \code{\link[DESeq2:results]{DESeq2::results}}
 #' @export
 getDESeqResults <- function(dds,
                             contrast.numer,

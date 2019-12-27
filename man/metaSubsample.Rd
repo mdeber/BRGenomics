@@ -73,6 +73,10 @@ This function performs bootstrap subsampling of mean readcounts at different
 positions within regions of interest. Mean signal counts can be estimated at
 base-pair resolution, or smoothed over larger bins.
 }
+\seealso{
+\code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
+  \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
+}
 \author{
 Mike DeBerardine
 }

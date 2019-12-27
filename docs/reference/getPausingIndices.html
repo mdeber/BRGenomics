@@ -37,11 +37,12 @@
 
 <meta property="og:title" content="Calculate pausing indices from user-supplied promoters &amp; genebodies — getPausingIndices" />
 <meta property="og:description" content="Pausing index (PI) is calculated for each gene (within matched
-promoters.gr and genebodies.gr) as promoter signal counts
-divided by genebody signal counts. If length.normalize = TRUE
-(recommended), the signal counts within each range in promoters.gr and
-genebodies.gr are divided by their respective range widths (region
-lengths) before pausing indices are calculated." />
+promoters.gr and genebodies.gr) as promoter-proximal (or pause
+region) signal counts divided by genebody signal counts. If
+length.normalize = TRUE (recommended), the signal counts within each
+range in promoters.gr and genebodies.gr are divided by their
+respective range widths (region lengths) before pausing indices are
+calculated." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -112,11 +113,12 @@ lengths) before pausing indices are calculated." />
 
     <div class="ref-description">
     <p>Pausing index (PI) is calculated for each gene (within matched
-<code>promoters.gr</code> and <code>genebodies.gr</code>) as promoter signal counts
-divided by genebody signal counts. If <code>length.normalize = TRUE</code>
-(recommended), the signal counts within each range in <code>promoters.gr</code> and
-<code>genebodies.gr</code> are divided by their respective range widths (region
-lengths) before pausing indices are calculated.</p>
+<code>promoters.gr</code> and <code>genebodies.gr</code>) as promoter-proximal (or pause
+region) signal counts divided by genebody signal counts. If
+<code>length.normalize = TRUE</code> (recommended), the signal counts within each
+range in <code>promoters.gr</code> and <code>genebodies.gr</code> are divided by their
+respective range widths (region lengths) before pausing indices are
+calculated.</p>
     </div>
 
     <pre class="usage"><span class='fu'>getPausingIndices</span>(
@@ -125,7 +127,8 @@ lengths) before pausing indices are calculated.</p>
   <span class='no'>genebodies.gr</span>,
   <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
   <span class='kw'>length_normalize</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>remove_empty</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+  <span class='kw'>remove_empty</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>()
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -138,36 +141,45 @@ lengths) before pausing indices are calculated.</p>
     </tr>
     <tr>
       <th>promoters.gr</th>
-      <td><p>A GRanges object containing all the regions of interest.
-The sum of all signal counts within is the pause index numerator.</p></td>
+      <td><p>A GRanges object containing promoter-proximal regions of
+interest.</p></td>
     </tr>
     <tr>
       <th>genebodies.gr</th>
-      <td><p>A GRanges object containing all the regions of interest.
-The sum of all signal counts within is the pause index denominator.</p></td>
+      <td><p>A GRanges object containing genebody regions of
+interest.</p></td>
     </tr>
     <tr>
       <th>field</th>
-      <td><p>The metadata field of <code>dataset.gr</code> to be counted, i.e. that
-contains the readcounts of interest.</p></td>
+      <td><p>The metadata field of <code>dataset.gr</code> to be counted. If
+<code>length(field) &gt; 1</code>, a dataframe is returned containing the pausing
+indices for each region in each field.</p></td>
     </tr>
     <tr>
       <th>length_normalize</th>
       <td><p>A logical indicating if signal counts within regions
-of interest should be length normalized. The default is TRUE, which is
-recommended, especially if input regions don't all have the same width.</p></td>
+of interest should be length normalized. The default is <code>TRUE</code>, which
+is recommended, especially if input regions don't all have the same width.</p></td>
     </tr>
     <tr>
       <th>remove_empty</th>
-      <td><p>A logical indicating if genes without any signal should
-be removed. The default is FALSE.</p></td>
+      <td><p>A logical indicating if genes without any signal in
+<code>promoters.gr</code> should be removed. No genes are filtered by default.</p></td>
+    </tr>
+    <tr>
+      <th>ncores</th>
+      <td><p>Multiple cores can only be used if <code>length(field) &gt; 1</code>.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A vector of length given by the length of the genelist (or possibly
-  shorter if <code>remove_empty = TRUE</code>).</p>
+  shorter if <code>remove_empty = TRUE</code>). If <code>length(field) &gt; 1</code>, a
+  dataframe is returned, containing a column for each field.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='getCountsByRegions.html'>getCountsByRegions</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -175,6 +187,7 @@ be removed. The default is FALSE.</p></td>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
+      <li><a href="#see-also">See also</a></li>
     </ul>
 
     <h2>Author</h2>

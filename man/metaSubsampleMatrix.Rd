@@ -63,6 +63,10 @@ of interest, each column is a position within that gene (either a specific
 basepair or a bin), and element values are signal (e.g. read counts) within
 those positions.
 }
+\seealso{
+\code{\link[BRGenomics:metaSubsample]{metaSubsample}},
+  \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
+}
 \author{
 Mike DeBerardine
 }

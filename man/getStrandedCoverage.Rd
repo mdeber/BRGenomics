@@ -11,15 +11,18 @@ getStrandedCoverage(dataset.gr, field = "score")
 one in which readcounts for individual ranges are contained in metadata
 (typically in the "score" field).}
 
-\item{field}{The name of the field that contains readcounts. If no metadata
-field contains readcounts, and each range represents a single read, set to
-NULL.}
+\item{field}{The name of the metadata field that contains readcounts. If no
+metadata field contains readcounts, and each range represents a single
+read, set to NULL.}
 }
 \description{
 Computes strand-specific coverage signal, and returns a GRanges object with
 signal in the "score" metadata column. Function also works for
 non-strand-specific data. Note that output is not automatically converted
 into a "basepair-resolution" GRanges object.
+}
+\seealso{
+\code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 }
 \author{
 Mike DeBerardine

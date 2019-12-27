@@ -51,6 +51,7 @@
 #' @return A GRanges object that may be shorter than \code{genelist} due to loss
 #'   of short ranges.
 #' @author Mike DeBerardine
+#' @seealso \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
 #' @export
 genebodies <- function(genelist,
                        start = 300,
@@ -144,7 +145,9 @@ genebodies <- function(genelist,
 #'   regions} have signal (e.g. as could happen if running this function on a
 #'   single region), the function will return an empty GRanges object with
 #'   intact metadata columns.
+#'
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
 getMaxPositionsBySignal <- function(regions.gr,
                                     dataset.gr,
@@ -245,6 +248,7 @@ getMaxPositionsBySignal <- function(regions.gr,
 #' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
 #'   - lower_quantile)}.
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
 #' @export
 subsetRegionsBySignal <- function(regions.gr,
                                   dataset.gr,

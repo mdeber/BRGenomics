@@ -56,6 +56,9 @@ default arguments return ranges that begin 300 bases downstream of the
 original start positions, and end 300 bases upstream of the original end
 positions.
 }
+\seealso{
+\code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
+}
 \author{
 Mike DeBerardine
 }

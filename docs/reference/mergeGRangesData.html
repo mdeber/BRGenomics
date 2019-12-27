@@ -38,7 +38,8 @@
 <meta property="og:title" content="Merge base-pair resolution GRanges objects — mergeGRangesData" />
 <meta property="og:description" content="Merges 2 or more GRanges objects. For each object, the range widths must all
 be 1, and the score metadata column contains coverage information at
-each site." />
+each site. This function returns a single GRange object containing all sites
+of the input objects, and the sum of all scores at all sites." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -110,7 +111,8 @@ each site." />
     <div class="ref-description">
     <p>Merges 2 or more GRanges objects. For each object, the range widths must all
 be 1, and the <code>score</code> metadata column contains coverage information at
-each site.</p>
+each site. This function returns a single GRange object containing all sites
+of the input objects, and the sum of all scores at all sites.</p>
     </div>
 
     <pre class="usage"><span class='fu'>mergeGRangesData</span>(<span class='no'>...</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>())</pre>
@@ -123,19 +125,28 @@ each site.</p>
       <td><p>Any number of GRanges objects in which signal (e.g. readcounts)
 are contained within metadata.</p></td>
     </tr>
+    <tr>
+      <th>field</th>
+      <td><p>One or more metadata fields to be combined, typically the
+"score" field. Fields typically contain coverage information.</p></td>
+    </tr>
+    <tr>
+      <th>ncores</th>
+      <td><p>More than one core can be used to coerce non-single-width
+GRanges objects using <code>makeGRangesBPres</code>.</p></td>
+    </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <p>A single GRange object containing all sites of the input objects, and
-  the sum of all scores at all sites.</p>
+    <div class='dont-index'><p><code><a href='makeGRangesBPres.html'>makeGRangesBPres</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
+      <li><a href="#see-also">See also</a></li>
     </ul>
 
     <h2>Author</h2>

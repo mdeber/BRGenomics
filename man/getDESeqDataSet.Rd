@@ -74,7 +74,7 @@ regions.
 
 \section{A note on DESeq2 sizeFactors}{
  DESeq2 \code{sizeFactors} are
-  sample-specific normalization that are applied by division, i.e.
+  sample-specific normalization factors that are applied by division, i.e.
   \eqn{counts_{norm,i}=counts_i / sizeFactor_i}{normcounts_i = counts_i /
   sizeFactor_i}. This is in contrast to normalization factors as defined in
   this package (and commonly elsewhere), which are applied by multiplication.
@@ -85,7 +85,7 @@ regions.
 }
 
 \seealso{
-\code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}},
+\code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
   \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}},
   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}}
 }

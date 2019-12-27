@@ -40,6 +40,8 @@
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   of these dataframes).
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:metaSubsample]{metaSubsample}},
+#'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
 metaSubsampleMatrix <- function(counts.mat,
                                 binsize = 1,
@@ -172,6 +174,8 @@ metaSubsampleMatrix <- function(counts.mat,
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   of these dataframes).
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
+#'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
 metaSubsample <- function(dataset.gr,
                           regions.gr,

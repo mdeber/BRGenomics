@@ -39,10 +39,6 @@ This function imports plus/minus pairs of bedGraph files. This function is
 useful for when both 5'- and 3'-end information is to be maintained for each
 sequenced molecule.
 }
-\examples{
-md.import.CoPRO("~/LacZ_RNAi_plus.bedGraph",
-"~/LacZ_RNAi_minus.bedGraph", "dm6")
-}
 \author{
 Mike DeBerardine
 }

@@ -55,6 +55,9 @@ If the widths of all ranges in \code{regions.gr} are equal, a matrix
   positions outside of each range are either set to \code{0} or \code{NA},
   depending on the argument.
 }
+\seealso{
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
+}
 \author{
 Mike DeBerardine
 }

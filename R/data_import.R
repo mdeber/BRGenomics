@@ -30,7 +30,6 @@
 #'   ranges are of width = 1.
 #' @author Mike DeBerardine
 #' @export
-#' @examples md.import.PROseq("~/LacZ_RNAi_plus.bw", "~/LacZ_RNAi_minus.bw", "dm6")
 import.PROseq <- function(plus_file,
                           minus_file,
                           genome = NULL,
@@ -90,8 +89,6 @@ import.PROseq <- function(plus_file,
 #'   number of identical reads (which share the same 5' and 3' ends).
 #' @author Mike DeBerardine
 #' @export
-#' @examples md.import.CoPRO("~/LacZ_RNAi_plus.bedGraph",
-#' "~/LacZ_RNAi_minus.bedGraph", "dm6")
 import.CoPRO <- function(plus_file,
                          minus_file,
                          genome = NULL,

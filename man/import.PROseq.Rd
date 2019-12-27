@@ -39,9 +39,6 @@ Imports a GRanges object containing base-pair resolution data, with
 This function imports plus/minus pairs of bigWig files containing
 basepair-resolution data, e.g. PRO-seq or PRO-cap data.
 }
-\examples{
-md.import.PROseq("~/LacZ_RNAi_plus.bw", "~/LacZ_RNAi_minus.bw", "dm6")
-}
 \author{
 Mike DeBerardine
 }

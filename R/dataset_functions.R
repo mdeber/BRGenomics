@@ -9,33 +9,36 @@
 #' is preserved, including all metadata. To wit, \code{length(output.gr) =
 #' sum(width(dataset.gr))}.
 #'
-#' @param gr A disjoint GRanges object.
+#' @param dataset.gr A disjoint GRanges object
 #'
-#' Note that this function doesn't perform any transformation on the metadata
-#' in the input; for any ranges of width > 1, the metadata is simply copied
-#' to the daughters of that range (whose widths are all equal to 1).
+#' @details Note that this function doesn't perform any transformation on the
+#'   metadata in the input; for any ranges of width > 1, the metadata is simply
+#'   copied to the daughters of that range (whose widths are all equal to 1).
 #'
-#' This function is intended to work on datasets at single-base resolution. Data
-#' of this type is often formatted as a bigWig file, and any data imported from
-#' a bigWig file by rtracklayer is suitable for processing. bigWig files will
-#' typically use run-length compression on the data signal (the 'score'
-#' column), such that when imported by rtracklayer, adjacent bases sharing the
-#' same signal will combined into a single range. The base-pair resolution
-#' GRanges objects produced by this function remove this compression, resulting
-#' in each index (each range) of the GRanges object addressing a single genomic
-#' position.
+#'   This function is intended to work on datasets at single-base resolution.
+#'   Data of this type is often formatted as a bigWig file, and any data
+#'   imported from a bigWig file by rtracklayer is suitable for processing.
+#'   bigWig files will typically use run-length compression on the data signal
+#'   (the 'score' column), such that when imported by rtracklayer, adjacent
+#'   bases sharing the same signal will combined into a single range. The
+#'   base-pair resolution GRanges objects produced by this function remove this
+#'   compression, resulting in each index (each range) of the GRanges object
+#'   addressing a single genomic position.
 #'
-#' To properly use base-pair resolution information, the user should be
-#' selecting a single-base from each read, which can be accomplished using
-#' GenomicRanges::resize(). Then, single-base coverage can be calculated using
-#' getStrandedCoverage.
+#'   To properly use base-pair resolution information, the user should be
+#'   selecting a single-base from each read, which can be accomplished using
+#'   \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}. Then,
+#'   single-base coverage can be calculated using
+#'   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
 #'
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
+#'   \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}
 #' @export
 makeGRangesBPres <- function(dataset.gr) {
 
     if (!isDisjoint(dataset.gr)) {
-        stop(.nicemsg("Input dataset.gr is not disjoint. See documentation"))
+        stop("Input dataset.gr is not disjoint. See documentation")
         return(geterrmessage())
     }
 
@@ -62,12 +65,12 @@ makeGRangesBPres <- function(dataset.gr) {
 #' @param dataset.gr A GRanges object either containing ranges for each read, or
 #'   one in which readcounts for individual ranges are contained in metadata
 #'   (typically in the "score" field).
-#' @param field The name of the field that contains readcounts. If no metadata
-#'   field contains readcounts, and each range represents a single read, set to
-#'   NULL.
+#' @param field The name of the metadata field that contains readcounts. If no
+#'   metadata field contains readcounts, and each range represents a single
+#'   read, set to NULL.
 #'
 #' @author Mike DeBerardine
-#'
+#' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 #' @export
 getStrandedCoverage <- function(dataset.gr, field = "score") {
 
@@ -183,23 +186,24 @@ subsampleGRanges <- function(dataset.gr,
 #'
 #' Merges 2 or more GRanges objects. For each object, the range widths must all
 #' be 1, and the \code{score} metadata column contains coverage information at
-#' each site.
+#' each site. This function returns a single GRange object containing all sites
+#' of the input objects, and the sum of all scores at all sites.
 #'
 #' @param ... Any number of GRanges objects in which signal (e.g. readcounts)
 #'   are contained within metadata.
-#'
-#' @return A single GRange object containing all sites of the input objects, and
-#'   the sum of all scores at all sites.
-#'
+#' @param field One or more metadata fields to be combined, typically the
+#'   "score" field. Fields typically contain coverage information.
+#' @param ncores More than one core can be used to coerce non-single-width
+#'   GRanges objects using \code{makeGRangesBPres}.
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 #' @export
 mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     data_in <- list(...)
 
     if (length(data_in) < 2) {
         warning("Running mergeGRangesData on less than 2 GRanges objects")
-        if (length(data_in) == 1)
-            return(makeGRangesBPres(data_in[[1]]))
+        if (length(data_in) == 1)  return(makeGRangesBPres(data_in[[1]]))
         return(GRanges())
     }
 
@@ -208,7 +212,7 @@ mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
                           function(x) all(width(x) == 1),
                           FUN.VALUE = logical(1))
     if (any(width_check == FALSE)) {
-        warning(.nicemsg("One or more inputs are not single-width GRanges,
+        warning(.nicemsg("One or more inputs are not single-width GRanges
                          objects. Will coerce them using
                          makeGRangesBPres()..."),
                 immediate. = TRUE)

@@ -87,9 +87,9 @@ subsets the dataset so that DESeq2 only estimates dispersion for the samples
 being compared, and not for all samples present.
 }
 \seealso{
-\code{\link[DESeq2:results]{DESeq2::results}},
+\code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
-  \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}}
+  \code{\link[DESeq2:results]{DESeq2::results}}
 }
 \author{
 Mike DeBerardine

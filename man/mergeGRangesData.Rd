@@ -9,15 +9,21 @@ mergeGRangesData(..., field = "score", ncores = detectCores())
 \arguments{
 \item{...}{Any number of GRanges objects in which signal (e.g. readcounts)
 are contained within metadata.}
-}
-\value{
-A single GRange object containing all sites of the input objects, and
-  the sum of all scores at all sites.
+
+\item{field}{One or more metadata fields to be combined, typically the
+"score" field. Fields typically contain coverage information.}
+
+\item{ncores}{More than one core can be used to coerce non-single-width
+GRanges objects using \code{makeGRangesBPres}.}
 }
 \description{
 Merges 2 or more GRanges objects. For each object, the range widths must all
 be 1, and the \code{score} metadata column contains coverage information at
-each site.
+each site. This function returns a single GRange object containing all sites
+of the input objects, and the sum of all scores at all sites.
+}
+\seealso{
+\code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 }
 \author{
 Mike DeBerardine

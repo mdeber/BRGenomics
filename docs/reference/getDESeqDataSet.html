@@ -198,7 +198,7 @@ Default is the total number of cores available.</p></td>
     <h2 class="hasAnchor" id="a-note-on-deseq-sizefactors"><a class="anchor" href="#a-note-on-deseq-sizefactors"></a>A note on DESeq2 sizeFactors</h2>
 
     <p>DESeq2 <code>sizeFactors</code> are
-  sample-specific normalization that are applied by division, i.e.
+  sample-specific normalization factors that are applied by division, i.e.
   \(counts_{norm,i}=counts_i / sizeFactor_i\). This is in contrast to normalization factors as defined in
   this package (and commonly elsewhere), which are applied by multiplication.
   Also note that DESeq2's "<code>normalizationFactors</code>" are not sample
@@ -207,7 +207,7 @@ Default is the total number of cores available.</p></td>
   GSEA or Go analysis).</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/DESeq2/man/DESeqDataSet.html'>DESeqDataSet</a></code>,
+    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/DESeq2/man/DESeqDataSet.html'>DESeq2::DESeqDataSet</a></code>,
   <code><a href='getDESeqResults.html'>getDESeqResults</a></code>,
   <code><a href='getDESeqResultsInBatch.html'>getDESeqResultsInBatch</a></code></p></div>
 

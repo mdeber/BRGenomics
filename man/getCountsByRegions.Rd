@@ -2,7 +2,7 @@
 % Please edit documentation in R/signal_counting.R
 \name{getCountsByRegions}
 \alias{getCountsByRegions}
-\title{Signal counts in regions of interest}
+\title{Get signal counts in regions of interest}
 \usage{
 getCountsByRegions(
   dataset.gr,
@@ -23,12 +23,12 @@ each region in each field.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
-\value{
-Returns a vector the same length as \code{regions.gr} containing
-  signal found in each range.
-}
 \description{
-Count signal (e.g. read coverage) of data in each region of interest.
+Returns a vector the same length as \code{regions.gr} containing signal found
+in each range.
+}
+\seealso{
+\code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 }
 \author{
 Mike DeBerardine

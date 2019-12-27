@@ -14,6 +14,7 @@
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
 getCountsByRegions <- function(dataset.gr,
                                regions.gr,
@@ -77,6 +78,7 @@ getCountsByRegions <- function(dataset.gr,
 #'   depending on the argument.
 #'
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
 getCountsByPositions <- function(dataset.gr,
                                  regions.gr,
@@ -204,6 +206,7 @@ getCountsByPositions <- function(dataset.gr,
 #'   shorter if \code{remove_empty = TRUE}). If \code{length(field) > 1}, a
 #'   dataframe is returned, containing a column for each field.
 #' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
 getPausingIndices <- function(dataset.gr,
                               promoters.gr,

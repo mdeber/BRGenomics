@@ -118,7 +118,7 @@ larger bins.</p>
   <span class='no'>dataset.gr</span>,
   <span class='kw'>binsize</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
-  <span class='kw'>keep.score</span> <span class='kw'>=</span> <span class='no'>F</span>
+  <span class='kw'>keep_score</span> <span class='kw'>=</span> <span class='no'>F</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -142,7 +142,7 @@ larger bins.</p>
       <td><p>The metadata field of <code>dataset.gr</code> to be counted.</p></td>
     </tr>
     <tr>
-      <th>keep.score</th>
+      <th>keep_score</th>
       <td><p>Logical indicating if the signal value at the max site
 should be reported. If set to <code>TRUE</code>, the values are kept as a new
 metadata column in <code>regions.gr</code>.</p></td>
@@ -156,12 +156,15 @@ metadata column in <code>regions.gr</code>.</p></td>
   most signal. If <code>binsize != 1</code>, a single site is still returned, but
   its position is set to the center of the bin. If the binsize is even, the
   site is rounded to be closer to the beginning of the range. If
-  <code>keep.score = TRUE</code>, then the output will also have metadata for score
+  <code>keep_score = TRUE</code>, then the output will also have metadata for score
   at the max site. The output is <em>not</em> necessarily same length as
   <code>regions.gr</code>, as regions without signal are not returned. If <em>no
   regions</em> have signal (e.g. as could happen if running this function on a
   single region), the function will return an empty GRanges object with
   intact metadata columns.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='getCountsByPositions.html'>getCountsByPositions</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -169,6 +172,7 @@ metadata column in <code>regions.gr</code>.</p></td>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
+      <li><a href="#see-also">See also</a></li>
     </ul>
 
     <h2>Author</h2>
