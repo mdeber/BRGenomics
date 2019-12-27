@@ -129,7 +129,7 @@ genebodies <- function(genelist,
 #'   (typically in the "score" field).
 #' @param binsize The size of bin in which to calculate signal scores.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param keep.score Logical indicating if the signal value at the max site
+#' @param keep_score Logical indicating if the signal value at the max site
 #'   should be reported. If set to \code{TRUE}, the values are kept as a new
 #'   metadata column in \code{regions.gr}.
 #'
@@ -138,7 +138,7 @@ genebodies <- function(genelist,
 #'   most signal. If \code{binsize != 1}, a single site is still returned, but
 #'   its position is set to the center of the bin. If the binsize is even, the
 #'   site is rounded to be closer to the beginning of the range. If
-#'   \code{keep.score = TRUE}, then the output will also have metadata for score
+#'   \code{keep_score = TRUE}, then the output will also have metadata for score
 #'   at the max site. The output is \emph{not} necessarily same length as
 #'   \code{regions.gr}, as regions without signal are not returned. If \emph{no
 #'   regions} have signal (e.g. as could happen if running this function on a
@@ -150,14 +150,14 @@ getMaxPositionsBySignal <- function(regions.gr,
                                     dataset.gr,
                                     binsize = 1,
                                     field = "score",
-                                    keep.score = F) {
+                                    keep_score = F) {
 
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
     # if no regions in regions.gr have signal, return an empty GRanges object
     if (length(regions.gr) == 0) {
-        if (keep.score)  regions.gr$MaxSiteScore <- integer(0)
+        if (keep_score)  regions.gr$MaxSiteScore <- integer(0)
         return(regions.gr)
     }
 
@@ -202,7 +202,7 @@ getMaxPositionsBySignal <- function(regions.gr,
     regions.max.gr <- GenomicRanges::promoters(regions.gr, 0, bin_centers)
     regions.max.gr <- GenomicRanges::resize(regions.max.gr, 1, fix = "end")
 
-    if (keep.score) {
+    if (keep_score) {
         regions.max.gr$MaxSiteScore <- max_scores
     }
 
