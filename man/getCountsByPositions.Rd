@@ -2,14 +2,14 @@
 % Please edit documentation in R/signal_counting.R
 \name{getCountsByPositions}
 \alias{getCountsByPositions}
-\title{Get signal count matrix within regions of interest}
+\title{Get signal counts at each position within regions of interest}
 \usage{
 getCountsByPositions(
   dataset.gr,
   regions.gr,
   binsize = 1,
   bin_FUN = sum,
-  simplify_multi_widths = c("list", "pad zero", "pad NA"),
+  simplify_multi_widths = c("list", "pad 0", "pad NA"),
   field = "score",
   ncores = detectCores()
 )
@@ -18,15 +18,14 @@ getCountsByPositions(
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
 (typically in the "score" field).}
 
-\item{regions.gr}{A GRanges object containing all the regions of interest.
-All ranges must have the same width!}
+\item{regions.gr}{A GRanges object containing all the regions of interest.}
 
 \item{binsize}{Size of bins (in bp) to use for counting within each range of
 \code{regions.gr}. Note that counts will \emph{not} be length-normalized.}
 
 \item{bin_FUN}{If \code{binsize > 1}, the function used to aggregate the
-signal at each base within each bin. The default is to sum the signal in
-each bin, but any function operating on a numeric vector can be used.}
+signal within each bin. By default, the signal is summed, but any function
+operating on a numeric vector can be used.}
 
 \item{simplify_multi_widths}{A string indicating the output format if the
 ranges in \code{regions.gr} have variable widths. Default = \code{"list"}.
@@ -39,7 +38,9 @@ output for generated each field.}
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
 \description{
-Get signal count matrix within regions of interest
+Generate a matrix containing a row for each region of interest, and
+columns for each position (each base if \code{binsize = 1}) within each
+region.
 }
 \details{
 If the widths of all ranges in \code{regions.gr} are equal, a matrix
@@ -47,12 +48,12 @@ If the widths of all ranges in \code{regions.gr} are equal, a matrix
   column for each bin. For input \code{regions.gr} with varying widths,
   setting \code{simplify_multi_widths = "list"} will output a list of
   variable-length vectors, with each vector corresponding to an input region.
-  If \code{simplify_multi_widths = "pad zero"} or \code{simplify_multi_widths
-  = "pad NA"}, the output is a matrix containing a row for each range in
-  \code{regions.gr}, and a column for each position in each range. The number
-  of columns is determined by the largest range in \code{regions.gr}, and
-  columns corresponding to positions outside of each range are either set to
-  \code{0} or \code{NA}, depending on the argument.
+  If \code{simplify_multi_widths = "pad 0"} or \code{"pad NA"}, the output
+  is a matrix containing a row for each range in \code{regions.gr}, and a
+  column for each position in each range. The number of columns is determined
+  by the largest range in \code{regions.gr}, and columns corresponding to
+  positions outside of each range are either set to \code{0} or \code{NA},
+  depending on the argument.
 }
 \author{
 Mike DeBerardine
