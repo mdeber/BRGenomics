@@ -1,8 +1,9 @@
 
 
-#' Signal counts in regions of interest
+#' Get signal counts in regions of interest
 #'
-#' Count signal (e.g. read coverage) of data in each region of interest.
+#' Returns a vector the same length as \code{regions.gr} containing signal found
+#' in each range.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
@@ -12,8 +13,6 @@
 #'   each region in each field.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
-#' @return Returns a vector the same length as \code{regions.gr} containing
-#'   signal found in each range.
 #' @author Mike DeBerardine
 #' @export
 getCountsByRegions <- function(dataset.gr,
