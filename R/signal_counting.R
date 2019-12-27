@@ -177,28 +177,32 @@ getCountsByPositions <- function(dataset.gr,
 #' Calculate pausing indices from user-supplied promoters & genebodies
 #'
 #' Pausing index (PI) is calculated for each gene (within matched
-#' \code{promoters.gr} and \code{genebodies.gr}) as promoter signal counts
-#' divided by genebody signal counts. If \code{length.normalize = TRUE}
-#' (recommended), the signal counts within each range in \code{promoters.gr} and
-#' \code{genebodies.gr} are divided by their respective range widths (region
-#' lengths) before pausing indices are calculated.
+#' \code{promoters.gr} and \code{genebodies.gr}) as promoter-proximal (or pause
+#' region) signal counts divided by genebody signal counts. If
+#' \code{length.normalize = TRUE} (recommended), the signal counts within each
+#' range in \code{promoters.gr} and \code{genebodies.gr} are divided by their
+#' respective range widths (region lengths) before pausing indices are
+#' calculated.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
-#' @param promoters.gr A GRanges object containing all the regions of interest.
-#'   The sum of all signal counts within is the pause index numerator.
-#' @param genebodies.gr A GRanges object containing all the regions of interest.
-#'   The sum of all signal counts within is the pause index denominator.
-#' @param field The metadata field of \code{dataset.gr} to be counted, i.e. that
-#'   contains the readcounts of interest.
+#' @param promoters.gr A GRanges object containing promoter-proximal regions of
+#'   interest.
+#' @param genebodies.gr A GRanges object containing genebody regions of
+#'   interest.
+#' @param field The metadata field of \code{dataset.gr} to be counted. If
+#'   \code{length(field) > 1}, a dataframe is returned containing the pausing
+#'   indices for each region in each field.
 #' @param length_normalize A logical indicating if signal counts within regions
-#'   of interest should be length normalized. The default is TRUE, which is
-#'   recommended, especially if input regions don't all have the same width.
-#' @param remove_empty A logical indicating if genes without any signal should
-#'   be removed. The default is FALSE.
+#'   of interest should be length normalized. The default is \code{TRUE}, which
+#'   is recommended, especially if input regions don't all have the same width.
+#' @param remove_empty A logical indicating if genes without any signal in
+#'   \code{promoters.gr} should be removed. No genes are filtered by default.
+#' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return A vector of length given by the length of the genelist (or possibly
-#'   shorter if \code{remove_empty = TRUE}).
+#'   shorter if \code{remove_empty = TRUE}). If \code{length(field) > 1}, a
+#'   dataframe is returned, containing a column for each field.
 #' @author Mike DeBerardine
 #' @export
 getPausingIndices <- function(dataset.gr,
@@ -206,7 +210,8 @@ getPausingIndices <- function(dataset.gr,
                               genebodies.gr,
                               field = "score",
                               length_normalize = TRUE,
-                              remove_empty = FALSE) {
+                              remove_empty = FALSE,
+                              ncores = detectCores()) {
 
     if (length(promoters.gr) != length(genebodies.gr)) {
         stop(message = .nicemsg("Number of ranges in promoters.gr != number of
@@ -216,28 +221,43 @@ getPausingIndices <- function(dataset.gr,
 
     counts_pr <- getCountsByRegions(dataset.gr = dataset.gr,
                                     regions.gr = promoters.gr,
-                                    field = field)
+                                    field = field, ncores = ncores)
     counts_gb <- getCountsByRegions(dataset.gr = dataset.gr,
                                     regions.gr = genebodies.gr,
-                                    field = field)
+                                    field = field, ncores = ncores)
 
     if (length_normalize) {
-        counts_pr <- counts_pr / width(promoters.gr)
-        counts_gb <- counts_gb / width(genebodies.gr)
+        if (length(field) > 1) {
+            counts_pr <- .length_norm_multi_fields(counts_pr)
+            counts_gb <- .length_norm_multi_fields(counts_gb)
+        } else {
+            counts_pr <- counts_pr / width(promoters.gr)
+            counts_gb <- counts_gb / width(genebodies.gr)
+        }
     }
 
     if (remove_empty) {
-        idx_pr <- which(counts_pr != 0)
-        idx_gb <- which(counts_gb != 0)
-        idx <- intersect(idx_pr, idx_gb)
-        counts_pr <- counts_pr[idx]
-        counts_gb <- counts_gb[idx]
+        if (length(field) > 1) {
+            idx <- lapply(counts_pr, function(x) which(x != 0))
+            idx <- Reduce(union, idx)
+            counts_pr <- counts_pr[idx, ]
+            counts_gb <- counts_gb[idx, ]
+        } else {
+            idx <- which(counts_pr != 0)
+            counts_pr <- counts_pr[idx]
+            counts_gb <- counts_gb[idx]
+        }
     }
 
     return(counts_pr / counts_gb)
 }
 
-
+.length_norm_multi_fields <- function(counts, regions, field) {
+    counts <- lapply(counts, "/", width(regions))
+    counts <- as.data.frame(counts)
+    names(counts) <- field
+    return(counts)
+}
 
 
 
