@@ -1,18 +1,6 @@
-
-# for updating documentation:
-#   for when fix_start != fix_end, filters intuitively for minimum window size
-#   if fix_start == fix_end, the size of all the returned ranges will be the same;
-      # for fix_start = "end", must be min_window between annotated
-      #     start and start of interval;
-      # for fix_end = "start", must be min_window between interval end and annotated
-      #     end
-#       but could make it so that...
-#       min_window filters by the length within the annotated region that's
-#       outside the returned range (i.e. for fix_end = "start", the distance
-#       between the interval end to the annotated end; for fix_start = "end",
-#       the distance between the annotated start to the beginning of the interval)
-#
-
+# ========================================================================= #
+# Functions for modifying regions of interest (i.e. annotations)
+# ------------------------------------------------------------------------- #
 
 #' Extract Genebodies
 #'
@@ -22,13 +10,13 @@
 #' can be upstream or downstream based on the sign, and both the start and end
 #' of the returned regions can be defined in terms of either the start of end
 #' site of the input ranges. For example, \code{genebodies(txs, -50, 150,
-#' fix_end = "start")} is equivalent to \code{promoters(txs, 50, 150)}. The
+#' fix.end = "start")} is equivalent to \code{promoters(txs, 50, 150)}. The
 #' default arguments return ranges that begin 300 bases downstream of the
 #' original start positions, and end 300 bases upstream of the original end
 #' positions.
 #'
 #' @param genelist A GRanges object containing genes of interest.
-#' @param start Depending on \code{fix_start}, the distance from either the
+#' @param start Depending on \code{fix.start}, the distance from either the
 #'   strand-specific start or end site to begin the returned ranges. If
 #'   positive, the returned range will begin downstream of the reference
 #'   position; negative numbers are used to return sites upstream of the
@@ -36,18 +24,15 @@
 #' @param end Identical to the \code{start} argument, but defines the
 #'   strand-specific end position of returned ranges. \code{end} must be
 #'   downstream of \code{start}.
-#' @param fix_start The reference point to use for defining the strand-specific
+#' @param fix.start The reference point to use for defining the strand-specific
 #'   start positions of returned ranges, either \code{"start"} or \code{"end"}.
-#' @param fix_end The reference point to use for defining the strand-specific
+#' @param fix.end The reference point to use for defining the strand-specific
 #'   end positions of returned ranges, either \code{"start"} or \code{"end"}.
-#'   Cannot be set to \code{"start"} if \code{fix_start = "end"}.
-#' @param min_window When \code{fix_start = "start"} and \code{fix_end = "end"},
-#'   \code{min_window} defines the minimum size (width) of a returned range.
-#'   However, when \code{fix_end = fix_start}, all returned ranges have the same
-#'   width, and \code{min_window} filters the input ranges based on the size
-#'   of the excluded region downstream (when \code{fix_end = "start"}) or
-#'   upstream (when \code{fix_start = "end"}) of the returned region.
-#'
+#'   Cannot be set to \code{"start"} if \code{fix.start = "end"}.
+#' @param min.window When \code{fix.start = "start"} and \code{fix.end = "end"},
+#'   \code{min.window} defines the minimum size (width) of a returned range.
+#'   However, when \code{fix.end = fix.start}, all returned ranges have the same
+#'   width, and \code{min.window} simply size-filters the input ranges.
 #' @return A GRanges object that may be shorter than \code{genelist} due to loss
 #'   of short ranges.
 #' @author Mike DeBerardine
@@ -56,51 +41,24 @@
 genebodies <- function(genelist,
                        start = 300,
                        end = -300,
-                       fix_start = "start",
-                       fix_end = "end",
-                       min_window = 500) {
+                       fix.start = "start",
+                       fix.end = "end",
+                       min.window = 0) {
 
-    if (!all(c(fix_start, fix_end) %in% c("start", "end"))) {
-        stop("fix_start and fix_end must be 'start' or 'end'")
-        return(geterrmessage())
-    }
-
-    if (fix_start == "end" & fix_end == "start") {
-        stop("cannot have fix_end = start when fix_start = end")
-        return(geterrmessage())
-    }
-
-    if ((fix_start == fix_end) & (end <= start)) {
-        stop("If fix_end = fix_start, end must be greater than start")
-        return(geterrmessage())
-    }
+    .check_args_genebodies(start, end, fix.start, fix.end)
 
     if (any(as.character(strand(genelist)) == "*")) {
         warning("Unstranded ranges were found and removed from genelist")
         genelist <- subset(genelist, strand != "*")
     }
 
-    # Filter genelist based on min_window
-
-    if (fix_start == "start") {
-        if (fix_end == "end") {
-            min_width <- start - end + min_window
-        } else {
-            # filter by distance from end of new interval to annotated end
-            min_width <- end + min_window
-        }
-    } else {
-        # filter by distance from annotated start to beginning of interval
-        min_width <- min_window - start
-    }
-
+    # Filter genelist based on min.window
+    min_width <- .find_min_width(start, end, fix.start, fix.end, min.window)
     genelist <- subset(genelist, width >= min_width)
 
-    # Get genebodies
-
     # starts are at strand-specific beginnings of the genebodies
-    sense_starts <- start(resize(genelist, 1, fix = fix_start))
-    sense_ends <- start(resize(genelist, 1, fix = fix_end))
+    sense_starts <- start(resize(genelist, 1, fix = fix.start))
+    sense_ends <- start(resize(genelist, 1, fix = fix.end))
 
     # shift with strand-specificity
     is_plus <- as.character(strand(genelist)) == "+"
@@ -116,6 +74,45 @@ genebodies <- function(genelist,
 }
 
 
+.check_args_genebodies <- function(start, end, fix.start, fix.end) {
+    if (!all(c(fix.start, fix.end) %in% c("start", "end"))) {
+        stop("fix.start and fix.end must be 'start' or 'end'")
+        return(geterrmessage())
+    }
+
+    if (fix.start == "end" & fix.end == "start") {
+        stop("cannot have fix.end = start when fix.start = end")
+        return(geterrmessage())
+    }
+
+    if ((fix.start == fix.end) & (end <= start)) {
+        stop("If fix.end = fix.start, end must be greater than start")
+        return(geterrmessage())
+    }
+}
+
+
+.find_min_width <- function(start, end, fix.start, fix.end, min.window) {
+    if (fix.start == "start" & fix.end == "end") {
+        return(start - end + min.window)
+    } else {
+        return(min.window)
+    }
+}
+
+# .find_min_width <- function(fix.start, fix.end, min.window) {
+#     if (fix.start == "start") {
+#         if (fix.end == "end") {
+#             return(start - end + min.window)
+#         } else {
+#             # filter by distance from end of new interval to annotated end
+#             return(end + min.window)
+#         }
+#     } else {
+#         # filter by distance from annotated start to beginning of interval
+#         min.window - start
+#     }
+# }
 
 
 

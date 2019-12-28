@@ -8,15 +8,15 @@ genebodies(
   genelist,
   start = 300,
   end = -300,
-  fix_start = "start",
-  fix_end = "end",
-  min_window = 500
+  fix.start = "start",
+  fix.end = "end",
+  min.window = 0
 )
 }
 \arguments{
 \item{genelist}{A GRanges object containing genes of interest.}
 
-\item{start}{Depending on \code{fix_start}, the distance from either the
+\item{start}{Depending on \code{fix.start}, the distance from either the
 strand-specific start or end site to begin the returned ranges. If
 positive, the returned range will begin downstream of the reference
 position; negative numbers are used to return sites upstream of the
@@ -26,19 +26,17 @@ reference. Set \code{start = 0} to return the reference position.}
 strand-specific end position of returned ranges. \code{end} must be
 downstream of \code{start}.}
 
-\item{fix_start}{The reference point to use for defining the strand-specific
+\item{fix.start}{The reference point to use for defining the strand-specific
 start positions of returned ranges, either \code{"start"} or \code{"end"}.}
 
-\item{fix_end}{The reference point to use for defining the strand-specific
+\item{fix.end}{The reference point to use for defining the strand-specific
 end positions of returned ranges, either \code{"start"} or \code{"end"}.
-Cannot be set to \code{"start"} if \code{fix_start = "end"}.}
+Cannot be set to \code{"start"} if \code{fix.start = "end"}.}
 
-\item{min_window}{When \code{fix_start = "start"} and \code{fix_end = "end"},
-\code{min_window} defines the minimum size (width) of a returned range.
-However, when \code{fix_end = fix_start}, all returned ranges have the same
-width, and \code{min_window} filters the input ranges based on the size
-of the excluded region downstream (when \code{fix_end = "start"}) or
-upstream (when \code{fix_start = "end"}) of the returned region.}
+\item{min.window}{When \code{fix.start = "start"} and \code{fix.end = "end"},
+\code{min.window} defines the minimum size (width) of a returned range.
+However, when \code{fix.end = fix.start}, all returned ranges have the same
+width, and \code{min.window} simply size-filters the input ranges.}
 }
 \value{
 A GRanges object that may be shorter than \code{genelist} due to loss
@@ -51,7 +49,7 @@ start and end sites of regions of interest (usually genes). Unlike
 can be upstream or downstream based on the sign, and both the start and end
 of the returned regions can be defined in terms of either the start of end
 site of the input ranges. For example, \code{genebodies(txs, -50, 150,
-fix_end = "start")} is equivalent to \code{promoters(txs, 50, 150)}. The
+fix.end = "start")} is equivalent to \code{promoters(txs, 50, 150)}. The
 default arguments return ranges that begin 300 bases downstream of the
 original start positions, and end 300 bases upstream of the original end
 positions.
