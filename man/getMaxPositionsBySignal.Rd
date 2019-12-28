@@ -8,8 +8,9 @@ getMaxPositionsBySignal(
   regions.gr,
   dataset.gr,
   binsize = 1,
+  bin.centers = FALSE,
   field = "score",
-  keep_score = F
+  keep.score = F
 )
 }
 \arguments{
@@ -20,20 +21,25 @@ getMaxPositionsBySignal(
 
 \item{binsize}{The size of bin in which to calculate signal scores.}
 
+\item{bin.centers}{Logical indicating if the centers of bins are returned, as
+opposed to the entire bin. If \code{TRUE},}
+
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
 
-\item{keep_score}{Logical indicating if the signal value at the max site
+\item{keep.score}{Logical indicating if the signal value at the max site
 should be reported. If set to \code{TRUE}, the values are kept as a new
 metadata column in \code{regions.gr}.}
 }
 \value{
 Output is a GRanges object with regions.gr metadata, but each range
   only contains the site within each \code{regions.gr} range that had the
-  most signal. If \code{binsize != 1}, a single site is still returned, but
-  its position is set to the center of the bin. If the binsize is even, the
-  site is rounded to be closer to the beginning of the range. If
-  \code{keep_score = TRUE}, then the output will also have metadata for score
-  at the max site. The output is \emph{not} necessarily same length as
+  most signal. If \code{binsize > 1}, the entire bin is returned, unless
+  \code{bin.centers = TRUE}, in which case a single-base site is returned.
+  The site is set to the center of the bin, and if the binsize is even, the
+  site is rounded to be closer to the beginning of the range.
+
+  If \code{keep.score = TRUE}, the output will also contain metadata for the
+  signal at the max site. The output is \emph{not} necessarily same length as
   \code{regions.gr}, as regions without signal are not returned. If \emph{no
   regions} have signal (e.g. as could happen if running this function on a
   single region), the function will return an empty GRanges object with

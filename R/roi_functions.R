@@ -129,18 +129,22 @@ genebodies <- function(genelist,
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
 #' @param binsize The size of bin in which to calculate signal scores.
+#' @param bin.centers Logical indicating if the centers of bins are returned, as
+#' opposed to the entire bin. If \code{TRUE},
 #' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param keep_score Logical indicating if the signal value at the max site
+#' @param keep.score Logical indicating if the signal value at the max site
 #'   should be reported. If set to \code{TRUE}, the values are kept as a new
 #'   metadata column in \code{regions.gr}.
 #'
 #' @return Output is a GRanges object with regions.gr metadata, but each range
 #'   only contains the site within each \code{regions.gr} range that had the
-#'   most signal. If \code{binsize != 1}, a single site is still returned, but
-#'   its position is set to the center of the bin. If the binsize is even, the
-#'   site is rounded to be closer to the beginning of the range. If
-#'   \code{keep_score = TRUE}, then the output will also have metadata for score
-#'   at the max site. The output is \emph{not} necessarily same length as
+#'   most signal. If \code{binsize > 1}, the entire bin is returned, unless
+#'   \code{bin.centers = TRUE}, in which case a single-base site is returned.
+#'   The site is set to the center of the bin, and if the binsize is even, the
+#'   site is rounded to be closer to the beginning of the range.
+#'
+#'   If \code{keep.score = TRUE}, the output will also contain metadata for the
+#'   signal at the max site. The output is \emph{not} necessarily same length as
 #'   \code{regions.gr}, as regions without signal are not returned. If \emph{no
 #'   regions} have signal (e.g. as could happen if running this function on a
 #'   single region), the function will return an empty GRanges object with
@@ -152,15 +156,16 @@ genebodies <- function(genelist,
 getMaxPositionsBySignal <- function(regions.gr,
                                     dataset.gr,
                                     binsize = 1,
+                                    bin.centers = FALSE,
                                     field = "score",
-                                    keep_score = F) {
+                                    keep.score = FALSE) {
 
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
     # if no regions in regions.gr have signal, return an empty GRanges object
     if (length(regions.gr) == 0) {
-        if (keep_score)  regions.gr$MaxSiteScore <- integer(0)
+        if (keep.score)  regions.gr$MaxSiteScore <- integer(0)
         return(regions.gr)
     }
 
@@ -197,17 +202,22 @@ getMaxPositionsBySignal <- function(regions.gr,
     regions.max.gr <- regions.gr
 
     if (binsize == 1) {
-        bin_centers <- max_pos
+        bin.centers <- max_pos
+        size <- 1
     } else {
-        bin_centers <- floor(binsize / 2) + ( binsize * (max_pos - 1) )
+        if (bin.centers) {
+            bin.centers <- floor(binsize / 2) + ( binsize * (max_pos - 1) )
+            size <- 1
+        } else {
+            bin.centers <- binsize * max_pos # end of bin
+            size <- binsize
+        }
     }
 
-    regions.max.gr <- GenomicRanges::promoters(regions.gr, 0, bin_centers)
-    regions.max.gr <- GenomicRanges::resize(regions.max.gr, 1, fix = "end")
+    regions.max.gr <- GenomicRanges::promoters(regions.gr, 0, bin.centers)
+    regions.max.gr <- GenomicRanges::resize(regions.max.gr, size, fix = "end")
 
-    if (keep_score) {
-        regions.max.gr$MaxSiteScore <- max_scores
-    }
+    if (keep.score)  regions.max.gr$MaxSiteScore <- max_scores
 
     return(regions.max.gr)
 }
