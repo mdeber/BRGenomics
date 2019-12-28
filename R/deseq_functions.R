@@ -178,9 +178,136 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 ### ------------------------------------------------------------------------- #
 ###
 
-##
+
+#' Get DESeq2 results using reduced dispersion matrices
+#'
+#' This function calls \code{\link[DESeq2:DESeq]{DESeq2::DESeq}} and
+#' \code{\link[DESeq2:results]{DESeq2::results}} on a pre-existing
+#' \code{DESeqDataSet} object and returns a \code{DESeqResults} table for one or
+#' more pairwise comparisons. However, unlike a standard call to
+#' \code{DESeq2::results} using the \code{contrast} argument, this function
+#' subsets the dataset so that DESeq2 only estimates dispersion for the samples
+#' being compared, and not for all samples present.
+#'
+#' @param dds A DESeqDataSet object, produced using either
+#'   \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}} from this package
+#'   or \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}} from \code{DESeq2}. If
+#'   \code{dds} was not created using \code{getDESeqDataSet}, \code{dds} must be
+#'   made with \code{design = ~condition} such that a unique \code{condition}
+#'   level exists for each sample/treatment condition.
+#' @param contrast.numer A string naming the \code{condition} to use as the
+#'   numerator in the DESeq2 comparison, typically the perturbative condition.
+#' @param contrast.denom A string naming the \code{condition} to use as the
+#'   denominator in the DESeq2 comparison, typically the control condition.
+#' @param comparisons.list As an optional alternative to supplying a single
+#'   \code{contrast.numer} and \code{contrast.denom}, users can supply a list of
+#'   character vectors containing numerator-denominator pairs, e.g.
+#'   \code{list(c("B", "A"), c("C", "A"), c("C", "B"))}.
+#' @param sizeFactors A vector containing DESeq2 \code{sizeFactors} to apply to
+#'   each sample. Each sample's readcounts are \emph{divided} by its respective
+#'   DESeq2 \code{sizeFactor}. A warning will be generated if the
+#'   \code{DESeqDataSet} already contains \code{sizeFactors}, and the previous
+#'   \code{sizeFactors} will be over-written.
+#' @param alpha The significance threshold passed to \code{DESeqResults}. This
+#'   won't affect the output results, but is used as a performance optimization
+#'   by DESeq2.
+#' @param args.DESeq Additional arguments passed to
+#'   \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
+#'   e.g. \code{list(test = "LRT", fitType = "local")}. All arguments given here
+#'   will be passed to \code{DESeq} except for \code{object} and
+#'   \code{parallel}. If no arguments are given, all defaults will be used.
+#' @param args.results Additional arguments passed to
+#'   \link[DESeq2:results]{DESeq2::results}, given as a list of argument-value
+#'   pairs, e.g. \code{list(altHypothesis = "greater", lfcThreshold = 1.5)}. All
+#'   arguments given here will be passed to \code{results} except for
+#'   \code{object}, \code{contrast}, \code{alpha}, and \code{parallel}. If no
+#'   arguments are given, all defaults will be used.
+#' @param ncores The number of cores to use for parallel processing. Multicore
+#'   processing is only used if more than one comparison is being made (i.e.
+#'   argument \code{comparisons.list} is used), and the number of cores utilized
+#'   will not be greater than the number of comparisons being performed.
+#' @param quiet If \code{TRUE}, all output messages from calls to \code{DESeq}
+#'   and \code{results} will be suppressed, although passing option \code{quiet}
+#'   in \code{args.DESeq} will supersede this option for the call to
+#'   \code{DESeq}.
+#'
+#' @return For a single comparison, the output is the \code{DESeqResults} result
+#'   table. If a \code{comparisons.list} is used to make multiple comparisons,
+#'   the output is a named list of \code{DESeqResults} objects, with elements
+#'   named following the pattern \code{"X_vs_Y"}, where \code{X} is the name of
+#'   the numerator condition, and \code{Y} is the name of the denominator
+#'   condition.
+#'
+#' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
+#'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
+#'   \code{\link[DESeq2:results]{DESeq2::results}}
+#' @export
+getDESeqResults <- function(dds,
+                            contrast.numer,
+                            contrast.denom,
+                            comparisons.list = NULL,
+                            sizeFactors = NULL,
+                            alpha = 0.1,
+                            args.DESeq = NULL,
+                            args.results = NULL,
+                            ncores = detectCores(),
+                            quiet = FALSE) {
+    require(DESeq2)
+
+    # check only one set of contrast args used
+    # and, if given, check format of contrasts.list
+    .check_contrast_args(as.list(match.call()[-1]))
+    if (!is.null(comparisons.list)) .check_list(comparisons.list)
+
+    # determine if/when to apply sizeFactors, and whether dds already has them
+    when_sf <- .when_sf(dds, sizeFactors)
+    exist_sf <- .exist_sizeFactors(dds)
+
+    # apply early NFs; return error if late apply and multiple comparisons
+    if (when_sf == "early") {
+        if (exist_sf & !quiet)
+            warning("Overwriting previous sizeFactors", immediate. = TRUE)
+        sizeFactors(dds) <- sizeFactors
+        sizeFactors <- NULL
+    }
+
+    if (is.null(comparisons.list)) {
+
+        res <- .get_deseq_results(
+            dds, contrast.numer, contrast.denom, sizeFactors = sizeFactors,
+            alpha = alpha, args.DESeq = args.DESeq, args.results = args.results,
+            ncores = ncores, quiet = quiet
+        )
+        return(res)
+
+    } else {
+
+        if (length(comparisons.list) > 1)  {
+            if (when_sf == "late") {
+                stop(message = .nicemsg("Length of sizeFactors not equal to
+                                        number of samples in dds"))
+                return(geterrmessage())
+            }
+            sizeFactors <- NULL
+        }
+
+        args.DESeq <- args.DESeq[names(args.DESeq) != "quiet"]
+        comparisons <- mclapply(comparisons.list, function(x) {
+            .get_deseq_results(
+                dds, x[1], x[2], sizeFactors = sizeFactors, alpha = alpha,
+                args.DESeq = args.DESeq, args.results = args.results,
+                ncores = 1, quiet = TRUE
+            )}, mc.cores = ncores)
+
+        names(comparisons) <- vapply(comparisons.list,
+                                     function(x) paste0(x[1], "_vs_", x[2]),
+                                     FUN.VALUE = character(1))
+        return(comparisons)
+    }
+}
+
 ## Helper functions
-##
 
 .check_contrast_args <- function(args) {
     nvec <- "contrast.numer" %in% names(args)
@@ -231,7 +358,7 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 
     if (!class(user_args) %in% c("list", "expression") |
         is.null(names(user_args))) {
-        stop(message = .nicemsg("If given, args_DESeq and args_results must be
+        stop(message = .nicemsg("If given, args.DESeq and args.results must be
                                 named lists or R expressions containing argument
                                 names and values. See documentation"))
         return(geterrmessage())
@@ -247,8 +374,8 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                                contrast.denom,
                                sizeFactors,
                                alpha,
-                               args_DESeq,
-                               args_results,
+                               args.DESeq,
+                               args.results,
                                ncores,
                                quiet) {
 
@@ -277,174 +404,43 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
     # Call DESeq()
     #---------------#
 
-    # Get args; only use parent function 'quiet' arg if not in args_DESeq
-    args_DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
-                              user_args = args_DESeq,
+    # Get args; only use parent function 'quiet' arg if not in args.DESeq
+    args.DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
+                              user_args = args.DESeq,
                               exclude = c("object", "parallel"))
-    if (!"quiet" %in% names(args_DESeq))
-        args_DESeq <- .merge_args(args_DESeq, list(quiet = quiet))
+    if (!"quiet" %in% names(args.DESeq))
+        args.DESeq <- .merge_args(args.DESeq, list(quiet = quiet))
 
-    dds <- do.call(DESeq, args_DESeq)
+    dds <- do.call(DESeq, args.DESeq)
 
     #---------------#
     # Call results()
     #---------------#
 
     # Get args
-    args_results <- .merge_args(expression(object = dds,
+    args.results <- .merge_args(expression(object = dds,
                                            contrast = c("condition",
                                                         contrast.numer,
                                                         contrast.denom),
                                            alpha = alpha),
-                                args_results,
+                                args.results,
                                 exclude = c("object", "contrast",
                                             "alpha", "parallel"))
     if (quiet) {
         suppressWarnings(suppressMessages(
-            res <- do.call(results, args_results)
+            res <- do.call(results, args.results)
         ))
     } else {
-        res <- do.call(results, args_results)
+        res <- do.call(results, args.results)
     }
     return(res)
 }
-
-
-#' Get DESeq2 results using reduced dispersion matrices
-#'
-#' This function calls \code{\link[DESeq2:DESeq]{DESeq2::DESeq}} and
-#' \code{\link[DESeq2:results]{DESeq2::results}} on a pre-existing
-#' \code{DESeqDataSet} object and returns a \code{DESeqResults} table for one or
-#' more pairwise comparisons. However, unlike a standard call to
-#' \code{DESeq2::results} using the \code{contrast} argument, this function
-#' subsets the dataset so that DESeq2 only estimates dispersion for the samples
-#' being compared, and not for all samples present.
-#'
-#' @param dds A DESeqDataSet object, produced using either
-#'   \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}} from this package
-#'   or \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}} from \code{DESeq2}. If
-#'   \code{dds} was not created using \code{getDESeqDataSet}, \code{dds} must be
-#'   made with \code{design = ~condition} such that a unique \code{condition}
-#'   level exists for each sample/treatment condition.
-#' @param contrast.numer A string naming the \code{condition} to use as the
-#'   numerator in the DESeq2 comparison, typically the perturbative condition.
-#' @param contrast.denom A string naming the \code{condition} to use as the
-#'   denominator in the DESeq2 comparison, typically the control condition.
-#' @param comparisons.list As an optional alternative to supplying a single
-#'   \code{contrast.numer} and \code{contrast.denom}, users can supply a list of
-#'   character vectors containing numerator-denominator pairs, e.g.
-#'   \code{list(c("B", "A"), c("C", "A"), c("C", "B"))}.
-#' @param sizeFactors A vector containing DESeq2 \code{sizeFactors} to apply to
-#'   each sample. Each sample's readcounts are \emph{divided} by its respective
-#'   DESeq2 \code{sizeFactor}. A warning will be generated if the
-#'   \code{DESeqDataSet} already contains \code{sizeFactors}, and the previous
-#'   \code{sizeFactors} will be over-written.
-#' @param alpha The significance threshold passed to \code{DESeqResults}. This
-#'   won't affect the output results, but is used as a performance optimization
-#'   by DESeq2.
-#' @param args_DESeq Additional arguments passed to
-#'   \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
-#'   e.g. \code{list(test = "LRT", fitType = "local")}. All arguments given here
-#'   will be passed to \code{DESeq} except for \code{object} and
-#'   \code{parallel}. If no arguments are given, all defaults will be used.
-#' @param args_results Additional arguments passed to
-#'   \link[DESeq2:results]{DESeq2::results}, given as a list of argument-value
-#'   pairs, e.g. \code{list(altHypothesis = "greater", lfcThreshold = 1.5)}. All
-#'   arguments given here will be passed to \code{results} except for
-#'   \code{object}, \code{contrast}, \code{alpha}, and \code{parallel}. If no
-#'   arguments are given, all defaults will be used.
-#' @param ncores The number of cores to use for parallel processing. Multicore
-#'   processing is only used if more than one comparison is being made (i.e.
-#'   argument \code{comparisons.list} is used), and the number of cores utilized
-#'   will not be greater than the number of comparisons being performed.
-#' @param quiet If \code{TRUE}, all output messages from calls to \code{DESeq}
-#'   and \code{results} will be suppressed, although passing option \code{quiet}
-#'   in \code{args_DESeq} will supersede this option for the call to
-#'   \code{DESeq}.
-#'
-#' @return For a single comparison, the output is the \code{DESeqResults} result
-#'   table. If a \code{comparisons.list} is used to make multiple comparisons,
-#'   the output is a named list of \code{DESeqResults} objects, with elements
-#'   named following the pattern \code{"X_vs_Y"}, where \code{X} is the name of
-#'   the numerator condition, and \code{Y} is the name of the denominator
-#'   condition.
-#'
-#' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
-#'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
-#'   \code{\link[DESeq2:results]{DESeq2::results}}
-#' @export
-getDESeqResults <- function(dds,
-                            contrast.numer,
-                            contrast.denom,
-                            comparisons.list = NULL,
-                            sizeFactors = NULL,
-                            alpha = 0.1,
-                            args_DESeq = NULL,
-                            args_results = NULL,
-                            ncores = detectCores(),
-                            quiet = FALSE) {
-    require(DESeq2)
-
-    # check only one set of contrast args used
-    # and, if given, check format of contrasts.list
-    .check_contrast_args(as.list(match.call()[-1]))
-    if (!is.null(comparisons.list)) .check_list(comparisons.list)
-
-    # determine if/when to apply sizeFactors, and whether dds already has them
-    when_sf <- .when_sf(dds, sizeFactors)
-    exist_sf <- .exist_sizeFactors(dds)
-
-    # apply early NFs; return error if late apply and multiple comparisons
-    if (when_sf == "early") {
-        if (exist_sf & !quiet)
-            warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        sizeFactors(dds) <- sizeFactors
-        sizeFactors <- NULL
-    }
-
-    if (is.null(comparisons.list)) {
-
-        res <- .get_deseq_results(
-            dds, contrast.numer, contrast.denom, sizeFactors = sizeFactors,
-            alpha = alpha, args_DESeq = args_DESeq, args_results = args_results,
-            ncores = ncores, quiet = quiet
-        )
-        return(res)
-
-    } else {
-
-        if (length(comparisons.list) > 1)  {
-            if (when_sf == "late") {
-                stop(message = .nicemsg("Length of sizeFactors not equal to
-                                        number of samples in dds"))
-                return(geterrmessage())
-            }
-            sizeFactors <- NULL
-        }
-
-        args_DESeq <- args_DESeq[names(args_DESeq) != "quiet"]
-        comparisons <- mclapply(comparisons.list, function(x) {
-            .get_deseq_results(
-                dds, x[1], x[2], sizeFactors = sizeFactors, alpha = alpha,
-                args_DESeq = args_DESeq, args_results = args_results,
-                ncores = 1, quiet = TRUE
-            )}, mc.cores = ncores)
-
-        names(comparisons) <- vapply(comparisons.list,
-                                     function(x) paste0(x[1], "_vs_", x[2]),
-                                     FUN.VALUE = character(1))
-        return(comparisons)
-    }
-}
-
 
 
 ### ========================================================================= #
 ### Get Batches of DESeq2 Results from DESeqDataSet
 ### ------------------------------------------------------------------------- #
 ###
-
 
 
 #' Automate batch calls to getDESeqResults

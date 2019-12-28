@@ -223,14 +223,14 @@ metaSubsample <- function(dataset.gr,
         return(dflist)
     }
 
-    if (remove.empty)  regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
-
     # Get signal in each bin of each gene
     # -> Matrix of dim = (ngenes, nbins)
     signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
                                         binsize = binsize,
                                         field = field)
+
+    if (remove.empty)  signal.bins <- signal.bins[rowSums(signal.bins) > 0, ]
 
     metamat <- metaSubsampleMatrix(counts.mat = signal.bins,
                                    binsize = 1,

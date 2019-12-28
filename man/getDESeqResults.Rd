@@ -11,8 +11,8 @@ getDESeqResults(
   comparisons.list = NULL,
   sizeFactors = NULL,
   alpha = 0.1,
-  args_DESeq = NULL,
-  args_results = NULL,
+  args.DESeq = NULL,
+  args.results = NULL,
   ncores = detectCores(),
   quiet = FALSE
 )
@@ -46,13 +46,13 @@ DESeq2 \code{sizeFactor}. A warning will be generated if the
 won't affect the output results, but is used as a performance optimization
 by DESeq2.}
 
-\item{args_DESeq}{Additional arguments passed to
+\item{args.DESeq}{Additional arguments passed to
 \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
 e.g. \code{list(test = "LRT", fitType = "local")}. All arguments given here
 will be passed to \code{DESeq} except for \code{object} and
 \code{parallel}. If no arguments are given, all defaults will be used.}
 
-\item{args_results}{Additional arguments passed to
+\item{args.results}{Additional arguments passed to
 \link[DESeq2:results]{DESeq2::results}, given as a list of argument-value
 pairs, e.g. \code{list(altHypothesis = "greater", lfcThreshold = 1.5)}. All
 arguments given here will be passed to \code{results} except for
@@ -66,7 +66,7 @@ will not be greater than the number of comparisons being performed.}
 
 \item{quiet}{If \code{TRUE}, all output messages from calls to \code{DESeq}
 and \code{results} will be suppressed, although passing option \code{quiet}
-in \code{args_DESeq} will supersede this option for the call to
+in \code{args.DESeq} will supersede this option for the call to
 \code{DESeq}.}
 }
 \value{

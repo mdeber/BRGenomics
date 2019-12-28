@@ -65,7 +65,7 @@ genebodies <- function(genelist,
     sense_starts <- ifelse(is_plus, sense_starts + start, sense_starts - start)
     sense_ends <- ifelse(is_plus, sense_ends + end, sense_ends - end)
 
-    # final starts/ends must be flipped for minus-strand genes
+    # actual GRanges starts/ends must be flipped for minus-strand genes
     starts <- ifelse(is_plus, sense_starts, sense_ends)
     ends <- ifelse(is_plus, sense_ends, sense_starts)
 
@@ -182,7 +182,6 @@ getMaxPositionsBySignal <- function(regions.gr,
                                 field = field)
 
     # Get vector with max bin for each gene, and another for the scores therein
-
     if (multi_width) {
         bins_i <- floor(widths / binsize) # number of bins within each region
         # remove last bins (if widths/binsize gives remainder)

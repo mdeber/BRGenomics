@@ -3,25 +3,6 @@
 ### -------------------------------------------------------------------------
 ###
 
-.get_unnamed_names <- function(...) {
-    # This function returns a character vector providing names for unnamed args
-    #   passed to a parent function. If arguments were named by user (i.e.
-    #   x = data_x, ...), it uses those names; but otherwise uses the names of
-    #   the objects themselves.
-    # This function excludes the named argument "quantiles", as currently it's
-    #   only called from the n-dimensional binning function in this package
-    dim_names <- as.list( match.call(call = sys.call(sys.parent(1))) )[-1]
-    if (!is.null(names(dim_names))) {
-        dim_names <- dim_names[names(dim_names) != "quantiles"]
-        # if quantiles the only named argument, or not all named, don't return
-        if (all(nchar(names(dim_names)) > 0)) {
-            return(names(dim_names))
-        }
-    }
-    return(as.character(dim_names))
-}
-
-
 
 #' N-dimensional binning of data by quantiles
 #'
@@ -109,6 +90,24 @@ binNdimensions <- function(..., quantiles = 10) {
     names(bin_idx) <- paste("bin", dim_names)
 
     as.data.frame(bin_idx)
+}
+
+
+.get_unnamed_names <- function(...) {
+    # This function returns a character vector providing names for unnamed args
+    #   passed to a parent function. If arguments were named by user (i.e.
+    #   x = data_x, ...), it uses those names; but otherwise uses the names of
+    #   the objects themselves.
+    # This function excludes the named argument "quantiles"
+    dim_names <- as.list( match.call(call = sys.call(sys.parent(1))) )[-1]
+    if (!is.null(names(dim_names))) {
+        dim_names <- dim_names[names(dim_names) != "quantiles"]
+        # if quantiles the only named argument, or not all named, don't return
+        if (all(nchar(names(dim_names)) > 0)) {
+            return(names(dim_names))
+        }
+    }
+    return(as.character(dim_names))
 }
 
 

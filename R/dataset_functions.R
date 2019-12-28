@@ -110,7 +110,9 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
 #' should be given as a metadata field (usually "score"), and should normally be
 #' integers. If normalized readcounts are given, an attempt will be made to
 #' infer the normalization factor based on the least-common-multiple of the
-#' signal found in the specified field.
+#' signal found in the specified field. This function can also subsample ranges
+#' directly if \code{field = NULL}, but the \code{sample} function can be used
+#' in this scenario.
 #'
 #' @param dataset.gr A GRanges object in which signal (e.g. readcounts) are
 #'   contained within metadata.
@@ -129,17 +131,19 @@ subsampleGRanges <- function(dataset.gr,
                              prop = NULL,
                              field = "score") {
 
-    if (!xor(missing(n), missing(prop))) {
+    if (!xor(is.null(n), is.null(prop))) {
         msg <- "Must give either 'n' or 'prop' for subsampling, but not both."
         stop(message = msg)
         return(geterrmessage())
     }
 
     if (is.null(field)) {
-        signal_counts <- rep(1, length(dataset.gr))
-    } else {
-        signal_counts <- mcols(dataset.gr)[[field]]
+        if (is.null(n)) n <- floor(prop * length(dataset.gr))
+        return(sample(dataset.gr, n))
     }
+
+    signal_counts <- mcols(dataset.gr)[[field]]
+    if (is.null(n))  n <- floor(prop * sum(signal_counts))
 
     if (all( round(signal_counts, 3) %% 1 == 0 )) {
         normed_signal <- FALSE
@@ -160,23 +164,13 @@ subsampleGRanges <- function(dataset.gr,
         }
     }
 
-    if (!missing(prop))  n <- floor(prop * sum(signal_counts))
-
     # avoid expanding GRanges, and sample associated indices
     idx <- rep(seq_along(dataset.gr), times = signal_counts)
     gr_sample <- dataset.gr[sample(idx, n)]
+    gr_out <- unique(gr_sample)
+    mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
 
-    if (is.null(field)) {
-        gr_out <- gr_sample
-    } else {
-        gr_out <- unique(gr_sample)
-        mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
-    }
-
-    if (normed_signal) {
-        mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm
-    }
-
+    if (normed_signal) mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm
     return(sort(gr_out))
 }
 

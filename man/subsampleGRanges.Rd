@@ -24,7 +24,9 @@ Random subsampling is not performed on ranges, but on reads. Readcounts
 should be given as a metadata field (usually "score"), and should normally be
 integers. If normalized readcounts are given, an attempt will be made to
 infer the normalization factor based on the least-common-multiple of the
-signal found in the specified field.
+signal found in the specified field. This function can also subsample ranges
+directly if \code{field = NULL}, but the \code{sample} function can be used
+in this scenario.
 }
 \author{
 Mike DeBerardine

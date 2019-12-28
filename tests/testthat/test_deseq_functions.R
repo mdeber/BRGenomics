@@ -182,7 +182,7 @@ test_that("arguments can be passed to DESeq call", {
     res_alt <- getDESeqResults(dds,
                                contrast.numer = "A",
                                contrast.denom = "B",
-                               args_DESeq = list(fitType = "mean"),
+                               args.DESeq = list(fitType = "mean"),
                                quiet = TRUE)
     expect_is(res_alt, "DESeqResults")
     expect_equivalent(names(res_alt), names(res))
@@ -196,7 +196,7 @@ test_that("arguments can be passed to results call", {
     res_alt <- getDESeqResults(dds,
                                contrast.numer = "A",
                                contrast.denom = "B",
-                               args_results = list(altHypothesis = "greater"),
+                               args.results = list(altHypothesis = "greater"),
                                quiet = TRUE)
     expect_is(res_alt, "DESeqResults")
     expect_equivalent(names(res_alt), names(res))
@@ -209,7 +209,7 @@ test_that("error if passing arguments not correct", {
     expect_error(getDESeqResults(dds,
                                  contrast.numer = "A",
                                  contrast.denom = "B",
-                                 args_DESeq = list("mean"),
+                                 args.DESeq = list("mean"),
                                  quiet = TRUE))
 })
 
