@@ -9,8 +9,8 @@ getPausingIndices(
   promoters.gr,
   genebodies.gr,
   field = "score",
-  length_normalize = TRUE,
-  remove_empty = FALSE,
+  length.normalize = TRUE,
+  remove.empty = FALSE,
   ncores = detectCores()
 )
 }
@@ -28,18 +28,18 @@ interest.}
 \code{length(field) > 1}, a dataframe is returned containing the pausing
 indices for each region in each field.}
 
-\item{length_normalize}{A logical indicating if signal counts within regions
+\item{length.normalize}{A logical indicating if signal counts within regions
 of interest should be length normalized. The default is \code{TRUE}, which
 is recommended, especially if input regions don't all have the same width.}
 
-\item{remove_empty}{A logical indicating if genes without any signal in
+\item{remove.empty}{A logical indicating if genes without any signal in
 \code{promoters.gr} should be removed. No genes are filtered by default.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
 \value{
 A vector of length given by the length of the genelist (or possibly
-  shorter if \code{remove_empty = TRUE}). If \code{length(field) > 1}, a
+  shorter if \code{remove.empty = TRUE}). If \code{length(field) > 1}, a
   dataframe is returned, containing a column for each field.
 }
 \description{

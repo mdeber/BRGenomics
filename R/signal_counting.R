@@ -195,15 +195,15 @@ getCountsByPositions <- function(dataset.gr,
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, a dataframe is returned containing the pausing
 #'   indices for each region in each field.
-#' @param length_normalize A logical indicating if signal counts within regions
+#' @param length.normalize A logical indicating if signal counts within regions
 #'   of interest should be length normalized. The default is \code{TRUE}, which
 #'   is recommended, especially if input regions don't all have the same width.
-#' @param remove_empty A logical indicating if genes without any signal in
+#' @param remove.empty A logical indicating if genes without any signal in
 #'   \code{promoters.gr} should be removed. No genes are filtered by default.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return A vector of length given by the length of the genelist (or possibly
-#'   shorter if \code{remove_empty = TRUE}). If \code{length(field) > 1}, a
+#'   shorter if \code{remove.empty = TRUE}). If \code{length(field) > 1}, a
 #'   dataframe is returned, containing a column for each field.
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
@@ -212,8 +212,8 @@ getPausingIndices <- function(dataset.gr,
                               promoters.gr,
                               genebodies.gr,
                               field = "score",
-                              length_normalize = TRUE,
-                              remove_empty = FALSE,
+                              length.normalize = TRUE,
+                              remove.empty = FALSE,
                               ncores = detectCores()) {
 
     if (length(promoters.gr) != length(genebodies.gr)) {
@@ -229,17 +229,17 @@ getPausingIndices <- function(dataset.gr,
                                     regions.gr = genebodies.gr,
                                     field = field, ncores = ncores)
 
-    if (length_normalize) {
+    if (length.normalize) {
         if (length(field) > 1) {
-            counts_pr <- .length_norm_multi_fields(counts_pr)
-            counts_gb <- .length_norm_multi_fields(counts_gb)
+            counts_pr <- .lnorm_multifields(counts_pr, promoters.gr, field)
+            counts_gb <- .lnorm_multifields(counts_gb, genebodies.gr, field)
         } else {
             counts_pr <- counts_pr / width(promoters.gr)
             counts_gb <- counts_gb / width(genebodies.gr)
         }
     }
 
-    if (remove_empty) {
+    if (remove.empty) {
         if (length(field) > 1) {
             idx <- lapply(counts_pr, function(x) which(x != 0))
             idx <- Reduce(union, idx)
@@ -255,7 +255,7 @@ getPausingIndices <- function(dataset.gr,
     return(counts_pr / counts_gb)
 }
 
-.length_norm_multi_fields <- function(counts, regions, field) {
+.lnorm_multifields <- function(counts, regions, field) {
     counts <- lapply(counts, "/", width(regions))
     counts <- as.data.frame(counts)
     names(counts) <- field

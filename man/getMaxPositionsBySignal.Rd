@@ -10,7 +10,7 @@ getMaxPositionsBySignal(
   binsize = 1,
   bin.centers = FALSE,
   field = "score",
-  keep.score = F
+  keep.score = FALSE
 )
 }
 \arguments{

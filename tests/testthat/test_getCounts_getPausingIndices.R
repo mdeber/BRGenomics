@@ -118,10 +118,9 @@ test_that("can perform arbitrary binning operations on count matrix", {
 context("Calculating pausing indices")
 
 txs_gb <- flank(txs_pr, 500, start = FALSE)
+pidx <- getPausingIndices(PROseq, txs_pr, txs_gb)
 
 test_that("can calculate pausing indices", {
-    pidx <- getPausingIndices(PROseq, txs_pr, txs_gb)
-
     expect_is(pidx, "numeric")
     expect_equivalent(round(pidx[1:4]), c(0, 2, 3, 0))
 })
@@ -130,9 +129,28 @@ test_that("error if regions.pr not matching regions.gb", {
     expect_error(getPausingIndices(PROseq, txs_pr, txs_gb[1:10]))
 })
 
-test_that("remove_empty works", {
-    pidx_re <- getPausingIndices(PROseq, txs_pr, txs_gb, remove_empty = TRUE)
-    expect_equal(length(pidx_re), 252)
+test_that("length.normalize works (check when FALSE)", {
+    pidx_norm <- getPausingIndices(PROseq, txs_pr, txs_gb,
+                                   length.normalize = FALSE)
+    expect_true(!all(pidx == pidx_norm))
+    expect_equivalent(round(pidx_norm)[1:4], c(0, 0, 1, 0))
 })
+
+test_that("remove.empty works", {
+    pidx_re <- getPausingIndices(PROseq, txs_pr, txs_gb, remove.empty = TRUE)
+    expect_true(length(pidx_re) < length(pidx))
+    expect_equal(length(pidx_re),
+                 length( which(getCountsByRegions(PROseq, txs_pr) != 0) ))
+})
+
+
+test_that("can get pause indices over multiple fields", {
+    pidx_multi <- getPausingIndices(ps_rename, txs_pr, txs_gb,
+                                    field = c("signal", "posnum"))
+    expect_is(pidx_multi, "data.frame")
+    expect_equivalent(names(pidx_multi), c("signal", "posnum"))
+    expect_equivalent(pidx_multi[, 1], pidx)
+})
+
 
 
