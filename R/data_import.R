@@ -3,11 +3,52 @@
 ### ------------------------------------------------------------------------- #
 ###
 
-.check_intscore <- function(gr) {
+# if scores are whole numbers, coerce them to integers
+.try_int_score <- function(gr) {
     if (all( round(score(gr) %% 1, 3) == 0 ))
         score(gr) <- as.integer(score(gr))
     gr
 }
+
+
+
+#' Remove odd chromosomes from GRanges objects
+#'
+#' This convenience function removes non-standard, mitochondrial, and/or sex
+#' chromosomes from any GRanges object. For the chromosomes being removed, any
+#' ranges found on those chromosomes are removed, and the chromosomes are also
+#' removed from \code{seqinfo}. Standard chromosomes are defined using the
+#' \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}} function
+#' from the \code{GenomeInfoDb} package.
+#'
+#' @param gr Any GRanges object, however the object should have a standard
+#'   genome set, e.g. \code{genome(gr) <- "hg38"}
+#' @param keep_X,keep_Y,keep_M,keep_nonstandard Logicals indicating which
+#'   non-autosomes should be kept. By default, sex chromosomes are kept, but
+#'   mitochondrial and non-standard chromosomes are removed.
+#'
+#' @author Mike DeBerardine
+#' @seealso
+#'    \code{\link[GenomeInfoDb:standardChromosomes]{
+#'    GenomeInfoDb::standardChromosomes}},
+#'
+#' @export
+tidyChromosomes <- function(gr,
+                            keep_X = TRUE,
+                            keep_Y = TRUE,
+                            keep_M = FALSE,
+                            keep_nonstandard = FALSE) {
+
+    chrom <- standardChromosomes(gr)
+
+    if (keep_nonstandard) chrom <- seqlevels(gr)
+    if (!keep_X)  chrom <- chrom[ chrom != "chrX" ]
+    if (!keep_Y)  chrom <- chrom[ chrom != "chrY" ]
+    if (!keep_M)  chrom <- chrom[ (chrom != "chrM") & (chrom != "chrMT") ]
+    gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
+    sortSeqlevels(gr)
+}
+
 
 
 #' Import PRO-seq (or similar) bigWig files
@@ -50,14 +91,14 @@ import.PROseq <- function(plus_file,
     suppressWarnings( gr <- c(p_gr, m_gr) )
 
     # scores are imported as doubles by default; if whole numbers, make integers
-    gr <- .check_intscore(gr)
+    gr <- .try_int_score(gr)
 
     # Make the width of each range equal to 1
     gr <- makeGRangesBPres(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
-        gr <- .tidy_chrom(gr,
+        gr <- tidyChromosomes(gr,
                           keep_X = keep_X,
                           keep_Y = keep_Y,
                           keep_M = keep_M,
@@ -106,11 +147,11 @@ import.CoPRO <- function(plus_file,
     suppressWarnings(gr <- c(p_bg, m_bg)) # combine into 1 GRanges object
 
     # scores are imported as doubles by default; if whole numbers, make integers
-    gr <- .check_intscore(gr)
+    gr <- .try_int_score(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
-        gr <- .tidy_chrom(gr,
+        gr <- tidyChromosomes(gr,
                           keep_X = keep_X,
                           keep_Y = keep_Y,
                           keep_M = keep_M,
@@ -147,11 +188,11 @@ import.bw_trim <- function(file,
     gr <- rtracklayer::import.bw(file)
 
     # scores are imported as doubles by default; if whole numbers, make integers
-    gr <- .check_intscore(gr)
+    gr <- .try_int_score(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
-        gr <- .tidy_chrom(gr,
+        gr <- tidyChromosomes(gr,
                           keep_X = keep_X,
                           keep_Y = keep_Y,
                           keep_M = keep_M,
@@ -162,88 +203,89 @@ import.bw_trim <- function(file,
 }
 
 
-#' Import transcripts from UCSC
-#'
-#' Imports all annotated transcripts by calling
-#' \code{\link[GenomicFeatures:transcripts]{GenomicFeatures::transcripts}, which
-#' includes alternative isoforms. Currently supports hg38, hg19, mm10, mm9, dm6,
-#' and dm3. This script filters non-standard and mitochondrial chromosomes.
-#'
-#' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
-#' @param keep_X A logical indicating if X chromosome transcripts should be
-#'   kept.
-#' @param keep_Y A logical indicating if Y chromosome transcripts should be
-#'   kept.
-#'
-#' @return A GRanges object, including metadata for unique identifiers.
-#' @author Mike DeBerardine
-#' @export
-importTxsUCSC <- function(genome,
-                          keep_X = TRUE,
-                          keep_Y = TRUE,
-                          keep_M = FALSE,
-                          keep_nonstandard = FALSE) {
-
-    db.txs <- .getTxDb(genome)
-    txs <- GenomicFeatures::transcripts(db.txs)
-
-    # keep tx_name (unique ids); remove tx_id (numbered starting at 1);
-    mcols(txs) <- data.frame(tx_name = txs$tx_name, stringsAsFactors = F)
-
-    # add gene_id
-    suppressMessages(
-        gene_names <- AnnotationDbi::select(db.txs,
-                                           keys = keys(db.txs),
-                                           columns = c("TXNAME"),
-                                           keytype = "GENEID")
-    )
-    txs <- txs[order(txs$tx_name)] # pre-sort for speed
-    gene_names <- gene_names[order(gene_names$TXNAME), ]
-
-    if ( all(txs$tx_name == gene_names$TXNAME) )
-        txs$gene_id <- gene_names$GENEID
-
-    # remove non-standard & mitochondrial chromosomes
-    txs <- .tidy_chrom(txs,
-                       keep_X = keep_X,
-                       keep_Y = keep_Y,
-                       keep_M = keep_M,
-                       keep_nonstandard = keep_nonstandard)
-
-    return(sort(txs))
-}
-
-
-
-#' Import genes from UCSC
-#'
-#' Imports all annotated genes by calling
-#' \code{\link[GenomicFeatures:genes]{GenomicFeatures::genes}}, which provides a
-#' single range for each annotated gene. Currently supports hg38, hg19, mm10,
-#' mm9, dm6, and dm3. This script filters non-standard and mitochondrial
-#' chromosomes.
-#'
-#' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
-#' @param keep_X A logical indicating if X chromosome transcripts should be
-#'   kept.
-#' @param keep_Y A logical indicating if Y chromosome transcripts should be
-#'   kept.
-#'
-#' @return A GRanges object, including metadata for unique identifiers.
-#' @author Mike DeBerardine
-#' @export
-importGenesUCSC <- function(genome,
-                            keep_X = TRUE,
-                            keep_Y = TRUE,
-                            keep_M = FALSE,
-                            keep_nonstandard = FALSE) {
-
-    db.txs <- .getTxDb(genome)
-    genes <- GenomicFeatures::genes(db.txs)
-    genes <- .tidy_chrom(txs,
-                         keep_X = keep_X,
-                         keep_Y = keep_Y,
-                         keep_M = keep_M,
-                         keep_nonstandard = keep_nonstandard)
-    return(sort(genes))
-}
+# #' Import transcripts from UCSC
+# #'
+# #' Imports all annotated transcripts by calling
+# #' \code{\link[GenomicFeatures:transcripts]{GenomicFeatures::transcripts}, which
+# #' includes alternative isoforms. Currently supports hg38, hg19, mm10, mm9, dm6,
+# #' and dm3. This script filters non-standard and mitochondrial chromosomes.
+# #'
+# #' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
+# #' @param keep_X A logical indicating if X chromosome transcripts should be
+# #'   kept.
+# #' @param keep_Y A logical indicating if Y chromosome transcripts should be
+# #'   kept.
+# #'
+# #' @return A GRanges object, including metadata for unique identifiers.
+# #' @author Mike DeBerardine
+# #' @export
+# importTxsUCSC <- function(genome,
+#                           keep_X = TRUE,
+#                           keep_Y = TRUE,
+#                           keep_M = FALSE,
+#                           keep_nonstandard = FALSE) {
+#
+#     db.txs <- .getTxDb(genome)
+#     txs <- GenomicFeatures::transcripts(db.txs)
+#
+#     # keep tx_name (unique ids); remove tx_id (numbered starting at 1);
+#     mcols(txs) <- data.frame(tx_name = txs$tx_name, stringsAsFactors = F)
+#
+#     # add gene_id
+#     suppressMessages(
+#         gene_names <- AnnotationDbi::select(db.txs,
+#                                            keys = keys(db.txs),
+#                                            columns = c("TXNAME"),
+#                                            keytype = "GENEID")
+#     )
+#     txs <- txs[order(txs$tx_name)] # pre-sort for speed
+#     gene_names <- gene_names[order(gene_names$TXNAME), ]
+#
+#     if ( all(txs$tx_name == gene_names$TXNAME) )
+#         txs$gene_id <- gene_names$GENEID
+#
+#     # remove non-standard & mitochondrial chromosomes
+#     txs <- tidyChromosomes(txs,
+#                        keep_X = keep_X,
+#                        keep_Y = keep_Y,
+#                        keep_M = keep_M,
+#                        keep_nonstandard = keep_nonstandard)
+#
+#     return(sort(txs))
+# }
+#
+#
+#
+# #' Import genes from UCSC
+# #'
+# #' Imports all annotated genes by calling
+# #' \code{\link[GenomicFeatures:genes]{GenomicFeatures::genes}}, which provides a
+# #' single range for each annotated gene. Currently supports hg38, hg19, mm10,
+# #' mm9, dm6, and dm3. This script filters non-standard and mitochondrial
+# #' chromosomes.
+# #'
+# #' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
+# #' @param keep_X A logical indicating if X chromosome transcripts should be
+# #'   kept.
+# #' @param keep_Y A logical indicating if Y chromosome transcripts should be
+# #'   kept.
+# #'
+# #' @return A GRanges object, including metadata for unique identifiers.
+# #' @author Mike DeBerardine
+# #' @export
+# importGenesUCSC <- function(genome,
+#                             keep_X = TRUE,
+#                             keep_Y = TRUE,
+#                             keep_M = FALSE,
+#                             keep_nonstandard = FALSE) {
+#
+#     db.txs <- .getTxDb(genome)
+#     genes <- GenomicFeatures::genes(db.txs)
+#     genes <- tidyChromosomes(txs,
+#                          keep_X = keep_X,
+#                          keep_Y = keep_Y,
+#                          keep_M = keep_M,
+#                          keep_nonstandard = keep_nonstandard)
+#     return(sort(genes))
+# }
+#
