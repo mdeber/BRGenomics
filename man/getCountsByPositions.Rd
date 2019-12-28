@@ -8,8 +8,8 @@ getCountsByPositions(
   dataset.gr,
   regions.gr,
   binsize = 1,
-  bin_FUN = sum,
-  simplify_multi_widths = c("list", "pad 0", "pad NA"),
+  FUN = sum,
+  simplify.multi.widths = c("list", "pad 0", "pad NA"),
   field = "score",
   ncores = detectCores()
 )
@@ -23,11 +23,11 @@ getCountsByPositions(
 \item{binsize}{Size of bins (in bp) to use for counting within each range of
 \code{regions.gr}. Note that counts will \emph{not} be length-normalized.}
 
-\item{bin_FUN}{If \code{binsize > 1}, the function used to aggregate the
+\item{FUN}{If \code{binsize > 1}, the function used to aggregate the
 signal within each bin. By default, the signal is summed, but any function
 operating on a numeric vector can be used.}
 
-\item{simplify_multi_widths}{A string indicating the output format if the
+\item{simplify.multi.widths}{A string indicating the output format if the
 ranges in \code{regions.gr} have variable widths. Default = \code{"list"}.
 See details below.}
 
@@ -46,9 +46,9 @@ region.
 If the widths of all ranges in \code{regions.gr} are equal, a matrix
   is returned containing a row for each range in \code{regions.gr}, and a
   column for each bin. For input \code{regions.gr} with varying widths,
-  setting \code{simplify_multi_widths = "list"} will output a list of
+  setting \code{simplify.multi.widths = "list"} will output a list of
   variable-length vectors, with each vector corresponding to an input region.
-  If \code{simplify_multi_widths = "pad 0"} or \code{"pad NA"}, the output
+  If \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output
   is a matrix containing a row for each range in \code{regions.gr}, and a
   column for each position in each range. The number of columns is determined
   by the largest range in \code{regions.gr}, and columns corresponding to

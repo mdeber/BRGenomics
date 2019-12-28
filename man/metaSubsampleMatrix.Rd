@@ -7,10 +7,10 @@
 metaSubsampleMatrix(
   counts.mat,
   binsize = 1,
-  first_output_xval = 1,
-  sample_name = deparse(substitute(counts.mat)),
-  n_iter = 1000,
-  prop_subsample = 0.1,
+  first.output.xval = 1,
+  sample.name = deparse(substitute(counts.mat)),
+  n.iter = 1000,
+  prop.sample = 0.1,
   lower = 0.125,
   upper = 0.875,
   NF = 1,
@@ -24,17 +24,17 @@ interest and columns are sites/bins in each region.}
 \item{binsize}{The size of bin (number of columns, e.g. basepairs) to use for
 metaplotting. Especially important for metaplots over large/sparse regions.}
 
-\item{first_output_xval}{The relative start position of the first bin, e.g.
+\item{first.output.xval}{The relative start position of the first bin, e.g.
 if regions.gr begins at 50 bases upstream of the TSS, set
-\code{first_output_xval = -50}. This number only affects the x-values that
+\code{first.output.xval = -50}. This number only affects the x-values that
 are returned, which are provided as a convenience.}
 
-\item{sample_name}{Defaults to the name of \code{dataset.gr}.}
+\item{sample.name}{Defaults to the name of \code{dataset.gr}.}
 
-\item{n_iter}{Number of random subsampling iterations to perform. Default is
+\item{n.iter}{Number of random subsampling iterations to perform. Default is
 1000.}
 
-\item{prop_subsample}{The proportion of rows to subsample in each iteration.
+\item{prop.sample}{The proportion of rows to subsample in each iteration.
 The default is 0.1.}
 
 \item{lower}{The lower quantile of subsampled signal means to return. The

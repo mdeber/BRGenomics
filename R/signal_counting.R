@@ -54,10 +54,10 @@ getCountsByRegions <- function(dataset.gr,
 #' @param regions.gr A GRanges object containing all the regions of interest.
 #' @param binsize Size of bins (in bp) to use for counting within each range of
 #'   \code{regions.gr}. Note that counts will \emph{not} be length-normalized.
-#' @param bin_FUN If \code{binsize > 1}, the function used to aggregate the
+#' @param FUN If \code{binsize > 1}, the function used to aggregate the
 #'   signal within each bin. By default, the signal is summed, but any function
 #'   operating on a numeric vector can be used.
-#' @param simplify_multi_widths A string indicating the output format if the
+#' @param simplify.multi.widths A string indicating the output format if the
 #'   ranges in \code{regions.gr} have variable widths. Default = \code{"list"}.
 #'   See details below.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
@@ -68,9 +68,9 @@ getCountsByRegions <- function(dataset.gr,
 #' @details If the widths of all ranges in \code{regions.gr} are equal, a matrix
 #'   is returned containing a row for each range in \code{regions.gr}, and a
 #'   column for each bin. For input \code{regions.gr} with varying widths,
-#'   setting \code{simplify_multi_widths = "list"} will output a list of
+#'   setting \code{simplify.multi.widths = "list"} will output a list of
 #'   variable-length vectors, with each vector corresponding to an input region.
-#'   If \code{simplify_multi_widths = "pad 0"} or \code{"pad NA"}, the output
+#'   If \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output
 #'   is a matrix containing a row for each range in \code{regions.gr}, and a
 #'   column for each position in each range. The number of columns is determined
 #'   by the largest range in \code{regions.gr}, and columns corresponding to
@@ -83,8 +83,8 @@ getCountsByRegions <- function(dataset.gr,
 getCountsByPositions <- function(dataset.gr,
                                  regions.gr,
                                  binsize = 1,
-                                 bin_FUN = sum,
-                                 simplify_multi_widths = c("list",
+                                 FUN = sum,
+                                 simplify.multi.widths = c("list",
                                                            "pad 0",
                                                            "pad NA"),
                                  field = "score",
@@ -102,8 +102,8 @@ getCountsByPositions <- function(dataset.gr,
             getCountsByPositions(dataset.gr = dataset.gr,
                                  regions.gr = regions.gr,
                                  binsize = binsize,
-                                 bin_FUN = bin_FUN,
-                                 simplify_multi_widths = simplify_multi_widths,
+                                 FUN = FUN,
+                                 simplify.multi.widths = simplify.multi.widths,
                                  field = i)
         }, mc.cores = ncores)
         names(reslist) <- field
@@ -111,16 +111,8 @@ getCountsByPositions <- function(dataset.gr,
     }
 
     if (multi_width) {
-
-        # check 'simplify_multi_widths' argument
-        if (missing(simplify_multi_widths))  simplify_multi_widths <- "list"
-        if (!simplify_multi_widths %in% c("list", "pad 0", "pad NA")) {
-            stop(message = .nicemsg("regions.gr has multiple widths, but an
-                                    invalid argument for simplify_multi_widths
-                                    was given. See documentation"))
-            return(geterrmessage())
-        }
-
+        simplify.multi.widths <- match.arg(simplify.multi.widths,
+                                           c("list", "pad 0", "pad NA"))
         # expand all regions to be the same width
         widths <- width(regions.gr) # save widths
         suppressWarnings(
@@ -144,14 +136,14 @@ getCountsByPositions <- function(dataset.gr,
 
     if (binsize > 1) {
         mat <- apply(mat, 1, function(x) .binVector(x, binsize = binsize,
-                                                    FUN = bin_FUN))
+                                                    FUN = FUN))
         mat <- t(mat) # apply will cbind rather than rbind
     }
 
     if (multi_width) {
         nbins_i <- floor(widths / binsize) # number of bins within each region
 
-        if (simplify_multi_widths == "list") {
+        if (simplify.multi.widths == "list") {
 
             return(mapply(function(i, nbin) mat[i, 1:nbin],
                           1:nrow(mat), nbins_i))
@@ -163,7 +155,7 @@ getCountsByPositions <- function(dataset.gr,
             arridx_pad <- t(arridx_pad) # sapply/vapply cbinds the rows
             arridx_pad <- which(arridx_pad, arr.ind = TRUE)
 
-            if (simplify_multi_widths == "pad 0") {
+            if (simplify.multi.widths == "pad 0") {
                 mat[arridx_pad] <- 0
             } else {
                 mat[arridx_pad] <- NA

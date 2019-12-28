@@ -71,7 +71,7 @@ test_that("can get list from multi-width counts matrix", {
 
 test_that("can get 0-padded counts matrix for multi-width regions", {
     padmat <- getCountsByPositions(PROseq, txs_dm6_chr4,
-                                   simplify_multi_widths = "pad 0")
+                                   simplify.multi.widths = "pad 0")
     expect_is(padmat, "matrix")
     expect_equivalent(dim(padmat),
                       c(length(txs_dm6_chr4), max(width(txs_dm6_chr4))))
@@ -80,32 +80,30 @@ test_that("can get 0-padded counts matrix for multi-width regions", {
 
 test_that("can get NA-padded counts matrix for multi-width regions", {
     padmat <- getCountsByPositions(PROseq, txs_dm6_chr4,
-                                   simplify_multi_widths = "pad NA")
+                                   simplify.multi.widths = "pad NA")
     expect_is(padmat, "matrix")
     expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
 })
 
 test_that("error on incorrect simplify argument", {
     expect_error(getCountsByPositions(PROseq, txs_dm6_chr4,
-                                      simplify_multi_widths = "notright"))
+                                      simplify.multi.widths = "notright"))
 })
 
 
 test_that("can perform arbitrary binning operations on count matrix", {
-    binsums <- getCountsByPositions(PROseq, txs_pr, binsize = 10,
-                                    bin_FUN = sum)
+    binsums <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sum)
     expect_is(binsums, "matrix")
     expect_equivalent(rowSums(binsums), rowSums(countsmat))
     expect_equivalent(dim(binsums), c(length(txs_dm6_chr4), 10))
 
-    binmeans <- getCountsByPositions(PROseq, txs_pr, binsize = 10,
-                                     bin_FUN = mean)
+    binmeans <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = mean)
     expect_is(binmeans, "matrix")
     expect_equivalent(which(binsums == 0), which(binmeans == 0))
     expect_true(sum(binsums) != sum(binmeans))
 
     binmedians <- getCountsByPositions(PROseq, txs_pr, binsize = 10,
-                                       bin_FUN = function(x) quantile(x, 0.5))
+                                       FUN = function(x) quantile(x, 0.5))
     expect_is(binmedians, "matrix")
     expect_equivalent(dim(binmedians), dim(binsums))
     expect_false(all(rowSums(binmedians) == 0))

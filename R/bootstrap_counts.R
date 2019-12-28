@@ -18,14 +18,14 @@
 #'   interest and columns are sites/bins in each region.
 #' @param binsize The size of bin (number of columns, e.g. basepairs) to use for
 #'   metaplotting. Especially important for metaplots over large/sparse regions.
-#' @param first_output_xval The relative start position of the first bin, e.g.
+#' @param first.output.xval The relative start position of the first bin, e.g.
 #'   if regions.gr begins at 50 bases upstream of the TSS, set
-#'   \code{first_output_xval = -50}. This number only affects the x-values that
+#'   \code{first.output.xval = -50}. This number only affects the x-values that
 #'   are returned, which are provided as a convenience.
-#' @param sample_name Defaults to the name of \code{dataset.gr}.
-#' @param n_iter Number of random subsampling iterations to perform. Default is
+#' @param sample.name Defaults to the name of \code{dataset.gr}.
+#' @param n.iter Number of random subsampling iterations to perform. Default is
 #'   1000.
-#' @param prop_subsample The proportion of rows to subsample in each iteration.
+#' @param prop.sample The proportion of rows to subsample in each iteration.
 #'   The default is 0.1.
 #' @param lower The lower quantile of subsampled signal means to return. The
 #'   default is 0.125 (12.5th percentile).
@@ -45,20 +45,20 @@
 #' @export
 metaSubsampleMatrix <- function(counts.mat,
                                 binsize = 1,
-                                first_output_xval = 1,
-                                sample_name = deparse(substitute(counts.mat)),
-                                n_iter = 1000,
-                                prop_subsample = 0.1,
+                                first.output.xval = 1,
+                                sample.name = deparse(substitute(counts.mat)),
+                                n.iter = 1000,
+                                prop.sample = 0.1,
                                 lower = 0.125,
                                 upper = 0.875,
                                 NF = 1,
                                 ncores = 1) {
 
     # Check that enough iterations are given for meaningful quantiles
-    if (n_iter != 1 & (round(n_iter*lower) == 0 |
-                       round(n_iter*lower) == 0.5*n_iter |
-                       round(n_iter*upper) == 0.5*n_iter |
-                       round(n_iter*upper) == n_iter)) {
+    if (n.iter != 1 & (round(n.iter*lower) == 0 |
+                       round(n.iter*lower) == 0.5*n.iter |
+                       round(n.iter*upper) == 0.5*n.iter |
+                       round(n.iter*upper) == n.iter)) {
         msg <- "Insufficient iterations to obtain distinct values of quantiles"
         stop(message = msg)
         return(geterrmessage())
@@ -66,7 +66,7 @@ metaSubsampleMatrix <- function(counts.mat,
 
     nbins <- floor(ncol(counts.mat) / binsize)
     ngenes <- nrow(counts.mat)
-    nsample <- round(prop_subsample*ngenes)
+    nsample <- round(prop.sample*ngenes)
 
     if (binsize > 1) {
         counts.mat <- apply(counts.mat, 1, .binVector, binsize = binsize)
@@ -75,37 +75,37 @@ metaSubsampleMatrix <- function(counts.mat,
 
     if (ncores == 1) {
         # Randomly subsample rows of counts.mat
-        # -> Matrix of dim = (nsample, n_iter)
-        idx_mat <- replicate(n_iter,
+        # -> Matrix of dim = (nsample, n.iter)
+        idx_mat <- replicate(n.iter,
                              sample(ngenes, size = nsample),
                              simplify = "array")
 
         # For each iteration, get average signal in each bin
-        # -> Matrix of dim = (nbins, n_iter)
+        # -> Matrix of dim = (nbins, n.iter)
         binavg_mat <- apply(idx_mat,
                             2,
                             function(idx) colMeans(counts.mat[idx, ]))
     } else {
         # Randomly subsample rows of the counts.mat
-        # -> List of length = n_iter, containing vectors of length = nsample
-        idx_mat <- replicate(n_iter,
+        # -> List of length = n.iter, containing vectors of length = nsample
+        idx_mat <- replicate(n.iter,
                              sample(ngenes, size = nsample),
                              simplify = FALSE)
 
         # For each iteration, get average signal in each bin
-        # -> List of length = n_iter containing vectors of length = nbins
+        # -> List of length = n.iter containing vectors of length = nbins
         binavg_mat <- mclapply(idx_mat,
                                function(idx) colMeans(counts.mat[idx, ]),
                                mc.cores = ncores)
 
         # Collapse list into matrix
-        # -> Matrix of dim = (nbins, n_iter)
-        binavg_mat <- matrix(unlist(binavg_mat), ncol = n_iter)
+        # -> Matrix of dim = (nbins, n.iter)
+        binavg_mat <- matrix(unlist(binavg_mat), ncol = n.iter)
     }
 
     # calculate final outputs
-    if (n_iter == 1) {
-        message(.nicemsg("With n_iter = 1, output mean and quantiles are not
+    if (n.iter == 1) {
+        message(.nicemsg("With n.iter = 1, output mean and quantiles are not
                          bootstrapped"))
         mean <- NF * binavg_mat
         lower <- NF * apply(counts.mat[idx_mat,], 2, quantile, lower)
@@ -119,13 +119,13 @@ metaSubsampleMatrix <- function(counts.mat,
     # Also return x-values and sample names for plotting;
     #   x-values centered in bins
     if (binsize == 1) {
-        x <- seq(0, nbins - 1) + first_output_xval
+        x <- seq(0, nbins - 1) + first.output.xval
     } else {
         x <- seq(0.5*binsize,
-                 nbins*binsize - 0.5*binsize, binsize) + first_output_xval
+                 nbins*binsize - 0.5*binsize, binsize) + first.output.xval
     }
 
-    return(data.frame(x, mean, lower, upper, sample_name))
+    return(data.frame(x, mean, lower, upper, sample.name))
 }
 
 
@@ -146,16 +146,16 @@ metaSubsampleMatrix <- function(counts.mat,
 #'   metaplot. All ranges must have the same width.
 #' @param binsize The size of bin (number of columns, e.g. basepairs) to use for
 #'   metaplotting. Especially important for metaplots over large/sparse regions.
-#' @param first_output_xval The relative start position of the first bin, e.g.
+#' @param first.output.xval The relative start position of the first bin, e.g.
 #'   if regions.gr begins at 50 bases upstream of the TSS, set
-#'   \code{first_output_xval = -50}. This number only affects the x-values that
+#'   \code{first.output.xval = -50}. This number only affects the x-values that
 #'   are returned, which are provided as a convenience.
-#' @param sample_name Defaults to the name of \code{dataset.gr}. This is
+#' @param sample.name Defaults to the name of \code{dataset.gr}. This is
 #'   included in the output as a convenience for row-binding outputs from
 #'   different samples.
-#' @param n_iter Number of random subsampling iterations to perform. Default is
+#' @param n.iter Number of random subsampling iterations to perform. Default is
 #'   \code{1000}.
-#' @param prop_subsample The proportion of the ranges in \code{regions.gr} (e.g.
+#' @param prop.sample The proportion of the ranges in \code{regions.gr} (e.g.
 #'   the proportion of genes) to subsample in each iteration. The default is
 #'   \code{0.1} (10 percent).
 #' @param lower The lower quantile of subsampled signal means to return. The
@@ -164,7 +164,7 @@ metaSubsampleMatrix <- function(counts.mat,
 #'   default is \code{0.875} (85.5th percentile).
 #' @param NF Optional normalization factor by which to multiply the counts.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param remove_empty A logical indicating whether regions without signal
+#' @param remove.empty A logical indicating whether regions without signal
 #'   should be removed from the analysis.
 #' @param ncores Number of cores to use for parallel computation. No parallel
 #'   processing is used by default, as there's no performance benefit for
@@ -180,15 +180,15 @@ metaSubsampleMatrix <- function(counts.mat,
 metaSubsample <- function(dataset.gr,
                           regions.gr,
                           binsize = 1,
-                          first_output_xval = 1,
-                          sample_name = deparse(substitute(dataset.gr)),
-                          n_iter = 1000,
-                          prop_subsample = 0.1,
+                          first.output.xval = 1,
+                          sample.name = deparse(substitute(dataset.gr)),
+                          n.iter = 1000,
+                          prop.sample = 0.1,
                           lower = 0.125,
                           upper = 0.875,
                           NF = 1,
                           field = "score",
-                          remove_empty = FALSE,
+                          remove.empty = FALSE,
                           ncores = 1) {
 
     if (length(unique(width(regions.gr))) > 1) {
@@ -205,7 +205,7 @@ metaSubsample <- function(dataset.gr,
         # get and alter arguments
         fun_args <- as.list(match.call())[-1]
         fun_args$ncores <- 1
-        fun_args$remove_empty <- FALSE
+        fun_args$remove.empty <- FALSE
 
         # in normal usage, these aren't required;
         #   but necessary when running package tests...
@@ -223,7 +223,7 @@ metaSubsample <- function(dataset.gr,
         return(dflist)
     }
 
-    if (remove_empty)  regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
+    if (remove.empty)  regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
     # Get signal in each bin of each gene
     # -> Matrix of dim = (ngenes, nbins)
@@ -234,10 +234,10 @@ metaSubsample <- function(dataset.gr,
 
     metamat <- metaSubsampleMatrix(counts.mat = signal.bins,
                                    binsize = 1,
-                                   first_output_xval = first_output_xval,
-                                   sample_name = sample_name,
-                                   n_iter = n_iter,
-                                   prop_subsample = prop_subsample,
+                                   first.output.xval = first.output.xval,
+                                   sample.name = sample.name,
+                                   n.iter = n.iter,
+                                   prop.sample = prop.sample,
                                    lower = lower,
                                    upper = upper,
                                    NF = NF,
@@ -248,7 +248,7 @@ metaSubsample <- function(dataset.gr,
         nbins <- nrow(metamat)
         binstart <- 0.5*binsize
         binstep <- nbins*binsize - 0.5*binsize
-        metamat$x <- seq(binstart, binstep, binsize) + first_output_xval
+        metamat$x <- seq(binstart, binstep, binsize) + first.output.xval
 
         y_vals <- c("mean", "lower", "upper")
         metamat[, y_vals] <- metamat[, y_vals] / binsize
@@ -321,10 +321,10 @@ metaSubsample <- function(dataset.gr,
 # #' @param nbins_linear_end The number of bins to use for counting signal within
 # #'   \code{linear_regions_end.gr}. Defaults to the width of the regions, i.e. a
 # #'   binsize of 1 (no binning).
-# #' @param sample_name Defaults to the name of \code{dataset.gr}.
-# #' @param n_iter Number of random subsampling iterations to perform. Default is
+# #' @param sample.name Defaults to the name of \code{dataset.gr}.
+# #' @param n.iter Number of random subsampling iterations to perform. Default is
 # #'   1000.
-# #' @param prop_subsample The proportion of the genelist (regions.gr) to
+# #' @param prop.sample The proportion of the genelist (regions.gr) to
 # #'   subsample in each iteration. The default is 0.1.
 # #' @param lower The lower quantile of subsampled signal means to return. The
 # #'   default is 0.125 (12.5th percentile).
@@ -332,7 +332,7 @@ metaSubsample <- function(dataset.gr,
 # #'   default is 0.875 (85.5th percentile).
 # #' @param NF Optional normalization factor by which to multiply the counts.
 # #' @param field The metadata field of \code{dataset.gr} to be counted.
-# #' @param remove_empty A logical indicating whether regions without signal
+# #' @param remove.empty A logical indicating whether regions without signal
 # #'   should be removed from the analysis.
 # #' @param ncores Number of cores to use for parallel computation. As of writing,
 # #'   parallel processing doesn't show any benefit for short computation times
@@ -359,14 +359,14 @@ metaSubsample <- function(dataset.gr,
 # unique(width(linear_regions_start.gr)),
 #                                 nbins_linear_end =
 # unique(width(linear_regions_end.gr)),
-#                                 sample_name = deparse(substitute(dataset.gr)),
-#                                 n_iter = 1000,
-#                                 prop_subsample = 0.1,
+#                                 sample.name = deparse(substitute(dataset.gr)),
+#                                 n.iter = 1000,
+#                                 prop.sample = 0.1,
 #                                 lower = 0.125,
 #                                 upper = 0.875,
 #                                 NF = 1,
 #                                 field = "score",
-#                                 remove_empty = FALSE,
+#                                 remove.empty = FALSE,
 #                                 ncores = 1) {
 #
 #     scaled_regions.list <- list(...)
@@ -422,10 +422,10 @@ metaSubsample <- function(dataset.gr,
 #     # -------------------------------------------------- #
 #
 #     # Check quantiles
-#     if (n_iter != 1 && (round(n_iter*lower) == 0 |
-#                         round(n_iter*lower) == 0.5*n_iter |
-#                         round(n_iter*upper) == 0.5*n_iter |
-#                         round(n_iter*upper) == n_iter)) {
+#     if (n.iter != 1 && (round(n.iter*lower) == 0 |
+#                         round(n.iter*lower) == 0.5*n.iter |
+#                         round(n.iter*upper) == 0.5*n.iter |
+#                         round(n.iter*upper) == n.iter)) {
 #         stop(message = .nicemsg("Insufficient iterations to obtain distinct
 #                                 values of quantiles"))
 #         return(geterrmessage())
@@ -442,7 +442,7 @@ metaSubsample <- function(dataset.gr,
 #                                            regions.gr = regions.gr,
 #                                            binsize = binsize,
 #                                            field = field,
-#                                            remove_empty = FALSE)
+#                                            remove.empty = FALSE)
 #         counts.mat <- counts.mat / binsize
 #         return(counts.mat)
 #     }
@@ -494,7 +494,7 @@ metaSubsample <- function(dataset.gr,
 #     # Creates matrix of dim = (ngenes, total number of bins across all regions)
 #
 #     ngenes <- unique(length_check)
-#     nsample <- round(prop_subsample*ngenes)
+#     nsample <- round(prop.sample*ngenes)
 #     counts.mat <- c()
 #
 #     # For scaled counts, combine in order given
@@ -522,7 +522,7 @@ metaSubsample <- function(dataset.gr,
 #
 #     # -------------------------------------------------- #
 #
-#     if (remove_empty) {
+#     if (remove.empty) {
 #         counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
 #     }
 #
@@ -532,9 +532,9 @@ metaSubsample <- function(dataset.gr,
 #
 #     metaSubsampleMatrix(counts.mat = counts.mat,
 #                              binsize = 1,
-#                              sample_name = sample_name,
-#                              n_iter = n_iter,
-#                              prop_subsample = prop_subsample,
+#                              sample.name = sample.name,
+#                              n.iter = n.iter,
+#                              prop.sample = prop.sample,
 #                              lower = lower,
 #                              upper = upper,
 #                              NF = NF,
