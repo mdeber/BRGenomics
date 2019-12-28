@@ -23,7 +23,7 @@
 #'
 #' @param gr Any GRanges object, however the object should have a standard
 #'   genome set, e.g. \code{genome(gr) <- "hg38"}
-#' @param keep_X,keep_Y,keep_M,keep_nonstandard Logicals indicating which
+#' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
 #'
@@ -34,17 +34,17 @@
 #'
 #' @export
 tidyChromosomes <- function(gr,
-                            keep_X = TRUE,
-                            keep_Y = TRUE,
-                            keep_M = FALSE,
-                            keep_nonstandard = FALSE) {
+                            keep.X = TRUE,
+                            keep.Y = TRUE,
+                            keep.M = FALSE,
+                            keep.nonstandard = FALSE) {
 
     chrom <- standardChromosomes(gr)
 
-    if (keep_nonstandard) chrom <- seqlevels(gr)
-    if (!keep_X)  chrom <- chrom[ chrom != "chrX" ]
-    if (!keep_Y)  chrom <- chrom[ chrom != "chrY" ]
-    if (!keep_M)  chrom <- chrom[ (chrom != "chrM") & (chrom != "chrMT") ]
+    if (keep.nonstandard) chrom <- seqlevels(gr)
+    if (!keep.X)  chrom <- chrom[ chrom != "chrX" ]
+    if (!keep.Y)  chrom <- chrom[ chrom != "chrY" ]
+    if (!keep.M)  chrom <- chrom[ (chrom != "chrM") & (chrom != "chrMT") ]
     gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
     sortSeqlevels(gr)
 }
@@ -61,9 +61,9 @@ tidyChromosomes <- function(gr,
 #' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
 #'   given, non-standard chromosomes are trimmed, and options for sex and
 #'   mitochondrial chromosomes are applied.
-#' @param keep_X Logical indicating whether the X chromosome should be kept.
-#' @param keep_Y Logical indicating whether the Y chromosome should be kept.
-#' @param keep_M Logical indicating whether mitochondrial chromosomes should be
+#' @param keep.X Logical indicating whether the X chromosome should be kept.
+#' @param keep.Y Logical indicating whether the Y chromosome should be kept.
+#' @param keep.M Logical indicating whether mitochondrial chromosomes should be
 #'   kept.
 #'
 #' @return Imports a GRanges object containing base-pair resolution data, with
@@ -74,10 +74,10 @@ tidyChromosomes <- function(gr,
 import.PROseq <- function(plus_file,
                           minus_file,
                           genome = NULL,
-                          keep_X = TRUE,
-                          keep_Y = TRUE,
-                          keep_M = FALSE,
-                          keep_nonstandard = FALSE) {
+                          keep.X = TRUE,
+                          keep.Y = TRUE,
+                          keep.M = FALSE,
+                          keep.nonstandard = FALSE) {
 
     # make possible to import only plus or minus
 
@@ -99,10 +99,10 @@ import.PROseq <- function(plus_file,
     if (!is.null(genome)) {
         genome(gr) <- genome
         gr <- tidyChromosomes(gr,
-                          keep_X = keep_X,
-                          keep_Y = keep_Y,
-                          keep_M = keep_M,
-                          keep_nonstandard = keep_nonstandard)
+                              keep.X = keep.X,
+                              keep.Y = keep.Y,
+                              keep.M = keep.M,
+                              keep.nonstandard = keep.nonstandard)
     }
 
     return(sort(gr))
@@ -120,9 +120,9 @@ import.PROseq <- function(plus_file,
 #' @param minus.file Path of minus strand bedGraph file.
 #' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
 #'   given, non-standard chromosomes are trimmed.
-#' @param keep_X Logical indicating whether the X chromosome should be kept.
-#' @param keep_Y Logical indicating whether the Y chromosome should be kept.
-#' @param keep_M Logical indicating whether mitochondrial chromosomes should be
+#' @param keep.X Logical indicating whether the X chromosome should be kept.
+#' @param keep.Y Logical indicating whether the Y chromosome should be kept.
+#' @param keep.M Logical indicating whether mitochondrial chromosomes should be
 #'   kept.
 #'
 #' @return Imports a GRanges object containing entire strand-specific reads.
@@ -133,10 +133,10 @@ import.PROseq <- function(plus_file,
 import.CoPRO <- function(plus_file,
                          minus_file,
                          genome = NULL,
-                         keep_X = TRUE,
-                         keep_Y = TRUE,
-                         keep_M = FALSE,
-                         keep_nonstandard = FALSE) {
+                         keep.X = TRUE,
+                         keep.Y = TRUE,
+                         keep.M = FALSE,
+                         keep.nonstandard = FALSE) {
     # import bw as GRanges objects
     p_bg <- rtracklayer::import.bedGraph(plus_file)
     m_bg <- rtracklayer::import.bedGraph(minus_file)
@@ -152,10 +152,10 @@ import.CoPRO <- function(plus_file,
     if (!is.null(genome)) {
         genome(gr) <- genome
         gr <- tidyChromosomes(gr,
-                          keep_X = keep_X,
-                          keep_Y = keep_Y,
-                          keep_M = keep_M,
-                          keep_nonstandard = keep_nonstandard)
+                              keep.X = keep.X,
+                              keep.Y = keep.Y,
+                              keep.M = keep.M,
+                              keep.nonstandard = keep.nonstandard)
     }
     return(sort(gr))
 }
@@ -170,9 +170,9 @@ import.CoPRO <- function(plus_file,
 #' @param file Path of a bigWig file (non-stranded).
 #' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
 #'   given, non-standard chromosomes are trimmed.
-#' @param keep_X Logical indicating whether the X chromosome should be kept.
-#' @param keep_Y Logical indicating whether the Y chromosome should be kept.
-#' @param keep_M Logical indicating whether mitochondrial chromosomes should be
+#' @param keep.X Logical indicating whether the X chromosome should be kept.
+#' @param keep.Y Logical indicating whether the Y chromosome should be kept.
+#' @param keep.M Logical indicating whether mitochondrial chromosomes should be
 #'   kept.
 #'
 #' @return Imports a GRanges object
@@ -180,10 +180,10 @@ import.CoPRO <- function(plus_file,
 #' @export
 import.bw_trim <- function(file,
                            genome = NULL,
-                           keep_X = TRUE,
-                           keep_Y = TRUE,
-                           keep_M = FALSE,
-                           keep_nonstandard = FALSE) {
+                           keep.X = TRUE,
+                           keep.Y = TRUE,
+                           keep.M = FALSE,
+                           keep.nonstandard = FALSE) {
 
     gr <- rtracklayer::import.bw(file)
 
@@ -193,10 +193,10 @@ import.bw_trim <- function(file,
     if (!is.null(genome)) {
         genome(gr) <- genome
         gr <- tidyChromosomes(gr,
-                          keep_X = keep_X,
-                          keep_Y = keep_Y,
-                          keep_M = keep_M,
-                          keep_nonstandard = keep_nonstandard)
+                              keep.X = keep.X,
+                              keep.Y = keep.Y,
+                              keep.M = keep.M,
+                              keep.nonstandard = keep.nonstandard)
     }
 
     return(sort(gr))
@@ -211,19 +211,19 @@ import.bw_trim <- function(file,
 # #' and dm3. This script filters non-standard and mitochondrial chromosomes.
 # #'
 # #' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
-# #' @param keep_X A logical indicating if X chromosome transcripts should be
+# #' @param keep.X A logical indicating if X chromosome transcripts should be
 # #'   kept.
-# #' @param keep_Y A logical indicating if Y chromosome transcripts should be
+# #' @param keep.Y A logical indicating if Y chromosome transcripts should be
 # #'   kept.
 # #'
 # #' @return A GRanges object, including metadata for unique identifiers.
 # #' @author Mike DeBerardine
 # #' @export
 # importTxsUCSC <- function(genome,
-#                           keep_X = TRUE,
-#                           keep_Y = TRUE,
-#                           keep_M = FALSE,
-#                           keep_nonstandard = FALSE) {
+#                           keep.X = TRUE,
+#                           keep.Y = TRUE,
+#                           keep.M = FALSE,
+#                           keep.nonstandard = FALSE) {
 #
 #     db.txs <- .getTxDb(genome)
 #     txs <- GenomicFeatures::transcripts(db.txs)
@@ -246,10 +246,10 @@ import.bw_trim <- function(file,
 #
 #     # remove non-standard & mitochondrial chromosomes
 #     txs <- tidyChromosomes(txs,
-#                        keep_X = keep_X,
-#                        keep_Y = keep_Y,
-#                        keep_M = keep_M,
-#                        keep_nonstandard = keep_nonstandard)
+#                        keep.X = keep.X,
+#                        keep.Y = keep.Y,
+#                        keep.M = keep.M,
+#                        keep.nonstandard = keep.nonstandard)
 #
 #     return(sort(txs))
 # }
@@ -265,27 +265,27 @@ import.bw_trim <- function(file,
 # #' chromosomes.
 # #'
 # #' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
-# #' @param keep_X A logical indicating if X chromosome transcripts should be
+# #' @param keep.X A logical indicating if X chromosome transcripts should be
 # #'   kept.
-# #' @param keep_Y A logical indicating if Y chromosome transcripts should be
+# #' @param keep.Y A logical indicating if Y chromosome transcripts should be
 # #'   kept.
 # #'
 # #' @return A GRanges object, including metadata for unique identifiers.
 # #' @author Mike DeBerardine
 # #' @export
 # importGenesUCSC <- function(genome,
-#                             keep_X = TRUE,
-#                             keep_Y = TRUE,
-#                             keep_M = FALSE,
-#                             keep_nonstandard = FALSE) {
+#                             keep.X = TRUE,
+#                             keep.Y = TRUE,
+#                             keep.M = FALSE,
+#                             keep.nonstandard = FALSE) {
 #
 #     db.txs <- .getTxDb(genome)
 #     genes <- GenomicFeatures::genes(db.txs)
 #     genes <- tidyChromosomes(txs,
-#                          keep_X = keep_X,
-#                          keep_Y = keep_Y,
-#                          keep_M = keep_M,
-#                          keep_nonstandard = keep_nonstandard)
+#                          keep.X = keep.X,
+#                          keep.Y = keep.Y,
+#                          keep.M = keep.M,
+#                          keep.nonstandard = keep.nonstandard)
 #     return(sort(genes))
 # }
 #

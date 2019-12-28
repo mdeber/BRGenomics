@@ -8,21 +8,21 @@ import.CoPRO(
   plus_file,
   minus_file,
   genome = NULL,
-  keep_X = TRUE,
-  keep_Y = TRUE,
-  keep_M = FALSE,
-  keep_nonstandard = FALSE
+  keep.X = TRUE,
+  keep.Y = TRUE,
+  keep.M = FALSE,
+  keep.nonstandard = FALSE
 )
 }
 \arguments{
 \item{genome}{Optional string for UCSC reference genome, e.g. "hg38". If
 given, non-standard chromosomes are trimmed.}
 
-\item{keep_X}{Logical indicating whether the X chromosome should be kept.}
+\item{keep.X}{Logical indicating whether the X chromosome should be kept.}
 
-\item{keep_Y}{Logical indicating whether the Y chromosome should be kept.}
+\item{keep.Y}{Logical indicating whether the Y chromosome should be kept.}
 
-\item{keep_M}{Logical indicating whether mitochondrial chromosomes should be
+\item{keep.M}{Logical indicating whether mitochondrial chromosomes should be
 kept.}
 
 \item{plus.file}{Path of plus strand bedGraph file.}

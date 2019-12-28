@@ -6,17 +6,17 @@
 \usage{
 tidyChromosomes(
   gr,
-  keep_X = TRUE,
-  keep_Y = TRUE,
-  keep_M = FALSE,
-  keep_nonstandard = FALSE
+  keep.X = TRUE,
+  keep.Y = TRUE,
+  keep.M = FALSE,
+  keep.nonstandard = FALSE
 )
 }
 \arguments{
 \item{gr}{Any GRanges object, however the object should have a standard
 genome set, e.g. \code{genome(gr) <- "hg38"}}
 
-\item{keep_X, keep_Y, keep_M, keep_nonstandard}{Logicals indicating which
+\item{keep.X, keep.Y, keep.M, keep.nonstandard}{Logicals indicating which
 non-autosomes should be kept. By default, sex chromosomes are kept, but
 mitochondrial and non-standard chromosomes are removed.}
 }
