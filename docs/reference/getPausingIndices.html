@@ -126,8 +126,8 @@ calculated.</p>
   <span class='no'>promoters.gr</span>,
   <span class='no'>genebodies.gr</span>,
   <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
-  <span class='kw'>length_normalize</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>remove_empty</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>length.normalize</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>remove.empty</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>()
 )</pre>
 
@@ -156,13 +156,13 @@ interest.</p></td>
 indices for each region in each field.</p></td>
     </tr>
     <tr>
-      <th>length_normalize</th>
+      <th>length.normalize</th>
       <td><p>A logical indicating if signal counts within regions
 of interest should be length normalized. The default is <code>TRUE</code>, which
 is recommended, especially if input regions don't all have the same width.</p></td>
     </tr>
     <tr>
-      <th>remove_empty</th>
+      <th>remove.empty</th>
       <td><p>A logical indicating if genes without any signal in
 <code>promoters.gr</code> should be removed. No genes are filtered by default.</p></td>
     </tr>
@@ -175,7 +175,7 @@ is recommended, especially if input regions don't all have the same width.</p></
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A vector of length given by the length of the genelist (or possibly
-  shorter if <code>remove_empty = TRUE</code>). If <code>length(field) &gt; 1</code>, a
+  shorter if <code>remove.empty = TRUE</code>). If <code>length(field) &gt; 1</code>, a
   dataframe is returned, containing a column for each field.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

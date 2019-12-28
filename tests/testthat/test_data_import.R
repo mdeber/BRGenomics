@@ -56,20 +56,9 @@ test_that("tidyChromosome works", {
 })
 
 
-# Generic bigWig import ---------------------------------------------------
+# Stranded bigWig import --------------------------------------------------
 
-test_that("Single bigWig can be imported", {
-    bw <- import.bw_trim(ps_p_file, "dm6")
-    expect_equal(c(genome(bw), use.names = FALSE), "dm6")
-    expect_equal(length(bw), 16587)
-    expect_is(bw$score, "integer")
-    expect_true(all(as.character(strand(bw)) == "*"))
-})
-
-
-# PRO-seq import ----------------------------------------------------------
-
-ps <- import.PROseq(ps_p_file, ps_m_file, "dm6")
+ps <- import_bigWig(ps_p_file, ps_m_file, "dm6")
 
 test_that("PROseq files import", {
     expect_is(ps, "GRanges")
@@ -86,8 +75,7 @@ test_that("Imported PROseq formatted correctly", {
 })
 
 
-# Paired ends import ------------------------------------------------------
-
+# Stranded bedGraph import ------------------------------------------------
 
 paired_p_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bedGraph",
                              package = "BRGenomics")
@@ -101,7 +89,7 @@ test_that("Paired PROseq files are found", {
     expect_true(nchar(paired_m_file) > 1)
 })
 
-ps_paired <- import.CoPRO(paired_p_file, paired_m_file, "dm6")
+ps_paired <- import_bedGraph(paired_p_file, paired_m_file, "dm6")
 
 test_that("Paired PROseq files import", {
     expect_is(ps_paired, "GRanges")

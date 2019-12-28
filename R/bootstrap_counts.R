@@ -199,7 +199,7 @@ metaSubsample <- function(dataset.gr,
     if (length(field) > 1) {
         ## reset seed, or get user's seed, and store to sample the same
         ## ranges for each field
-        if (!exists(".Random.seed") | is.null(.Random.seed)) set.seed(NULL)
+        if ( !exists(".Random.seed") | is.null(.Random.seed) ) set.seed(NULL)
         seed <- .Random.seed
 
         # get and alter arguments

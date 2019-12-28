@@ -118,7 +118,7 @@
   <span class='no'>dataset.gr</span>,
   <span class='kw'>quantiles</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.5</span>, <span class='fl'>1</span>),
   <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>,
-  <span class='kw'>order_by_rank</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>order.by.rank</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>density</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
 )</pre>
 
@@ -148,7 +148,7 @@ quantile = 0</code>.</p></td>
       <td><p>The metadata field of <code>dataset.gr</code> to be counted.</p></td>
     </tr>
     <tr>
-      <th>order_by_rank</th>
+      <th>order.by.rank</th>
       <td><p>If <code>TRUE</code>, the output regions are sorted based on
 the amount of signal contained (in decreasing order). If <code>FALSE</code> (the
 default), genes are sorted by their positions.</p></td>
@@ -173,7 +173,7 @@ function only considers the total signal in each range.</p></td>
   signal (<code>lower_quantile = 0.25</code>, <code>upper_quantile = 0.75</code>). If
   <code>lower_quantile = 0</code> and <code>upper_quantile = 1</code>, all regions are
   returned, but the returned regions will be sorted by position, or by score
-  if <code>order_by_rank = TRUE</code>.</p>
+  if <code>order.by.rank = TRUE</code>.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code>getCountsByRegion</code></p></div>

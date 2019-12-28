@@ -40,7 +40,9 @@
 should be given as a metadata field (usually &quot;score&quot;), and should normally be
 integers. If normalized readcounts are given, an attempt will be made to
 infer the normalization factor based on the least-common-multiple of the
-signal found in the specified field." />
+signal found in the specified field. This function can also subsample ranges
+directly if field = NULL, but the sample function can be used
+in this scenario." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -114,7 +116,9 @@ signal found in the specified field." />
 should be given as a metadata field (usually "score"), and should normally be
 integers. If normalized readcounts are given, an attempt will be made to
 infer the normalization factor based on the least-common-multiple of the
-signal found in the specified field.</p>
+signal found in the specified field. This function can also subsample ranges
+directly if <code>field = NULL</code>, but the <code>sample</code> function can be used
+in this scenario.</p>
     </div>
 
     <pre class="usage"><span class='fu'>subsampleGRanges</span>(<span class='no'>dataset.gr</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>prop</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>field</span> <span class='kw'>=</span> <span class='st'>"score"</span>)</pre>

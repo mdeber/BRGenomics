@@ -128,8 +128,8 @@ being compared, and not for all samples present.</p>
   <span class='kw'>comparisons.list</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>sizeFactors</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>0.1</span>,
-  <span class='kw'>args_DESeq</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>args_results</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>args.DESeq</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>args.results</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fu'>detectCores</span>(),
   <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
 )</pre>
@@ -178,7 +178,7 @@ won't affect the output results, but is used as a performance optimization
 by DESeq2.</p></td>
     </tr>
     <tr>
-      <th>args_DESeq</th>
+      <th>args.DESeq</th>
       <td><p>Additional arguments passed to
 <code><a href='https://rdrr.io/pkg/DESeq2/man/DESeq.html'>DESeq</a></code>, given as a list of argument-value pairs,
 e.g. <code><a href='https://rdrr.io/r/base/list.html'>list(test = "LRT", fitType = "local")</a></code>. All arguments given here
@@ -186,7 +186,7 @@ will be passed to <code>DESeq</code> except for <code>object</code> and
 <code>parallel</code>. If no arguments are given, all defaults will be used.</p></td>
     </tr>
     <tr>
-      <th>args_results</th>
+      <th>args.results</th>
       <td><p>Additional arguments passed to
 <a href='https://rdrr.io/pkg/DESeq2/man/results.html'>DESeq2::results</a>, given as a list of argument-value
 pairs, e.g. <code><a href='https://rdrr.io/r/base/list.html'>list(altHypothesis = "greater", lfcThreshold = 1.5)</a></code>. All
@@ -205,7 +205,7 @@ will not be greater than the number of comparisons being performed.</p></td>
       <th>quiet</th>
       <td><p>If <code>TRUE</code>, all output messages from calls to <code>DESeq</code>
 and <code>results</code> will be suppressed, although passing option <code>quiet</code>
-in <code>args_DESeq</code> will supersede this option for the call to
+in <code>args.DESeq</code> will supersede this option for the call to
 <code>DESeq</code>.</p></td>
     </tr>
     </table>

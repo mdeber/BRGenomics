@@ -42,7 +42,7 @@ GenomicRanges::promoters, distances
 can be upstream or downstream based on the sign, and both the start and end
 of the returned regions can be defined in terms of either the start of end
 site of the input ranges. For example, genebodies(txs, -50, 150,
-fix_end = &quot;start&quot;) is equivalent to promoters(txs, 50, 150). The
+fix.end = &quot;start&quot;) is equivalent to promoters(txs, 50, 150). The
 default arguments return ranges that begin 300 bases downstream of the
 original start positions, and end 300 bases upstream of the original end
 positions." />
@@ -121,7 +121,7 @@ start and end sites of regions of interest (usually genes). Unlike
 can be upstream or downstream based on the sign, and both the start and end
 of the returned regions can be defined in terms of either the start of end
 site of the input ranges. For example, <code>genebodies(txs, -50, 150,
-fix_end = "start")</code> is equivalent to <code>promoters(txs, 50, 150)</code>. The
+fix.end = "start")</code> is equivalent to <code>promoters(txs, 50, 150)</code>. The
 default arguments return ranges that begin 300 bases downstream of the
 original start positions, and end 300 bases upstream of the original end
 positions.</p>
@@ -131,9 +131,9 @@ positions.</p>
   <span class='no'>genelist</span>,
   <span class='kw'>start</span> <span class='kw'>=</span> <span class='fl'>300</span>,
   <span class='kw'>end</span> <span class='kw'>=</span> -<span class='fl'>300</span>,
-  <span class='kw'>fix_start</span> <span class='kw'>=</span> <span class='st'>"start"</span>,
-  <span class='kw'>fix_end</span> <span class='kw'>=</span> <span class='st'>"end"</span>,
-  <span class='kw'>min_window</span> <span class='kw'>=</span> <span class='fl'>500</span>
+  <span class='kw'>fix.start</span> <span class='kw'>=</span> <span class='st'>"start"</span>,
+  <span class='kw'>fix.end</span> <span class='kw'>=</span> <span class='st'>"end"</span>,
+  <span class='kw'>min.window</span> <span class='kw'>=</span> <span class='fl'>0</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -145,7 +145,7 @@ positions.</p>
     </tr>
     <tr>
       <th>start</th>
-      <td><p>Depending on <code>fix_start</code>, the distance from either the
+      <td><p>Depending on <code>fix.start</code>, the distance from either the
 strand-specific start or end site to begin the returned ranges. If
 positive, the returned range will begin downstream of the reference
 position; negative numbers are used to return sites upstream of the
@@ -158,24 +158,22 @@ strand-specific end position of returned ranges. <code>end</code> must be
 downstream of <code>start</code>.</p></td>
     </tr>
     <tr>
-      <th>fix_start</th>
+      <th>fix.start</th>
       <td><p>The reference point to use for defining the strand-specific
 start positions of returned ranges, either <code>"start"</code> or <code>"end"</code>.</p></td>
     </tr>
     <tr>
-      <th>fix_end</th>
+      <th>fix.end</th>
       <td><p>The reference point to use for defining the strand-specific
 end positions of returned ranges, either <code>"start"</code> or <code>"end"</code>.
-Cannot be set to <code>"start"</code> if <code>fix_start = "end"</code>.</p></td>
+Cannot be set to <code>"start"</code> if <code>fix.start = "end"</code>.</p></td>
     </tr>
     <tr>
-      <th>min_window</th>
-      <td><p>When <code>fix_start = "start"</code> and <code>fix_end = "end"</code>,
-<code>min_window</code> defines the minimum size (width) of a returned range.
-However, when <code>fix_end = fix_start</code>, all returned ranges have the same
-width, and <code>min_window</code> filters the input ranges based on the size
-of the excluded region downstream (when <code>fix_end = "start"</code>) or
-upstream (when <code>fix_start = "end"</code>) of the returned region.</p></td>
+      <th>min.window</th>
+      <td><p>When <code>fix.start = "start"</code> and <code>fix.end = "end"</code>,
+<code>min.window</code> defines the minimum size (width) of a returned range.
+However, when <code>fix.end = fix.start</code>, all returned ranges have the same
+width, and <code>min.window</code> simply size-filters the input ranges.</p></td>
     </tr>
     </table>
 

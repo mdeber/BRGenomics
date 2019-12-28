@@ -51,27 +51,35 @@ tidyChromosomes <- function(gr,
 
 
 
-#' Import PRO-seq (or similar) bigWig files
+#' Import basepair-resolution files
 #'
-#' This function imports plus/minus pairs of bigWig files containing
-#' basepair-resolution data, e.g. PRO-seq or PRO-cap data.
-#'
-#' @param plus_bw Path of plus strand bigWig file.
-#' @param minus_bw Path of minus strand bigWig file.
+#' @param plus_file,minus_file Paths for strand-specific input files.
 #' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
 #'   given, non-standard chromosomes are trimmed, and options for sex and
 #'   mitochondrial chromosomes are applied.
-#' @param keep.X Logical indicating whether the X chromosome should be kept.
-#' @param keep.Y Logical indicating whether the Y chromosome should be kept.
-#' @param keep.M Logical indicating whether mitochondrial chromosomes should be
-#'   kept.
+#' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
+#'   non-autosomes should be kept. By default, sex chromosomes are kept, but
+#'   mitochondrial and non-standard chromosomes are removed.
 #'
-#' @return Imports a GRanges object containing base-pair resolution data, with
-#'   the \code{score} metadata column indicating readcounts at each base. All
-#'   ranges are of width = 1.
+#' @details Imports a GRanges object containing base-pair resolution data, with
+#'   the \code{score} metadata column indicating the number of reads represented
+#'   by each range.
+#'
+#'   \code{import_bedGraph} is useful for when both 5'- and 3'-end information
+#'   is to be maintained for each sequenced molecule. It effectively imports the
+#'   entire read.
+#'
+#'   For \code{import_bigWig}, all ranges are of width = 1.
+#'
 #' @author Mike DeBerardine
-#' @export
-import.PROseq <- function(plus_file,
+#' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
+#'   \code{\link[rtracklayer:import]{rtracklayer::import}}
+#' @name import-functions
+NULL
+
+
+#' @rdname import-functions
+import_bigWig <- function(plus_file,
                           minus_file,
                           genome = NULL,
                           keep.X = TRUE,
@@ -109,35 +117,15 @@ import.PROseq <- function(plus_file,
 }
 
 
-
-#' Import CoPRO (or similar) bedGraph files
-#'
-#' This function imports plus/minus pairs of bedGraph files. This function is
-#' useful for when both 5'- and 3'-end information is to be maintained for each
-#' sequenced molecule.
-#'
-#' @param plus.file Path of plus strand bedGraph file.
-#' @param minus.file Path of minus strand bedGraph file.
-#' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
-#'   given, non-standard chromosomes are trimmed.
-#' @param keep.X Logical indicating whether the X chromosome should be kept.
-#' @param keep.Y Logical indicating whether the Y chromosome should be kept.
-#' @param keep.M Logical indicating whether mitochondrial chromosomes should be
-#'   kept.
-#'
-#' @return Imports a GRanges object containing entire strand-specific reads.
-#'   Each range is unique, and the \code{score} metadata column indicates the
-#'   number of identical reads (which share the same 5' and 3' ends).
-#' @author Mike DeBerardine
-#' @export
-import.CoPRO <- function(plus_file,
-                         minus_file,
-                         genome = NULL,
-                         keep.X = TRUE,
-                         keep.Y = TRUE,
-                         keep.M = FALSE,
-                         keep.nonstandard = FALSE) {
-    # import bw as GRanges objects
+#' @rdname import-functions
+import_bedGraph <- function(plus_file,
+                            minus_file,
+                            genome = NULL,
+                            keep.X = TRUE,
+                            keep.Y = TRUE,
+                            keep.M = FALSE,
+                            keep.nonstandard = FALSE) {
+    # import bedgraph as GRanges objects
     p_bg <- rtracklayer::import.bedGraph(plus_file)
     m_bg <- rtracklayer::import.bedGraph(minus_file)
     score(m_bg) <- abs(score(m_bg)) # scores = reads; make all positive
@@ -157,48 +145,6 @@ import.CoPRO <- function(plus_file,
                               keep.M = keep.M,
                               keep.nonstandard = keep.nonstandard)
     }
-    return(sort(gr))
-}
-
-
-#' Import bigWig files (general)
-#'
-#' General function for importing a single bigWig file as a GRanges object. The
-#' added functionality over \code{rtracklayer::import.bw} is in trimming odd
-#' chromosomes.
-#'
-#' @param file Path of a bigWig file (non-stranded).
-#' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
-#'   given, non-standard chromosomes are trimmed.
-#' @param keep.X Logical indicating whether the X chromosome should be kept.
-#' @param keep.Y Logical indicating whether the Y chromosome should be kept.
-#' @param keep.M Logical indicating whether mitochondrial chromosomes should be
-#'   kept.
-#'
-#' @return Imports a GRanges object
-#' @author Mike DeBerardine
-#' @export
-import.bw_trim <- function(file,
-                           genome = NULL,
-                           keep.X = TRUE,
-                           keep.Y = TRUE,
-                           keep.M = FALSE,
-                           keep.nonstandard = FALSE) {
-
-    gr <- rtracklayer::import.bw(file)
-
-    # scores are imported as doubles by default; if whole numbers, make integers
-    gr <- .try_int_score(gr)
-
-    if (!is.null(genome)) {
-        genome(gr) <- genome
-        gr <- tidyChromosomes(gr,
-                              keep.X = keep.X,
-                              keep.Y = keep.Y,
-                              keep.M = keep.M,
-                              keep.nonstandard = keep.nonstandard)
-    }
-
     return(sort(gr))
 }
 
