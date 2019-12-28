@@ -237,7 +237,7 @@ getMaxPositionsBySignal <- function(regions.gr,
 #'   GRanges object is returned if \code{lower quantile = 1} or \code{upper
 #'   quantile = 0}.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param order_by_rank If \code{TRUE}, the output regions are sorted based on
+#' @param order.by.rank If \code{TRUE}, the output regions are sorted based on
 #'   the amount of signal contained (in decreasing order). If \code{FALSE} (the
 #'   default), genes are sorted by their positions.
 #' @param density A logical indicating whether signal counts should be
@@ -250,7 +250,7 @@ getMaxPositionsBySignal <- function(regions.gr,
 #'   signal (\code{lower_quantile = 0.25}, \code{upper_quantile = 0.75}). If
 #'   \code{lower_quantile = 0} and \code{upper_quantile = 1}, all regions are
 #'   returned, but the returned regions will be sorted by position, or by score
-#'   if \code{order_by_rank = TRUE}.
+#'   if \code{order.by.rank = TRUE}.
 #'
 #' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
 #'   - lower_quantile)}.
@@ -261,7 +261,7 @@ subsetRegionsBySignal <- function(regions.gr,
                                   dataset.gr,
                                   quantiles = c(0.5, 1),
                                   field = "score",
-                                  order_by_rank = FALSE,
+                                  order.by.rank = FALSE,
                                   density = FALSE) {
 
     if (quantiles[1] == 1 | quantiles[2] == 0)  return(regions.gr[0])
@@ -276,7 +276,7 @@ subsetRegionsBySignal <- function(regions.gr,
     bounds <- quantile(seq_along(regions.gr), quantiles)
     idx <- window(idx_rank, bounds[1], bounds[2])
 
-    if (order_by_rank) {
+    if (order.by.rank) {
         return(rev(regions.gr[idx]))
     } else {
         return(sort(regions.gr[idx]))

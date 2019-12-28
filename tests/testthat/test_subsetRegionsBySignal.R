@@ -53,7 +53,7 @@ test_that("ordering by rank", {
     ordered_high <- subsetRegionsBySignal(test_regions,
                                           dataset.gr = PROseq,
                                           quantiles = c(0.5, 1),
-                                          order_by_rank = TRUE)
+                                          order.by.rank = TRUE)
     expect_true(all(order(out_high) == seq_along(ordered_high)))
     expect_false(all(order(ordered_high) == seq_along(ordered_high)))
 })

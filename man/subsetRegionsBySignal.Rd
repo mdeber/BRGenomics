@@ -9,7 +9,7 @@ subsetRegionsBySignal(
   dataset.gr,
   quantiles = c(0.5, 1),
   field = "score",
-  order_by_rank = FALSE,
+  order.by.rank = FALSE,
   density = FALSE
 )
 }
@@ -28,7 +28,7 @@ quantile = 0}.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
 
-\item{order_by_rank}{If \code{TRUE}, the output regions are sorted based on
+\item{order.by.rank}{If \code{TRUE}, the output regions are sorted based on
 the amount of signal contained (in decreasing order). If \code{FALSE} (the
 default), genes are sorted by their positions.}
 
@@ -52,7 +52,7 @@ Typical uses may include removing the 5% of genes with the lowest
   signal (\code{lower_quantile = 0.25}, \code{upper_quantile = 0.75}). If
   \code{lower_quantile = 0} and \code{upper_quantile = 1}, all regions are
   returned, but the returned regions will be sorted by position, or by score
-  if \code{order_by_rank = TRUE}.
+  if \code{order.by.rank = TRUE}.
 }
 \seealso{
 \code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
