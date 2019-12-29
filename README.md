@@ -9,7 +9,7 @@
 
 Efficient tools for the analysis of high-resolution genomics data in R.
 
-Explore the documentation: <https://mdeber.github.io/index.html>
+Explore the documentation: <https://mdeber.github.io/>
 
 ## Installation
 
