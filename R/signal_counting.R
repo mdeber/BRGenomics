@@ -110,29 +110,31 @@ getCountsByRegions <- function(dataset.gr,
 #'
 #' txs_pr <- promoters(txs_dm6_chr4, 0, 50) # first 50 bases
 #' countsmat <- getCountsByPositions(PROseq, txs_pr)
-#' countsmat[1:6, 40:50] # show only 40-50 bp after TSS
+#' countsmat[10:15, 41:50] # show only 41-50 bp after TSS
 #'
 #' #--------------------------------------------------#
 #' # redo with 10 bp bins from 0 to 100
 #' #--------------------------------------------------#
 #'
+#' # column 5 is sums of rows shown above
+#'
 #' txs_pr <- promoters(txs_dm6_chr4, 0, 100)
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10)
-#' countsmat[1:6, ]
+#' countsmat[10:15, ]
 #'
 #' #--------------------------------------------------#
 #' # same as the above, but with the average signal in each bin
 #' #--------------------------------------------------#
 #'
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = mean)
-#' countsmat[1:6, ]
+#' countsmat[10:15, ]
 #'
 #' #--------------------------------------------------#
 #' # standard deviation of signal in each bin
 #' #--------------------------------------------------#
 #'
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
-#' round(countsmat[1:6, ], 2)
+#' round(countsmat[10:15, ], 2)
 getCountsByPositions <- function(dataset.gr,
                                  regions.gr,
                                  binsize = 1,
