@@ -81,7 +81,7 @@ subsetRegionsBySignal(txs_dm6_chr4, PROseq,
                       order.by.rank = TRUE)
 }
 \seealso{
-\code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 }
 \author{
 Mike DeBerardine

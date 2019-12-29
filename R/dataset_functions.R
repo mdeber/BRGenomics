@@ -35,6 +35,7 @@
 #' @seealso \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
 #'   \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}
 #' @export
+#' @importFrom GenomicRanges GRanges GPos mcols mcols<- isDisjoint findOverlaps
 #' @examples
 #' data("PROseq") # load included PROseq data
 #' range(width(PROseq))
@@ -85,6 +86,7 @@ makeGRangesBPres <- function(dataset.gr) {
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 #' @export
+#' @importFrom GenomicRanges mcols
 #' @examples
 #' #--------------------------------------------------#
 #' # Using included full-read data
@@ -131,6 +133,8 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
     return(sort(cov_gr))
 }
 
+#' @importFrom GenomicRanges strand coverage mcols GRanges seqinfo strand<-
+#'   score
 .get_stranded_cov <- function(dataset.gr, strand_i, field) {
     gr <- subset(dataset.gr, strand == strand_i)
     if (is.null(field)) {
@@ -166,6 +170,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
 #'
 #' @author Mike DeBerardine
 #' @export
+#' @importFrom GenomicRanges mcols mcols<- countOverlaps
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -243,6 +248,8 @@ subsampleGRanges <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 #' @export
+#' @importFrom parallel detectCores mclapply
+#' @importFrom GenomicRanges GRanges width findOverlaps mcols mcols<-
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'

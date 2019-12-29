@@ -43,6 +43,8 @@
 #' @seealso \code{\link[BRGenomics:metaSubsample]{metaSubsample}},
 #'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#' @importFrom parallel mclapply
+#' @importFrom stats quantile
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -205,6 +207,8 @@ metaSubsampleMatrix <- function(counts.mat,
 #' @seealso \code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
 #'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#' @importFrom parallel mclapply
+#' @importFrom GenomicRanges width
 #'
 #' @examples
 #' data("PROseq") # import included PROseq data

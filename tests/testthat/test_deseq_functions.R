@@ -44,8 +44,10 @@ test_that("metadata in simple DESeqDataSet correct", {
 })
 
 test_that("can use multicore to make DESeqDataSet", {
-    expect_is(getDESeqDataSet(ps_list, txs, quiet = T), "DESeqDataSet")
-    expect_equivalent(getDESeqDataSet(ps_list, txs, quiet = T), dds)
+    expect_is(getDESeqDataSet(ps_list, txs, quiet = T, ncores = 2),
+              "DESeqDataSet")
+    expect_equivalent(getDESeqDataSet(ps_list, txs, quiet = T, ncores = 2),
+                      dds)
 })
 
 test_that("can add sizeFactors to DESeqDataSet", {
@@ -53,12 +55,13 @@ test_that("can add sizeFactors to DESeqDataSet", {
     expect_equivalent(1:6, sizeFactors(getDESeqDataSet(ps_list,
                                                        txs,
                                                        sizeFactors = 1:6,
-                                                       quiet = T)))
+                                                       quiet = T,
+                                                       ncores = 2)))
 })
 
 test_that("gene names and discontinuous ranges supported", {
-    dds_dsc <- getDESeqDataSet(ps_list, txs,
-                               gene_names = txs$gene_id, quiet = T)
+    dds_dsc <- getDESeqDataSet(ps_list, txs, gene_names = txs$gene_id,
+                               quiet = T, ncores = 2)
     expect_is(dds_dsc, "DESeqDataSet")
     expect_equivalent(dim(dds_dsc), c(length(unique(txs$gene_id)),
                                       length(ps_list)))
@@ -89,7 +92,7 @@ test_that("error if gene_names not matched to regions.gr", {
 
 
 test_that("message if quiet = FALSE", {
-    expect_message(getDESeqDataSet(ps_list, txs, quiet = FALSE))
+    expect_message(getDESeqDataSet(ps_list, txs, quiet = FALSE, ncores = 2))
 })
 
 
@@ -124,7 +127,8 @@ test_that("get proper results from list of comparisons", {
 
 test_that("can use multicore to get results from list of comparisons", {
     cl <- list(c("B", "A"), c("C", "A"))
-    expect_equivalent(res2, getDESeqResults(dds, comparisons.list = cl))
+    expect_equivalent(res2, getDESeqResults(dds, comparisons.list = cl,
+                                            ncores = 2))
 })
 
 test_that("messages when quiet = FALSE", {
@@ -151,10 +155,11 @@ test_that("error when invalid arguments", {
 test_that("can apply size factors to whole dds, and comparison-only", {
     res2sf <- getDESeqResults(dds,
                               comparisons.list = list(c("B", "A"), c("C", "A")),
-                              sizeFactors = rep(1, 6), quiet = TRUE)
+                              sizeFactors = rep(1, 6), quiet = TRUE, ncores = 2)
     expect_false(all(res2[[1]]$log2FoldChange == res2sf[[1]]$log2FoldChange))
     res2sf2 <- getDESeqResults(dds, comparisons.list = list(c("B", "A")),
-                               sizeFactors = rep(1, 4), quiet = TRUE)
+                               sizeFactors = rep(1, 4), quiet = TRUE,
+                               ncores = 2)
     expect_equivalent(res2sf[[1]]$log2FoldChange, res2sf2[[1]]$log2FoldChange)
 })
 
@@ -171,11 +176,11 @@ test_that("warning if overwriting size factors", {
     dds_sf <- dds
     sizeFactors(dds_sf) <- rep(1, 6)
     expect_warning(getDESeqResults(dds_sf, "B", "A", sizeFactors = rep(1, 6)),
-                   quiet = TRUE)
+                   quiet = TRUE, ncores = 2)
     expect_warning(getDESeqResults(dds_sf, "B", "A", sizeFactors = rep(1, 4)),
-                   quiet = TRUE)
+                   quiet = TRUE, ncores = 2)
     expect_warning(getDESeqResults(dds_sf, comparisons.list = list(c("B", "A")),
-                                   sizeFactors = rep(1, 6)))
+                                   sizeFactors = rep(1, 6), ncores = 2))
 })
 
 test_that("arguments can be passed to DESeq call", {

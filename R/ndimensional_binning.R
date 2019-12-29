@@ -1,13 +1,13 @@
 ### =========================================================================
-### N-dimensional binning by quantiles
+### N-dimensional binning by nbins
 ### -------------------------------------------------------------------------
 ###
 
 
-#' N-dimensional binning of data by quantiles
+#' N-dimensional binning
 #'
 #' This function takes in data along 1 or more dimensions, and for each
-#' dimension the data is divided into evenly-sized quantiles from the minimum
+#' dimension the data is divided into evenly-sized bins from the minimum
 #' value to the maximum value, and bin numbers are returned. For instance, if
 #' each index of the input data were a gene, the input dimensions would be
 #' various quantitative measures of that gene, e.g. expression level, number of
@@ -21,11 +21,11 @@
 #'   columns should correspond to measurements (dimensions). If lists or
 #'   vectors are given, they must all have the same lengths. Other input classes
 #'   will be coerced into a single dataframe.
-#' @param quantiles Either a number giving the number of quantiles to use for
+#' @param nbins Either a number giving the number of bins to use for
 #'   all dimensions (default = 10), or a vector containing the number of
-#'   quantiles to use for each dimension of input data given.
+#'   bins to use for each dimension of input data given.
 #'
-#' @return A dataframe containing indices in \code{1:quantiles} for each
+#' @return A dataframe containing indices in \code{1:nbins} for each
 #'   datapoint in each dimension.
 #'
 #' @author Mike DeBerardine
@@ -49,16 +49,15 @@
 #' counts_cps <- getCountsByRegions(PROseq, cps)
 #'
 #' #--------------------------------------------------#
-#' # divide genes into 20 quantiles for each measurement
+#' # divide genes into 20 bins for each measurement
 #' #--------------------------------------------------#
 #'
-#' count_quantiles <- binNdimensions(counts_pr, counts_gb, counts_cps,
-#'                                   quantiles = 20)
+#' count_bins <- binNdimensions(counts_pr, counts_gb, counts_cps, nbins = 20)
 #'
 #' length(txs_dm6_chr4)
-#' nrow(count_quantiles)
-#' count_quantiles[1:10, ]
-binNdimensions <- function(..., quantiles = 10) {
+#' nrow(count_bins)
+#' count_bins[1:10, ]
+binNdimensions <- function(..., nbins = 10) {
 
     data_in <- list(...)
 
@@ -94,13 +93,13 @@ binNdimensions <- function(..., quantiles = 10) {
         }
     }
 
-    # check input quantiles
+    # check input bins
     n_dim <- ncol(data)
-    if (length(quantiles) > 1 & length(quantiles) != n_dim) {
-        stop(.nicemsg("User input %d dimensions of data, but length(quantiles)
-                      = %d. Quantiles must match number of dimensions, or be a
+    if (length(nbins) > 1 & length(nbins) != n_dim) {
+        stop(.nicemsg("User input %d dimensions of data, but length(nbins)
+                      = %d. nbins must match number of dimensions, or be a
                       single number.",
-                      n_dim, length(quantiles)))
+                      n_dim, length(nbins)))
         return(geterrmessage())
     }
 
@@ -108,7 +107,7 @@ binNdimensions <- function(..., quantiles = 10) {
     seqRange <- function(x, y) seq(min(Filter(is.finite, x)),
                                    max(Filter(is.finite, x)),
                                    length = y)
-    bin_seqs <- mapply(seqRange, data, quantiles, SIMPLIFY = FALSE)
+    bin_seqs <- mapply(seqRange, data, nbins, SIMPLIFY = FALSE)
 
     # get bin indices for each datapoint along each dimension
     bin_idx <- mapply(findInterval, data, bin_seqs, SIMPLIFY = FALSE)
@@ -123,11 +122,11 @@ binNdimensions <- function(..., quantiles = 10) {
     #   passed to a parent function. If arguments were named by user (i.e.
     #   x = data_x, ...), it uses those names; but otherwise uses the names of
     #   the objects themselves.
-    # This function excludes the named argument "quantiles"
+    # This function excludes the named argument "nbins"
     dim_names <- as.list( match.call(call = sys.call(sys.parent(1))) )[-1]
     if (!is.null(names(dim_names))) {
-        dim_names <- dim_names[names(dim_names) != "quantiles"]
-        # if quantiles the only named argument, or not all named, don't return
+        dim_names <- dim_names[names(dim_names) != "nbins"]
+        # if nbins the only named argument, or not all named, don't return
         if (all(nchar(names(dim_names)) > 0)) {
             return(names(dim_names))
         }

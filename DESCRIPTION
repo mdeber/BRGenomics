@@ -12,18 +12,20 @@ Encoding: UTF-8
 LazyData: FALSE
 RoxygenNote: 7.0.2
 Depends:
-    rtracklayer,
-    GenomicFeatures,
+    R (>= 2.10),
+    GenomicRanges,
+    GenomeInfoDb,
     BiocParallel
 Imports:
-    GenomicRanges,
+    rtracklayer,
     stats4,
     BiocGenerics,
     parallel,
     S4Vectors,
     IRanges,
     AnnotationDbi,
-    GenomeInfoDb
+    DESeq2,
+    SummarizedExperiment
 Suggests:
     BiocStyle,
     knitr,
@@ -35,8 +37,6 @@ Suggests:
     TxDb.Dmelanogaster.UCSC.dm6.ensGene,
     TxDb.Dmelanogaster.UCSC.dm3.ensGene,
     testthat
-Enhances:
-    DESeq2
 biocViews:
     Software,
     DataImport,

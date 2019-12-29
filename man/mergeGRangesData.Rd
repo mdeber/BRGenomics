@@ -25,13 +25,19 @@ of the input objects, and the sum of all scores at all sites.
 \examples{
 data("PROseq") # load included PROseq data
 
+#--------------------------------------------------#
 # divide PROseq data into thirds
+#--------------------------------------------------#
+
 thirds <- floor( (1:3)/3 * length(PROseq) )
 ps_1 <- PROseq[1:thirds[1]]
 ps_2 <- PROseq[(thirds[1]+1):thirds[2]]
 ps_3 <- PROseq[(thirds[2]+1):thirds[3]]
 
+#--------------------------------------------------#
 # re-merge PROseq data
+#--------------------------------------------------#
+
 length(PROseq)
 length(mergeGRangesData(ps_1, ps_2))
 length(mergeGRangesData(ps_1, ps_2, ps_3))

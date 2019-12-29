@@ -115,7 +115,8 @@ ps_list <- list(A_rep1 = ps_a_rep1,
 # also using discontinuous gene regions, as gene_ids are repeated
 dds <- getDESeqDataSet(ps_list,
                        txs_dm6_chr4,
-                       gene_names = txs_dm6_chr4$gene_id)
+                       gene_names = txs_dm6_chr4$gene_id,
+                       ncores = 2)
 
 dds
 
@@ -136,7 +137,6 @@ reslist[[1]]
 }
 \seealso{
 \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
-  \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
   \code{\link[DESeq2:results]{DESeq2::results}}
 }
 \author{

@@ -111,13 +111,13 @@ ps_list <- list(A_rep1 = ps_a_rep1,
 dds <- getDESeqDataSet(ps_list,
                        txs_dm6_chr4,
                        gene_names = txs_dm6_chr4$gene_id,
-                       quiet = TRUE)
+                       quiet = TRUE,
+                       ncores = 2)
 dds
 }
 \seealso{
 \code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
-  \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}},
-  \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}}
+  \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}}
 }
 \author{
 Mike DeBerardine

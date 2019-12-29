@@ -3,13 +3,13 @@
 ### ------------------------------------------------------------------------- #
 ###
 
-# if scores are whole numbers, coerce them to integers
+#' @importFrom GenomicRanges score score<-
 .try_int_score <- function(gr) {
+    # if scores are whole numbers, coerce them to integers
     if (all( round(score(gr) %% 1, 3) == 0 ))
         score(gr) <- as.integer(score(gr))
     gr
 }
-
 
 
 #' Remove odd chromosomes from GRanges objects
@@ -33,6 +33,8 @@
 #'    GenomeInfoDb::standardChromosomes}}
 #'
 #' @export
+#' @importFrom GenomeInfoDb standardChromosomes seqlevels keepSeqlevels
+#'   sortSeqlevels
 #' @examples
 #' data("PROseq") # load included PROseq data
 #' # (only data on chr4, so nothing actually changes)
@@ -89,6 +91,8 @@ NULL
 
 #' @rdname import-functions
 #' @export
+#' @importFrom GenomicRanges score score<- strand<-
+#' @importFrom GenomeInfoDb genome<-
 import_bigWig <- function(plus_file,
                           minus_file,
                           genome = NULL,
@@ -129,6 +133,8 @@ import_bigWig <- function(plus_file,
 
 #' @rdname import-functions
 #' @export
+#' @importFrom GenomicRanges score score<- strand<-
+#' @importFrom GenomeInfoDb genome<-
 import_bedGraph <- function(plus_file,
                             minus_file,
                             genome = NULL,

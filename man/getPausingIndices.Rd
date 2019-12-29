@@ -73,6 +73,7 @@ pr <- promoters(txs, 0, 100)
 #--------------------------------------------------#
 
 pidx <- getPausingIndices(PROseq, pr, gb)
+
 length(txs_dm6_chr4)
 length(pidx)
 head(pidx)
@@ -88,6 +89,7 @@ head( getPausingIndices(PROseq, pr, gb, length.normalize = FALSE) )
 #--------------------------------------------------#
 
 pidx_signal <- getPausingIndices(PROseq, pr, gb, remove.empty = TRUE)
+
 length(pidx_signal)
 }
 \seealso{

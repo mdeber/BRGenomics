@@ -26,7 +26,8 @@ ps_rename$posnum <- seq_along(ps_rename)
 
 test_that("signal counts work over multiple metadata fields", {
     counts_multiple <- getCountsByRegions(ps_rename, txs_dm6_chr4,
-                                          field = c("signal", "posnum"))
+                                          field = c("signal", "posnum"),
+                                          ncores = 2)
     expect_is(counts_multiple, "data.frame")
     expect_equivalent(counts_multiple$signal, test_counts)
 })
@@ -48,7 +49,8 @@ test_that("simple counts matrix correctly calculated", {
 
 test_that("simple counts matrix works over multiple metadata fields", {
     fieldcounts <- getCountsByPositions(ps_rename, txs_pr,
-                                       field = c("signal", "posnum"))
+                                       field = c("signal", "posnum"),
+                                       ncores = 2)
     expect_is(fieldcounts, "list")
     expect_equivalent(names(fieldcounts), c("signal", "posnum"))
     expect_is(fieldcounts[[1]], "matrix")
@@ -144,7 +146,8 @@ test_that("remove.empty works", {
 
 test_that("can get pause indices over multiple fields", {
     pidx_multi <- getPausingIndices(ps_rename, txs_pr, txs_gb,
-                                    field = c("signal", "posnum"))
+                                    field = c("signal", "posnum"),
+                                    ncores = 2)
     expect_is(pidx_multi, "data.frame")
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi[, 1], pidx)

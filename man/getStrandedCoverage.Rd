@@ -27,6 +27,7 @@ into a "basepair-resolution" GRanges object.
 #--------------------------------------------------#
 
 data("PROseq_paired")
+
 PROseq_paired[1:6]
 
 getStrandedCoverage(PROseq_paired)[1:6]
@@ -36,6 +37,7 @@ getStrandedCoverage(PROseq_paired)[1:6]
 #--------------------------------------------------#
 
 data("PROseq")
+
 PROseq[1:6]
 
 # undo coverage for the first 100 positions

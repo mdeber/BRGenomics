@@ -2,9 +2,9 @@
 % Please edit documentation in R/ndimensional_binning.R
 \name{binNdimensions}
 \alias{binNdimensions}
-\title{N-dimensional binning of data by quantiles}
+\title{N-dimensional binning}
 \usage{
-binNdimensions(..., quantiles = 10)
+binNdimensions(..., nbins = 10)
 }
 \arguments{
 \item{...}{A single dataframe, or any number of lists or vectors containing
@@ -13,17 +13,17 @@ columns should correspond to measurements (dimensions). If lists or
 vectors are given, they must all have the same lengths. Other input classes
 will be coerced into a single dataframe.}
 
-\item{quantiles}{Either a number giving the number of quantiles to use for
+\item{nbins}{Either a number giving the number of bins to use for
 all dimensions (default = 10), or a vector containing the number of
-quantiles to use for each dimension of input data given.}
+bins to use for each dimension of input data given.}
 }
 \value{
-A dataframe containing indices in \code{1:quantiles} for each
+A dataframe containing indices in \code{1:nbins} for each
   datapoint in each dimension.
 }
 \description{
 This function takes in data along 1 or more dimensions, and for each
-dimension the data is divided into evenly-sized quantiles from the minimum
+dimension the data is divided into evenly-sized bins from the minimum
 value to the maximum value, and bin numbers are returned. For instance, if
 each index of the input data were a gene, the input dimensions would be
 various quantitative measures of that gene, e.g. expression level, number of
@@ -49,15 +49,14 @@ counts_gb <- getCountsByRegions(PROseq, early_gb)
 counts_cps <- getCountsByRegions(PROseq, cps)
 
 #--------------------------------------------------#
-# divide genes into 20 quantiles for each measurement
+# divide genes into 20 bins for each measurement
 #--------------------------------------------------#
 
-count_quantiles <- binNdimensions(counts_pr, counts_gb, counts_cps,
-                                  quantiles = 20)
+count_bins <- binNdimensions(counts_pr, counts_gb, counts_cps, nbins = 20)
 
 length(txs_dm6_chr4)
-nrow(count_quantiles)
-count_quantiles[1:10, ]
+nrow(count_bins)
+count_bins[1:10, ]
 }
 \author{
 Mike DeBerardine

@@ -38,6 +38,8 @@
 #' @author Mike DeBerardine
 #' @seealso \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
 #' @export
+#' @importFrom GenomicRanges strand width resize ranges<-
+#' @importFrom IRanges IRanges
 #'
 #' @examples
 #' data("txs_dm6_chr4") # load included transcript data
@@ -176,6 +178,8 @@ genebodies <- function(genelist,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#' @importFrom GenomicRanges width resize
+#' @importFrom IRanges subsetByOverlaps
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -303,8 +307,10 @@ getMaxPositionsBySignal <- function(regions.gr,
 #' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
 #'   - lower_quantile)}.
 #' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
+#' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
+#' @importFrom stats window quantile
+#' @importFrom GenomicRanges width
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data

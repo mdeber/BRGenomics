@@ -16,6 +16,9 @@
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#' @importFrom stats aggregate
+#' @importFrom GenomicRanges findOverlaps mcols
+#' @importFrom parallel detectCores mclapply
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -94,6 +97,8 @@ getCountsByRegions <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
+#' @importFrom GenomicRanges findOverlaps resize width start mcols
+#' @importFrom parallel detectCores mclapply
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -248,6 +253,7 @@ getCountsByPositions <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
+#' @importFrom parallel detectCores
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -315,8 +321,8 @@ getPausingIndices <- function(dataset.gr,
             counts_pr <- .lnorm_multifields(counts_pr, promoters.gr, field)
             counts_gb <- .lnorm_multifields(counts_gb, genebodies.gr, field)
         } else {
-            counts_pr <- counts_pr / width(promoters.gr)
-            counts_gb <- counts_gb / width(genebodies.gr)
+            counts_pr <- counts_pr / GenomicRanges::width(promoters.gr)
+            counts_gb <- counts_gb / GenomicRanges::width(genebodies.gr)
         }
     }
 
@@ -337,7 +343,7 @@ getPausingIndices <- function(dataset.gr,
 }
 
 .lnorm_multifields <- function(counts, regions, field) {
-    counts <- lapply(counts, "/", width(regions))
+    counts <- lapply(counts, "/", GenomicRanges::width(regions))
     counts <- as.data.frame(counts)
     names(counts) <- field
     return(counts)

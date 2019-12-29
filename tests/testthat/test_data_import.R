@@ -29,7 +29,7 @@ test_that("PROseq files are found", {
 # Check tidyChromosome function -------------------------------------------
 
 test_that("tidyChromosome works", {
-    bw <- import.bw(ps_p_file)
+    bw <- rtracklayer::import.bw(ps_p_file)
     seqlevels(bw) <- c("chr4", "chr2L", "chrM", "chrX", "chrY", "unassigned")
     genome(bw) <- "dm6"
     seqnames(bw)[1:5] <- c("chr2L", "chrM", "chrX", "chrY", "unassigned")

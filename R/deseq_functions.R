@@ -70,11 +70,13 @@
 #'   GSEA or Go analysis).
 #'
 #' @export
+#' @importFrom stats aggregate
+#' @importFrom parallel detectCores mclapply
+#' @importFrom SummarizedExperiment SummarizedExperiment
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
-#'   \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}},
-#'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}}
+#'   \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}}
 #'
 #' @examples
 #' suppressPackageStartupMessages(require(DESeq2))
@@ -103,7 +105,8 @@
 #' dds <- getDESeqDataSet(ps_list,
 #'                        txs_dm6_chr4,
 #'                        gene_names = txs_dm6_chr4$gene_id,
-#'                        quiet = TRUE)
+#'                        quiet = TRUE,
+#'                        ncores = 2)
 #' dds
 getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             regions.gr,
@@ -113,7 +116,6 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             field = "score",
                             ncores = detectCores(),
                             quiet = FALSE) {
-    require(DESeq2)
 
     if (is.null(sample_names)) {
         stop(message = .nicemsg("sample_names are required, but none were
@@ -172,7 +174,7 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
         # for setting rowRanges, will use the largest range for each gene
         idx <- mclapply(rownames(counts.mat), function(i) {
             idx_i <- which(gene_names == i)
-            idx_i[which.max(width(regions.gr[idx_i]))]
+            idx_i[which.max(GenomicRanges::width(regions.gr[idx_i]))]
         }, mc.cores = ncores)
         regions.gr <- regions.gr[unlist(idx)]
 
@@ -189,14 +191,14 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 
     if (quiet) {
         suppressMessages(
-            counts.dds <- DESeqDataSet(counts.se, design = ~condition)
+            counts.dds <- DESeq2::DESeqDataSet(counts.se, design = ~condition)
         )
     } else {
-        counts.dds <- DESeqDataSet(counts.se, design = ~condition)
+        counts.dds <- DESeq2::DESeqDataSet(counts.se, design = ~condition)
     }
 
 
-    if (!is.null(sizeFactors))  sizeFactors(counts.dds) <- sizeFactors
+    if (!is.null(sizeFactors)) DESeq2::sizeFactors(counts.dds) <- sizeFactors
 
     return(counts.dds)
 }
@@ -269,9 +271,9 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
-#'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
 #'   \code{\link[DESeq2:results]{DESeq2::results}}
 #' @export
+#' @importFrom parallel detectCores mclapply
 #'
 #' @examples
 #' #--------------------------------------------------#
@@ -302,7 +304,8 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 #' # also using discontinuous gene regions, as gene_ids are repeated
 #' dds <- getDESeqDataSet(ps_list,
 #'                        txs_dm6_chr4,
-#'                        gene_names = txs_dm6_chr4$gene_id)
+#'                        gene_names = txs_dm6_chr4$gene_id,
+#'                        ncores = 2)
 #'
 #' dds
 #'
@@ -330,7 +333,6 @@ getDESeqResults <- function(dds,
                             args.results = NULL,
                             ncores = detectCores(),
                             quiet = FALSE) {
-    require(DESeq2)
 
     # check only one set of contrast args used
     # and, if given, check format of contrasts.list
@@ -345,7 +347,7 @@ getDESeqResults <- function(dds,
     if (when_sf == "early") {
         if (exist_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        sizeFactors(dds) <- sizeFactors
+        DESeq2::sizeFactors(dds) <- sizeFactors
         sizeFactors <- NULL
     }
 
@@ -424,6 +426,7 @@ getDESeqResults <- function(dds,
     return("late")
 }
 
+#' @importFrom DESeq2 sizeFactors
 .exist_sizeFactors <- function(dds) {
     if (!is.null(sizeFactors(dds))) return(TRUE)
     return(FALSE)
@@ -475,7 +478,7 @@ getDESeqResults <- function(dds,
     if (when_sf == "early") {
         if (exist_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        sizeFactors(dds) <- sizeFactors
+        DESeq2::sizeFactors(dds) <- sizeFactors
     }
 
     #---------------#
@@ -489,7 +492,7 @@ getDESeqResults <- function(dds,
     if (!"quiet" %in% names(args.DESeq))
         args.DESeq <- .merge_args(args.DESeq, list(quiet = quiet))
 
-    dds <- do.call(DESeq, args.DESeq)
+    dds <- do.call(DESeq2::DESeq, args.DESeq)
 
     #---------------#
     # Call results()
@@ -506,10 +509,10 @@ getDESeqResults <- function(dds,
                                             "alpha", "parallel"))
     if (quiet) {
         suppressWarnings(suppressMessages(
-            res <- do.call(results, args.results)
+            res <- do.call(DESeq2::results, args.results)
         ))
     } else {
-        res <- do.call(results, args.results)
+        res <- do.call(DESeq2::results, args.results)
     }
     return(res)
 }
