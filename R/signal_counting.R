@@ -198,8 +198,8 @@ getCountsByPositions <- function(dataset.gr,
 
         if (simplify.multi.widths == "list") {
 
-            return(mapply(function(i, nbin) mat[i, 1:nbin],
-                          1:nrow(mat), nbins_i))
+            return(mapply(function(i, nbin) mat[i, seq_len(nbin)],
+                          seq_len(nrow(mat)), nbins_i))
 
         } else {
             arridx_pad <- vapply(nbins_i,

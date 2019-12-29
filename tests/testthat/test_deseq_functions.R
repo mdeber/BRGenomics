@@ -44,9 +44,9 @@ test_that("metadata in simple DESeqDataSet correct", {
 })
 
 test_that("can use multicore to make DESeqDataSet", {
-    expect_is(getDESeqDataSet(ps_list, txs, quiet = T, ncores = 2),
+    expect_is(getDESeqDataSet(ps_list, txs, quiet = TRUE, ncores = 2),
               "DESeqDataSet")
-    expect_equivalent(getDESeqDataSet(ps_list, txs, quiet = T, ncores = 2),
+    expect_equivalent(getDESeqDataSet(ps_list, txs, quiet = TRUE, ncores = 2),
                       dds)
 })
 
@@ -55,13 +55,13 @@ test_that("can add sizeFactors to DESeqDataSet", {
     expect_equivalent(1:6, sizeFactors(getDESeqDataSet(ps_list,
                                                        txs,
                                                        sizeFactors = 1:6,
-                                                       quiet = T,
+                                                       quiet = TRUE,
                                                        ncores = 2)))
 })
 
 test_that("gene names and discontinuous ranges supported", {
     dds_dsc <- getDESeqDataSet(ps_list, txs, gene_names = txs$gene_id,
-                               quiet = T, ncores = 2)
+                               quiet = TRUE, ncores = 2)
     expect_is(dds_dsc, "DESeqDataSet")
     expect_equivalent(dim(dds_dsc), c(length(unique(txs$gene_id)),
                                       length(ps_list)))

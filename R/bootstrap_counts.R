@@ -141,9 +141,9 @@ metaSubsampleMatrix <- function(counts.mat,
         lower <- NF * apply(counts.mat[idx_mat,], 2, quantile, lower)
         lower <- NF * apply(counts.mat[idx_mat,], 2, quantile, upper)
     } else {
-        mean <- NF * apply(binavg_mat, 1, quantile, 0.5, names = F)
-        lower <- NF * apply(binavg_mat, 1, quantile, lower, names = F)
-        upper <- NF * apply(binavg_mat, 1, quantile, upper, names = F)
+        mean <- NF * apply(binavg_mat, 1, quantile, 0.5, names = FALSE)
+        lower <- NF * apply(binavg_mat, 1, quantile, lower, names = FALSE)
+        upper <- NF * apply(binavg_mat, 1, quantile, upper, names = FALSE)
     }
 
     # Also return x-values and sample names for plotting;
@@ -264,18 +264,15 @@ metaSubsample <- function(dataset.gr,
         fun_args$ncores <- 1
         fun_args$remove.empty <- FALSE
 
-        # in normal usage, these aren't required;
-        #   but necessary when running package tests...
+        # normally not required, but can be when running package tests...
         fun_args$dataset.gr <- dataset.gr
         fun_args$regions.gr <- regions.gr
 
-        dflist <- mclapply(field,
-                           function(i) {
-                               .Random.seed <- seed
-                               fun_args$field <- i
-                               do.call(metaSubsample, fun_args)
-                           },
-                           mc.cores = ncores)
+        dflist <- mclapply(field, function(i) {
+            .Random.seed <- seed
+            fun_args$field <- i
+            do.call(metaSubsample, fun_args)
+        }, mc.cores = ncores)
         names(dflist) <- field
         return(dflist)
     }
@@ -284,36 +281,33 @@ metaSubsample <- function(dataset.gr,
     # -> Matrix of dim = (ngenes, nbins)
     signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
-                                        binsize = binsize,
-                                        field = field)
+                                        binsize = binsize, field = field)
 
     if (remove.empty)  signal.bins <- signal.bins[rowSums(signal.bins) > 0, ]
 
-    metamat <- metaSubsampleMatrix(counts.mat = signal.bins,
-                                   binsize = 1,
-                                   first.output.xval = first.output.xval,
-                                   sample.name = sample.name,
-                                   n.iter = n.iter,
-                                   prop.sample = prop.sample,
-                                   lower = lower,
-                                   upper = upper,
-                                   NF = NF,
-                                   ncores = ncores)
+    metamat <- metaSubsampleMatrix(
+        counts.mat = signal.bins, binsize = 1,
+        first.output.xval = first.output.xval, sample.name = sample.name,
+        n.iter = n.iter, prop.sample = prop.sample, lower = lower,
+        upper = upper, NF = NF, ncores = ncores
+    )
 
     # fix x-values to match bins, and binsize-normalize the returned values
-    if (binsize != 1) {
-        nbins <- nrow(metamat)
-        binstart <- 0.5*binsize
-        binstep <- nbins*binsize - 0.5*binsize
-        metamat$x <- seq(binstart, binstep, binsize) + first.output.xval
-
-        y_vals <- c("mean", "lower", "upper")
-        metamat[, y_vals] <- metamat[, y_vals] / binsize
-    }
-
+    if (binsize != 1)  metamat <- .fix_bin_sizes(metamat, binsize)
     return(metamat)
 }
 
+
+.fix_bin_sizes <- function(metamat, binsize) {
+    nbins <- nrow(metamat)
+    binstart <- 0.5*binsize
+    binstep <- nbins*binsize - 0.5*binsize
+    metamat$x <- seq(binstart, binstep, binsize) + first.output.xval
+
+    y_vals <- c("mean", "lower", "upper")
+    metamat[, y_vals] <- metamat[, y_vals] / binsize
+    return(metamat)
+}
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Bootstrapping signal means over variable-length ranges

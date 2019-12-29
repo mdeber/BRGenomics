@@ -238,7 +238,7 @@ getMaxPositionsBySignal <- function(regions.gr,
     if (multi_width) {
         bins_i <- floor(widths / binsize) # number of bins within each region
         # remove last bins (if widths/binsize gives remainder)
-        countslist <- lapply(1:nrow(mat),
+        countslist <- lapply(seq_len(nrow(mat)),
                              function(i) mat[ i, seq_len(bins_i[i]) ])
         max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
         max_scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
