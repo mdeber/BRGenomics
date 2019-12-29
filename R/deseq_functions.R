@@ -76,6 +76,35 @@
 #'   \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}},
 #'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}}
 #'
+#' @examples
+#' suppressPackageStartupMessages(require(DESeq2))
+#' data("PROseq") # import included PROseq data
+#' data("txs_dm6_chr4") # import included transcripts
+#'
+#' # divide PROseq data into 6 toy datasets
+#' ps_a_rep1 <- PROseq[seq(1, length(PROseq), 6)]
+#' ps_b_rep1 <- PROseq[seq(2, length(PROseq), 6)]
+#' ps_c_rep1 <- PROseq[seq(3, length(PROseq), 6)]
+#'
+#' ps_a_rep2 <- PROseq[seq(4, length(PROseq), 6)]
+#' ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
+#' ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
+#'
+#' ps_list <- list(A_rep1 = ps_a_rep1,
+#'                 A_rep2 = ps_a_rep2,
+#'                 B_rep1 = ps_b_rep1,
+#'                 B_rep2 = ps_b_rep2,
+#'                 C_rep1 = ps_c_rep1,
+#'                 C_rep2 = ps_c_rep2)
+#'
+#' # make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
+#' #    this means there is double-counting
+#' # also using discontinuous gene regions, as gene_ids are repeated
+#' dds <- getDESeqDataSet(ps_list,
+#'                        txs_dm6_chr4,
+#'                        gene_names = txs_dm6_chr4$gene_id,
+#'                        quiet = TRUE)
+#' dds
 getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             regions.gr,
                             sample_names = names(dataset.list),
@@ -243,6 +272,54 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 #'   \code{\link[BRGenomics:getDESeqResultsInBatch]{getDESeqResultsInBatch}},
 #'   \code{\link[DESeq2:results]{DESeq2::results}}
 #' @export
+#'
+#' @examples
+#' #--------------------------------------------------#
+#' # getDESeqDataSet
+#' #--------------------------------------------------#
+#' suppressPackageStartupMessages(require(DESeq2))
+#' data("PROseq") # import included PROseq data
+#' data("txs_dm6_chr4") # import included transcripts
+#'
+#' # divide PROseq data into 6 toy datasets
+#' ps_a_rep1 <- PROseq[seq(1, length(PROseq), 6)]
+#' ps_b_rep1 <- PROseq[seq(2, length(PROseq), 6)]
+#' ps_c_rep1 <- PROseq[seq(3, length(PROseq), 6)]
+#'
+#' ps_a_rep2 <- PROseq[seq(4, length(PROseq), 6)]
+#' ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
+#' ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
+#'
+#' ps_list <- list(A_rep1 = ps_a_rep1,
+#'                 A_rep2 = ps_a_rep2,
+#'                 B_rep1 = ps_b_rep1,
+#'                 B_rep2 = ps_b_rep2,
+#'                 C_rep1 = ps_c_rep1,
+#'                 C_rep2 = ps_c_rep2)
+#'
+#' # make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
+#' #    this means there is double-counting
+#' # also using discontinuous gene regions, as gene_ids are repeated
+#' dds <- getDESeqDataSet(ps_list,
+#'                        txs_dm6_chr4,
+#'                        gene_names = txs_dm6_chr4$gene_id)
+#'
+#' dds
+#'
+#' #--------------------------------------------------#
+#' # getDESeqResults
+#' #--------------------------------------------------#
+#'
+#' res <- getDESeqResults(dds, "B", "A")
+#'
+#' res
+#'
+#' reslist <- getDESeqResults(dds,
+#'                            comparisons.list = list(c("B", "A"), c("C", "A")),
+#'                            ncores = 1)
+#' names(reslist)
+#'
+#' reslist[[1]]
 getDESeqResults <- function(dds,
                             contrast.numer,
                             contrast.denom,
@@ -264,7 +341,7 @@ getDESeqResults <- function(dds,
     when_sf <- .when_sf(dds, sizeFactors)
     exist_sf <- .exist_sizeFactors(dds)
 
-    # apply early NFs; return error if late apply and multiple comparisons
+    # apply early NFs
     if (when_sf == "early") {
         if (exist_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
@@ -283,6 +360,7 @@ getDESeqResults <- function(dds,
 
     } else {
 
+        # if multiple comparisons, return error if trying to apply NFs late
         if (length(comparisons.list) > 1)  {
             if (when_sf == "late") {
                 stop(message = .nicemsg("Length of sizeFactors not equal to
@@ -310,11 +388,11 @@ getDESeqResults <- function(dds,
 ## Helper functions
 
 .check_contrast_args <- function(args) {
-    nvec <- "contrast.numer" %in% names(args)
-    dvec <- "contrast.denom" %in% names(args)
+    num <- "contrast.numer" %in% names(args)
+    denom <- "contrast.denom" %in% names(args)
     clist <- !is.null(args$comparisons.list)
 
-    if (!xor(clist, nvec & dvec)) {
+    if (!xor(clist, num & denom)) {
         stop(message = .nicemsg("Either provide both contrast.numer and
                                 contrast.denom, or provide comparisons.list,
                                 but not both"))
@@ -443,95 +521,95 @@ getDESeqResults <- function(dds,
 ###
 
 
-#' Automate batch calls to getDESeqResults
-#'
-#' This function can automate the generation numerous pairwise DESeq2
-#' comparisons using several logical schemes.
-#'
-#'
-#' @param dds
-#' @param sizeFactors
-#' @param alpha
-#' @param anchor
-#' @param permutations
-#' @param additional_comparisons
-#' @param ncores
-#'
-#' @return
-#' @export
-#'
-#' @examples
-getDESeqResultsInBatch <- function(dds,
-                                   sizeFactors = NULL,
-                                   alpha = 0.05,
-                                   anchor = NULL,
-                                   permutations = FALSE,
-                                   additional_comparisons = NULL,
-                                   ncores = detectCores()) {
-
-    if (!is.null(sizeFactors))  sizeFactors(dds) <- sizeFactors
-
-    condition_names <- as.character(levels(dds$condition))
-
-    # If anchor is given, compare everything to every sample name that pattern
-    # matches anchor
-    if (!is.null(anchor)) {
-        idx.anchor <- grep(anchor, condition_names)
-        all_pairs <- data.frame(Var1 = rep(idx.anchor,
-                                           each = length(condition_names)),
-                                Var2 = seq_along(condition_names))
-        all_pairs <- subset(all_pairs, Var1 != Var2)
-    }
-
-    # If no anchor given, do combinations of comparisons
-    if (is.null(anchor)) {
-        if (permutations) {
-            # all pairwise comparisons, order matters
-            #   (i.e. get 1-vs-2 and 2-vs-1)
-            all_pairs <- expand.grid( rep(list(seq_along(condition_names)), 2) )
-            all_pairs <- subset(all_pairs, Var1 != Var2)
-            all_pairs <- all_pairs[, 2:1]
-        } else {
-            # combinations, order doesn't matter
-            #   (i.e. if get 1-vs-2, don't get 2-vs-1)
-            all_pairs <- combn(seq_along(condition_names), 2)
-            all_pairs <- t(all_pairs)
-        }
-    }
-
-    # if additional_comparisons given, add them to the end
-    if (!is.null(additional_comparisons)) {
-        add.numer <- vapply(additional_comparisons, "[[", 1, character(1))
-        add.denom <- vapply(additional_comparisons, "[[", 2, character(1))
-        idx.add <- data.frame(
-            Var1 = vapply(add.denom,
-                          function(i) which(condition_names == i),
-                          FUN.VALUE = integer(1)),
-            Var2 = vapply(add.numer,
-                          function(i) which(condition_names == i),
-                          FUN.VALUE = integer(1)),
-            row.names = NULL
-        )
-        all_pairs <- rbind(all_pairs, idx.add)
-    }
-
-    # call DESeq2::results for all comparisons
-    comparisons <- mclapply(seq_len(nrow(all_pairs)), function(i) {
-        numer_i <- all_pairs[i, 2]
-        denom_i <- all_pairs[i, 1]
-        md.getDESeqResults(dds = dds,
-                           contrast.numer = condition_names[numer_i],
-                           contrast.denom = condition_names[denom_i],
-                           alpha = alpha)
-    }, mc.cores = ncores)
-
-    names(comparisons) <- vapply(seq_along(comparisons), function(i) {
-        numer_i <- all_pairs[i, 2]
-        denom_i <- all_pairs[i, 1]
-        paste0(condition_names[numer_i], "_vs_", condition_names[denom_i])
-    }, FUN.VALUE = character(1))
-
-    return(comparisons)
-}
+# #' Automate batch calls to getDESeqResults
+# #'
+# #' This function can automate the generation numerous pairwise DESeq2
+# #' comparisons using several logical schemes.
+# #'
+# #'
+# #' @param dds
+# #' @param sizeFactors
+# #' @param alpha
+# #' @param anchor
+# #' @param permutations
+# #' @param additional_comparisons
+# #' @param ncores
+# #'
+# #' @return
+# #' @export
+# #'
+# #' @examples
+# getDESeqResultsInBatch <- function(dds,
+#                                    sizeFactors = NULL,
+#                                    alpha = 0.05,
+#                                    anchor = NULL,
+#                                    permutations = FALSE,
+#                                    additional_comparisons = NULL,
+#                                    ncores = detectCores()) {
+#
+#     if (!is.null(sizeFactors))  sizeFactors(dds) <- sizeFactors
+#
+#     condition_names <- as.character(levels(dds$condition))
+#
+#     # If anchor is given, compare everything to every sample name that pattern
+#     # matches anchor
+#     if (!is.null(anchor)) {
+#         idx.anchor <- grep(anchor, condition_names)
+#         all_pairs <- data.frame(Var1 = rep(idx.anchor,
+#                                            each = length(condition_names)),
+#                                 Var2 = seq_along(condition_names))
+#         all_pairs <- subset(all_pairs, Var1 != Var2)
+#     }
+#
+#     # If no anchor given, do combinations of comparisons
+#     if (is.null(anchor)) {
+#         if (permutations) {
+#             # all pairwise comparisons, order matters
+#             #   (i.e. get 1-vs-2 and 2-vs-1)
+#             all_pairs <- expand.grid( rep(list(seq_along(condition_names)), 2) )
+#             all_pairs <- subset(all_pairs, Var1 != Var2)
+#             all_pairs <- all_pairs[, 2:1]
+#         } else {
+#             # combinations, order doesn't matter
+#             #   (i.e. if get 1-vs-2, don't get 2-vs-1)
+#             all_pairs <- combn(seq_along(condition_names), 2)
+#             all_pairs <- t(all_pairs)
+#         }
+#     }
+#
+#     # if additional_comparisons given, add them to the end
+#     if (!is.null(additional_comparisons)) {
+#         add.numer <- vapply(additional_comparisons, "[[", 1, character(1))
+#         add.denom <- vapply(additional_comparisons, "[[", 2, character(1))
+#         idx.add <- data.frame(
+#             Var1 = vapply(add.denom,
+#                           function(i) which(condition_names == i),
+#                           FUN.VALUE = integer(1)),
+#             Var2 = vapply(add.numer,
+#                           function(i) which(condition_names == i),
+#                           FUN.VALUE = integer(1)),
+#             row.names = NULL
+#         )
+#         all_pairs <- rbind(all_pairs, idx.add)
+#     }
+#
+#     # call DESeq2::results for all comparisons
+#     comparisons <- mclapply(seq_len(nrow(all_pairs)), function(i) {
+#         numer_i <- all_pairs[i, 2]
+#         denom_i <- all_pairs[i, 1]
+#         md.getDESeqResults(dds = dds,
+#                            contrast.numer = condition_names[numer_i],
+#                            contrast.denom = condition_names[denom_i],
+#                            alpha = alpha)
+#     }, mc.cores = ncores)
+#
+#     names(comparisons) <- vapply(seq_along(comparisons), function(i) {
+#         numer_i <- all_pairs[i, 2]
+#         denom_i <- all_pairs[i, 1]
+#         paste0(condition_names[numer_i], "_vs_", condition_names[denom_i])
+#     }, FUN.VALUE = character(1))
+#
+#     return(comparisons)
+# }
 
 

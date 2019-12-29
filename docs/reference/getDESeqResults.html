@@ -221,9 +221,88 @@ in <code>args.DESeq</code> will supersede this option for the call to
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='getDESeqDataSet.html'>getDESeqDataSet</a></code>,
-  <code><a href='getDESeqResultsInBatch.html'>getDESeqResultsInBatch</a></code>,
+  <code>getDESeqResultsInBatch</code>,
   <code><a href='https://rdrr.io/pkg/DESeq2/man/results.html'>DESeq2::results</a></code></p></div>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='co'>#--------------------------------------------------#</span>
+<span class='co'># getDESeqDataSet</span>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='fu'><a href='https://rdrr.io/r/base/message.html'>suppressPackageStartupMessages</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/library.html'>require</a></span>(<span class='no'>DESeq2</span>))
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"PROseq"</span>) <span class='co'># import included PROseq data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"txs_dm6_chr4"</span>) <span class='co'># import included transcripts</span>
+
+<span class='co'># divide PROseq data into 6 toy datasets</span>
+<span class='no'>ps_a_rep1</span> <span class='kw'>&lt;-</span> <span class='no'>PROseq</span>[<span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>1</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PROseq</span>), <span class='fl'>6</span>)]
+<span class='no'>ps_b_rep1</span> <span class='kw'>&lt;-</span> <span class='no'>PROseq</span>[<span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>2</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PROseq</span>), <span class='fl'>6</span>)]
+<span class='no'>ps_c_rep1</span> <span class='kw'>&lt;-</span> <span class='no'>PROseq</span>[<span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>3</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PROseq</span>), <span class='fl'>6</span>)]
+
+<span class='no'>ps_a_rep2</span> <span class='kw'>&lt;-</span> <span class='no'>PROseq</span>[<span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>4</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PROseq</span>), <span class='fl'>6</span>)]
+<span class='no'>ps_b_rep2</span> <span class='kw'>&lt;-</span> <span class='no'>PROseq</span>[<span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>5</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PROseq</span>), <span class='fl'>6</span>)]
+<span class='no'>ps_c_rep2</span> <span class='kw'>&lt;-</span> <span class='no'>PROseq</span>[<span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>6</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PROseq</span>), <span class='fl'>6</span>)]
+
+<span class='no'>ps_list</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>A_rep1</span> <span class='kw'>=</span> <span class='no'>ps_a_rep1</span>,
+                <span class='kw'>A_rep2</span> <span class='kw'>=</span> <span class='no'>ps_a_rep2</span>,
+                <span class='kw'>B_rep1</span> <span class='kw'>=</span> <span class='no'>ps_b_rep1</span>,
+                <span class='kw'>B_rep2</span> <span class='kw'>=</span> <span class='no'>ps_b_rep2</span>,
+                <span class='kw'>C_rep1</span> <span class='kw'>=</span> <span class='no'>ps_c_rep1</span>,
+                <span class='kw'>C_rep2</span> <span class='kw'>=</span> <span class='no'>ps_c_rep2</span>)
+
+<span class='co'># make flawed dataset (ranges in txs_dm6_chr4 not disjoint)</span>
+<span class='co'>#    this means there is double-counting</span>
+<span class='co'># also using discontinuous gene regions, as gene_ids are repeated</span>
+<span class='no'>dds</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getDESeqDataSet.html'>getDESeqDataSet</a></span>(<span class='no'>ps_list</span>,
+                       <span class='no'>txs_dm6_chr4</span>,
+                       <span class='kw'>gene_names</span> <span class='kw'>=</span> <span class='no'>txs_dm6_chr4</span>$<span class='no'>gene_id</span>)</div><div class='output co'>#&gt; <span class='message'>renaming the first element in assays to 'counts'</span></div><div class='output co'>#&gt; <span class='message'>converting counts to integer mode</span></div><div class='input'>
+<span class='no'>dds</span></div><div class='output co'>#&gt; class: DESeqDataSet 
+#&gt; dim: 111 6 
+#&gt; metadata(1): version
+#&gt; assays(1): counts
+#&gt; rownames(111): FBgn0267363 FBgn0266617 ... FBgn0039924 FBgn0027101
+#&gt; rowData names(2): tx_name gene_id
+#&gt; colnames(6): A_rep1 A_rep2 ... C_rep1 C_rep2
+#&gt; colData names(2): condition replicate</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># getDESeqResults</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='no'>res</span> <span class='kw'>&lt;-</span> <span class='fu'>getDESeqResults</span>(<span class='no'>dds</span>, <span class='st'>"B"</span>, <span class='st'>"A"</span>)</div><div class='output co'>#&gt; <span class='message'>estimating size factors</span></div><div class='output co'>#&gt; <span class='message'>estimating dispersions</span></div><div class='output co'>#&gt; <span class='message'>gene-wise dispersion estimates</span></div><div class='output co'>#&gt; <span class='message'>mean-dispersion relationship</span></div><div class='output co'>#&gt; <span class='message'>final dispersion estimates</span></div><div class='output co'>#&gt; <span class='message'>fitting model and testing</span></div><div class='input'>
+<span class='no'>res</span></div><div class='output co'>#&gt; log2 fold change (MLE): condition B vs A 
+#&gt; Wald test p-value: condition B vs A 
+#&gt; DataFrame with 111 rows and 6 columns
+#&gt;               baseMean log2FoldChange     lfcSE        stat    pvalue      padj
+#&gt;              &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+#&gt; FBgn0267363    0.25000     -1.4283946  4.997107 -0.28584433  0.774997   0.99766
+#&gt; FBgn0266617   10.34365      0.0838289  0.897865  0.09336470  0.925614   0.99766
+#&gt; FBgn0265633    2.01884      0.0120837  1.785163  0.00676898  0.994599   0.99766
+#&gt; FBgn0264617   64.61865      0.2152746  0.390560  0.55119533  0.581500   0.99766
+#&gt; FBgn0085432 4575.85639     -0.2116051  0.207035 -1.02207177  0.306747   0.99766
+#&gt; ...                ...            ...       ...         ...       ...       ...
+#&gt; FBgn0039928    696.376     0.00585552  0.242563   0.0241402  0.980741   0.99766
+#&gt; FBgn0052017    121.156    -0.04873622  0.338569  -0.1439476  0.885542   0.99766
+#&gt; FBgn0002521    172.065    -0.14843126  0.307854  -0.4821480  0.629701   0.99766
+#&gt; FBgn0039924    162.633     0.30042713  0.465331   0.6456196  0.518526   0.99766
+#&gt; FBgn0027101    357.788    -0.12638095  0.236357  -0.5347032  0.592855   0.99766</div><div class='input'>
+<span class='no'>reslist</span> <span class='kw'>&lt;-</span> <span class='fu'>getDESeqResults</span>(<span class='no'>dds</span>,
+                           <span class='kw'>comparisons.list</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"B"</span>, <span class='st'>"A"</span>), <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"C"</span>, <span class='st'>"A"</span>)),
+                           <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fl'>1</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span>(<span class='no'>reslist</span>)</div><div class='output co'>#&gt; [1] "B_vs_A" "C_vs_A"</div><div class='input'>
+<span class='no'>reslist</span><span class='kw'>[[</span><span class='fl'>1</span>]]</div><div class='output co'>#&gt; log2 fold change (MLE): condition B vs A 
+#&gt; Wald test p-value: condition B vs A 
+#&gt; DataFrame with 111 rows and 6 columns
+#&gt;               baseMean log2FoldChange     lfcSE        stat    pvalue      padj
+#&gt;              &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+#&gt; FBgn0267363    0.25000     -1.4283946  4.997107 -0.28584433  0.774997   0.99766
+#&gt; FBgn0266617   10.34365      0.0838289  0.897865  0.09336470  0.925614   0.99766
+#&gt; FBgn0265633    2.01884      0.0120837  1.785163  0.00676898  0.994599   0.99766
+#&gt; FBgn0264617   64.61865      0.2152746  0.390560  0.55119533  0.581500   0.99766
+#&gt; FBgn0085432 4575.85639     -0.2116051  0.207035 -1.02207177  0.306747   0.99766
+#&gt; ...                ...            ...       ...         ...       ...       ...
+#&gt; FBgn0039928    696.376     0.00585552  0.242563   0.0241402  0.980741   0.99766
+#&gt; FBgn0052017    121.156    -0.04873622  0.338569  -0.1439476  0.885542   0.99766
+#&gt; FBgn0002521    172.065    -0.14843126  0.307854  -0.4821480  0.629701   0.99766
+#&gt; FBgn0039924    162.633     0.30042713  0.465331   0.6456196  0.518526   0.99766
+#&gt; FBgn0027101    357.788    -0.12638095  0.236357  -0.5347032  0.592855   0.99766</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -231,6 +310,7 @@ in <code>args.DESeq</code> will supersede this option for the call to
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
       <li><a href="#see-also">See also</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>

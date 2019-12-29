@@ -5,7 +5,7 @@ library(DESeq2)
 data("PROseq")
 data("txs_dm6_chr4")
 
-# split into 4 toy datasets
+# split into 6 toy datasets
 ps_a_rep1 <- PROseq[seq(1, length(PROseq), 6)]
 ps_b_rep1 <- PROseq[seq(2, length(PROseq), 6)]
 ps_c_rep1 <- PROseq[seq(3, length(PROseq), 6)]

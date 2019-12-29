@@ -43,6 +43,34 @@
 #' @seealso \code{\link[BRGenomics:metaSubsample]{metaSubsample}},
 #'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' data("txs_dm6_chr4") # load included transcripts
+#'
+#' # for each transcript, use promoter-proximal region from TSS to +100
+#' pr <- promoters(txs_dm6_chr4, 0, 100)
+#'
+#' # generate a matrix of counts in each region
+#' countsmat <- getCountsByPositions(PROseq, pr)
+#' dim(countsmat)
+#'
+#' #--------------------------------------------------#
+#' # bootstrap average signal in 10 bp bins across all transcripts
+#' #--------------------------------------------------#
+#'
+#' set.seed(11)
+#' df <- metaSubsampleMatrix(countsmat, binsize = 10, sample.name = "PROseq")
+#' df[1:10, ]
+#'
+#' #--------------------------------------------------#
+#' # the same, using a normalization factor, and changing the x-values
+#' #--------------------------------------------------#
+#'
+#' set.seed(11)
+#' df <- metaSubsampleMatrix(countsmat, binsize = 10, first.output.xval = 0,
+#'                           NF = 0.75, sample.name = "PROseq")
+#' df[1:10, ]
 metaSubsampleMatrix <- function(counts.mat,
                                 binsize = 1,
                                 first.output.xval = 1,
@@ -177,6 +205,31 @@ metaSubsampleMatrix <- function(counts.mat,
 #' @seealso \code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
 #'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # import included PROseq data
+#' data("txs_dm6_chr4") # import included transcripts
+#'
+#' # for each transcript, use promoter-proximal region from TSS to +100
+#' pr <- promoters(txs_dm6_chr4, 0, 100)
+#'
+#' #--------------------------------------------------#
+#' # Bootstrap average signal in each 5 bp bin across all transcripts,
+#' # and get confidence bands for middle 30% of bootstrapped means
+#' #--------------------------------------------------#
+#'
+#' set.seed(11)
+#' df <- metaSubsample(PROseq, pr, binsize = 5, lower = 0.35, upper = 0.65)
+#' df[1:10, ]
+#'
+#' #--------------------------------------------------#
+#' # Plot bootstrapped means with confidence intervals
+#' #--------------------------------------------------#
+#'
+#' plot(mean ~ x, df, type = "l", main = "PROseq Signal",
+#'      ylab = "Mean + 30% CI", xlab = "Distance from TSS")
+#' polygon(c(df$x, rev(df$x)), c(df$lower, rev(df$upper)),
+#'         col = adjustcolor("black", 0.1), border = FALSE)
 metaSubsample <- function(dataset.gr,
                           regions.gr,
                           binsize = 1,

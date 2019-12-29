@@ -146,12 +146,33 @@ each region in each field.</p></td>
 
     <div class='dont-index'><p><code><a href='getCountsByPositions.html'>getCountsByPositions</a></code></p></div>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"PROseq"</span>) <span class='co'># load included PROseq data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"txs_dm6_chr4"</span>) <span class='co'># load included transcripts</span>
+
+<span class='no'>counts</span> <span class='kw'>&lt;-</span> <span class='fu'>getCountsByRegions</span>(<span class='no'>PROseq</span>, <span class='no'>txs_dm6_chr4</span>)
+
+<span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>txs_dm6_chr4</span>)</div><div class='output co'>#&gt; [1] 339</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>counts</span>)</div><div class='output co'>#&gt; [1] 339</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span>(<span class='no'>counts</span>)</div><div class='output co'>#&gt; [1]    1   58   13  125  263 2522</div><div class='input'>
+<span class='co'># Assign as metadata to the transcript GRanges</span>
+<span class='no'>txs_dm6_chr4</span>$<span class='no'>PROseq</span> <span class='kw'>&lt;-</span> <span class='no'>counts</span>
+<span class='no'>txs_dm6_chr4</span>[<span class='fl'>1</span>:<span class='fl'>6</span>]</div><div class='output co'>#&gt; GRanges object with 6 ranges and 3 metadata columns:
+#&gt;       seqnames       ranges strand |     tx_name     gene_id    PROseq
+#&gt;          &lt;Rle&gt;    &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;numeric&gt;
+#&gt;   [1]     chr4     879-5039      + | FBtr0346692 FBgn0267363         1
+#&gt;   [2]     chr4  42774-43374      + | FBtr0344900 FBgn0266617        58
+#&gt;   [3]     chr4  44774-46074      + | FBtr0340499 FBgn0265633        13
+#&gt;   [4]     chr4  56497-60974      + | FBtr0333704 FBgn0264617       125
+#&gt;   [5]     chr4  56497-63124      + | FBtr0333705 FBgn0264617       263
+#&gt;   [6]     chr4 69326-101419      + | FBtr0100246 FBgn0085432      2522
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#see-also">See also</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>

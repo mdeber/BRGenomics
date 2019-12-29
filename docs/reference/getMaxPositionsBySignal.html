@@ -173,6 +173,45 @@ metadata column in <code>regions.gr</code>.</p></td>
 
     <div class='dont-index'><p><code><a href='getCountsByPositions.html'>getCountsByPositions</a></code></p></div>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"PROseq"</span>) <span class='co'># load included PROseq data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"txs_dm6_chr4"</span>) <span class='co'># load included transcripts</span>
+
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># first 50 bases of transcripts</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='no'>pr</span> <span class='kw'>&lt;-</span> <span class='fu'>promoters</span>(<span class='no'>txs_dm6_chr4</span>, <span class='fl'>0</span>, <span class='fl'>50</span>)
+<span class='no'>pr</span>[<span class='fl'>1</span>:<span class='fl'>3</span>]</div><div class='output co'>#&gt; GRanges object with 3 ranges and 2 metadata columns:
+#&gt;       seqnames      ranges strand |     tx_name     gene_id
+#&gt;          &lt;Rle&gt;   &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;   [1]     chr4     879-928      + | FBtr0346692 FBgn0267363
+#&gt;   [2]     chr4 42774-42823      + | FBtr0344900 FBgn0266617
+#&gt;   [3]     chr4 44774-44823      + | FBtr0340499 FBgn0265633
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># max sites</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>getMaxPositionsBySignal</span>(<span class='no'>pr</span>[<span class='fl'>1</span>:<span class='fl'>3</span>], <span class='no'>PROseq</span>, <span class='kw'>keep.score</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; GRanges object with 2 ranges and 3 metadata columns:
+#&gt;       seqnames    ranges strand |     tx_name     gene_id MaxSiteScore
+#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;    &lt;numeric&gt;
+#&gt;   [1]     chr4     42799      + | FBtr0344900 FBgn0266617            3
+#&gt;   [2]     chr4     44801      + | FBtr0340499 FBgn0265633            1
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># max sites in 5 bp bins</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>getMaxPositionsBySignal</span>(<span class='no'>pr</span>[<span class='fl'>1</span>:<span class='fl'>3</span>], <span class='no'>PROseq</span>, <span class='kw'>binsize</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>keep.score</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; GRanges object with 2 ranges and 3 metadata columns:
+#&gt;       seqnames      ranges strand |     tx_name     gene_id MaxSiteScore
+#&gt;          &lt;Rle&gt;   &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;    &lt;numeric&gt;
+#&gt;   [1]     chr4 42794-42798      + | FBtr0344900 FBgn0266617            4
+#&gt;   [2]     chr4 44799-44803      + | FBtr0340499 FBgn0265633            1
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -180,6 +219,7 @@ metadata column in <code>regions.gr</code>.</p></td>
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
       <li><a href="#see-also">See also</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>

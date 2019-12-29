@@ -27,6 +27,20 @@ each region in each field.}
 Returns a vector the same length as \code{regions.gr} containing signal found
 in each range.
 }
+\examples{
+data("PROseq") # load included PROseq data
+data("txs_dm6_chr4") # load included transcripts
+
+counts <- getCountsByRegions(PROseq, txs_dm6_chr4)
+
+length(txs_dm6_chr4)
+length(counts)
+head(counts)
+
+# Assign as metadata to the transcript GRanges
+txs_dm6_chr4$PROseq <- counts
+txs_dm6_chr4[1:6]
+}
 \seealso{
 \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 }

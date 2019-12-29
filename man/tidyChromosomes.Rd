@@ -28,9 +28,14 @@ removed from \code{seqinfo}. Standard chromosomes are defined using the
 \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}} function
 from the \code{GenomeInfoDb} package.
 }
+\examples{
+data("PROseq") # load included PROseq data
+# (only data on chr4, so nothing actually changes)
+PROseq_tidy <- tidyChromosomes(PROseq)
+}
 \seealso{
 \code{\link[GenomeInfoDb:standardChromosomes]{
-   GenomeInfoDb::standardChromosomes}},
+   GenomeInfoDb::standardChromosomes}}
 }
 \author{
 Mike DeBerardine

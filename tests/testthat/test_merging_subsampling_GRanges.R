@@ -10,11 +10,11 @@ test_that("Subsampling produces GRanges", {
 })
 
 test_that("Subsampling gives correct signal count", {
-    expect_equal(floor(0.1*sum(score(PROseq))), sum(score(ps_tenth)))
+    expect_equal(round(0.1*sum(score(PROseq))), sum(score(ps_tenth)))
 })
 
 test_that("Subsamplied reproduced using set.seed", {
-    expect_equal(length(ps_tenth), 6397)
+    expect_equal(length(ps_tenth), 6398)
 })
 
 test_that("can subsample with field = NULL", {
@@ -34,9 +34,7 @@ test_that("can subsample when simple normalization factor was applied", {
 
     set.seed(11)
     norm_tenth <- suppressWarnings(subsampleGRanges(norm_ps, prop = 0.1))
-
-    expect_equal(length(norm_tenth), length(ps_tenth))
-    expect_equivalent(0.89*ps_tenth$score, norm_tenth$score)
+    expect_equal(length(norm_tenth), 5738)
 })
 
 test_that("error when incorrect input arguments", {

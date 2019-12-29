@@ -51,6 +51,13 @@ Imports a GRanges object containing base-pair resolution data, with
 
   For \code{import_bigWig}, all ranges are of width = 1.
 }
+\examples{
+# get local address for included bigWig files
+p.bw <- system.file("extdata", "PROseq_dm6_chr4_plus.bw", package = "BRGenomics")
+m.bw <- system.file("extdata", "PROseq_dm6_chr4_minus.bw", package = "BRGenomics")
+# import bigWigs
+PROseq <- import_bigWig(p.bw, m.bw, genome = "dm6")
+}
 \seealso{
 \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
   \code{\link[rtracklayer:import]{rtracklayer::import}}

@@ -38,6 +38,32 @@
 #' @author Mike DeBerardine
 #' @seealso \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
 #' @export
+#'
+#' @examples
+#' data("txs_dm6_chr4") # load included transcript data
+#' len <- length(txs_dm6_chr4)
+#' txs <- txs_dm6_chr4[c(1:2, len - 1, len)]
+#' txs
+#'
+#' #--------------------------------------------------#
+#' # genebodies from +300 (300 bp after TSS) to 300 bp before the poly-A site
+#' #--------------------------------------------------#
+#'
+#' genebodies(txs, 300, -300)
+#'
+#' #--------------------------------------------------#
+#' # promoters from -50 to +100
+#' #--------------------------------------------------#
+#'
+#' promoters(txs, 50, 100)
+#'
+#' genebodies(txs, -50, 100, fix.end = "start")
+#'
+#' #--------------------------------------------------#
+#' # region from 500 to 1000 bases after the poly-A site
+#' #--------------------------------------------------#
+#'
+#' genebodies(txs, 500, 1000, fix.start = "end")
 genebodies <- function(genelist,
                        start = 300,
                        end = -300,
@@ -150,6 +176,29 @@ genebodies <- function(genelist,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' data("txs_dm6_chr4") # load included transcripts
+#'
+#' #--------------------------------------------------#
+#' # first 50 bases of transcripts
+#' #--------------------------------------------------#
+#'
+#' pr <- promoters(txs_dm6_chr4, 0, 50)
+#' pr[1:3]
+#'
+#' #--------------------------------------------------#
+#' # max sites
+#' #--------------------------------------------------#
+#'
+#' getMaxPositionsBySignal(pr[1:3], PROseq, keep.score = TRUE)
+#'
+#' #--------------------------------------------------#
+#' # max sites in 5 bp bins
+#' #--------------------------------------------------#
+#'
+#' getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.score = TRUE)
 getMaxPositionsBySignal <- function(regions.gr,
                                     dataset.gr,
                                     binsize = 1,
@@ -256,6 +305,32 @@ getMaxPositionsBySignal <- function(regions.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' data("txs_dm6_chr4") # load included transcripts
+#'
+#' txs_dm6_chr4
+#'
+#' #--------------------------------------------------#
+#' # get the top 50% of transcripts by signal
+#' #--------------------------------------------------#
+#'
+#' subsetRegionsBySignal(txs_dm6_chr4, PROseq)
+#'
+#' #--------------------------------------------------#
+#' # get the middle 50% of transcripts by signal
+#' #--------------------------------------------------#
+#'
+#' subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.25, 0.75))
+#'
+#' #--------------------------------------------------#
+#' # get the top 10% of transcripts by signal, and sort them by highest signal
+#' #--------------------------------------------------#
+#'
+#' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
+#'                       quantiles = c(0.9, 1),
+#'                       order.by.rank = TRUE)
 subsetRegionsBySignal <- function(regions.gr,
                                   dataset.gr,
                                   quantiles = c(0.5, 1),

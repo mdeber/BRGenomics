@@ -63,6 +63,34 @@ of interest, each column is a position within that gene (either a specific
 basepair or a bin), and element values are signal (e.g. read counts) within
 those positions.
 }
+\examples{
+data("PROseq") # load included PROseq data
+data("txs_dm6_chr4") # load included transcripts
+
+# for each transcript, use promoter-proximal region from TSS to +100
+pr <- promoters(txs_dm6_chr4, 0, 100)
+
+# generate a matrix of counts in each region
+countsmat <- getCountsByPositions(PROseq, pr)
+dim(countsmat)
+
+#--------------------------------------------------#
+# bootstrap average signal in 10 bp bins across all transcripts
+#--------------------------------------------------#
+
+set.seed(11)
+df <- metaSubsampleMatrix(countsmat, binsize = 10, sample.name = "PROseq")
+df[1:10, ]
+
+#--------------------------------------------------#
+# the same, using a normalization factor, and changing the x-values
+#--------------------------------------------------#
+
+set.seed(11)
+df <- metaSubsampleMatrix(countsmat, binsize = 10, first.output.xval = 0,
+                          NF = 0.75, sample.name = "PROseq")
+df[1:10, ]
+}
 \seealso{
 \code{\link[BRGenomics:metaSubsample]{metaSubsample}},
   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}

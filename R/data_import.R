@@ -30,9 +30,13 @@
 #' @author Mike DeBerardine
 #' @seealso
 #'    \code{\link[GenomeInfoDb:standardChromosomes]{
-#'    GenomeInfoDb::standardChromosomes}},
+#'    GenomeInfoDb::standardChromosomes}}
 #'
 #' @export
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' # (only data on chr4, so nothing actually changes)
+#' PROseq_tidy <- tidyChromosomes(PROseq)
 tidyChromosomes <- function(gr,
                             keep.X = TRUE,
                             keep.Y = TRUE,
@@ -48,7 +52,6 @@ tidyChromosomes <- function(gr,
     gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
     sortSeqlevels(gr)
 }
-
 
 
 #' Import basepair-resolution files
@@ -75,10 +78,17 @@ tidyChromosomes <- function(gr,
 #' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
 #'   \code{\link[rtracklayer:import]{rtracklayer::import}}
 #' @name import-functions
+#' @examples
+#' # get local address for included bigWig files
+#' p.bw <- system.file("extdata", "PROseq_dm6_chr4_plus.bw", package = "BRGenomics")
+#' m.bw <- system.file("extdata", "PROseq_dm6_chr4_minus.bw", package = "BRGenomics")
+#' # import bigWigs
+#' PROseq <- import_bigWig(p.bw, m.bw, genome = "dm6")
 NULL
 
 
 #' @rdname import-functions
+#' @export
 import_bigWig <- function(plus_file,
                           minus_file,
                           genome = NULL,
@@ -118,6 +128,7 @@ import_bigWig <- function(plus_file,
 
 
 #' @rdname import-functions
+#' @export
 import_bedGraph <- function(plus_file,
                             minus_file,
                             genome = NULL,
@@ -147,6 +158,9 @@ import_bedGraph <- function(plus_file,
     }
     return(sort(gr))
 }
+
+
+
 
 
 # #' Import transcripts from UCSC

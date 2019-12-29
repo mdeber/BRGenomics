@@ -51,6 +51,45 @@ range in \code{promoters.gr} and \code{genebodies.gr} are divided by their
 respective range widths (region lengths) before pausing indices are
 calculated.
 }
+\examples{
+data("PROseq") # load included PROseq data
+data("txs_dm6_chr4") # load included transcripts
+
+#--------------------------------------------------#
+# Get promoter-proximal and genebody regions
+#--------------------------------------------------#
+
+# genebodies from +300 to 300 bp before the poly-A site
+gb <- genebodies(txs_dm6_chr4, 300, -300, min.window = 400)
+
+# get the transcripts that are large enough (>1kb in size)
+txs <- subset(txs_dm6_chr4, tx_name \%in\% gb$tx_name)
+
+# for the same transcripts, promoter-proximal region from 0 to +100
+pr <- promoters(txs, 0, 100)
+
+#--------------------------------------------------#
+# Calculate pausing indices
+#--------------------------------------------------#
+
+pidx <- getPausingIndices(PROseq, pr, gb)
+length(txs_dm6_chr4)
+length(pidx)
+head(pidx)
+
+#--------------------------------------------------#
+# Without length normalization
+#--------------------------------------------------#
+
+head( getPausingIndices(PROseq, pr, gb, length.normalize = FALSE) )
+
+#--------------------------------------------------#
+# Removing empty means the values no longer match the genelist
+#--------------------------------------------------#
+
+pidx_signal <- getPausingIndices(PROseq, pr, gb, remove.empty = TRUE)
+length(pidx_signal)
+}
 \seealso{
 \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 }

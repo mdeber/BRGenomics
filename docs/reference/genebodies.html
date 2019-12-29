@@ -185,6 +185,67 @@ width, and <code>min.window</code> simply size-filters the input ranges.</p></td
 
     <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/GenomicRanges/man/intra-range-methods.html'>intra-range-methods</a></code></p></div>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"txs_dm6_chr4"</span>) <span class='co'># load included transcript data</span>
+<span class='no'>len</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>txs_dm6_chr4</span>)
+<span class='no'>txs</span> <span class='kw'>&lt;-</span> <span class='no'>txs_dm6_chr4</span>[<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>:<span class='fl'>2</span>, <span class='no'>len</span> - <span class='fl'>1</span>, <span class='no'>len</span>)]
+<span class='no'>txs</span></div><div class='output co'>#&gt; GRanges object with 4 ranges and 2 metadata columns:
+#&gt;       seqnames          ranges strand |     tx_name     gene_id
+#&gt;          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;   [1]     chr4        879-5039      + | FBtr0346692 FBgn0267363
+#&gt;   [2]     chr4     42774-43374      + | FBtr0344900 FBgn0266617
+#&gt;   [3]     chr4 1225737-1230713      - | FBtr0100402 FBgn0027101
+#&gt;   [4]     chr4 1225737-1230713      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># genebodies from +300 (300 bp after TSS) to 300 bp before the poly-A site</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>genebodies</span>(<span class='no'>txs</span>, <span class='fl'>300</span>, -<span class='fl'>300</span>)</div><div class='output co'>#&gt; GRanges object with 4 ranges and 2 metadata columns:
+#&gt;       seqnames          ranges strand |     tx_name     gene_id
+#&gt;          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;   [1]     chr4       1179-4739      + | FBtr0346692 FBgn0267363
+#&gt;   [2]     chr4           43074      + | FBtr0344900 FBgn0266617
+#&gt;   [3]     chr4 1226037-1230413      - | FBtr0100402 FBgn0027101
+#&gt;   [4]     chr4 1226037-1230413      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># promoters from -50 to +100</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>promoters</span>(<span class='no'>txs</span>, <span class='fl'>50</span>, <span class='fl'>100</span>)</div><div class='output co'>#&gt; GRanges object with 4 ranges and 2 metadata columns:
+#&gt;       seqnames          ranges strand |     tx_name     gene_id
+#&gt;          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;   [1]     chr4         829-978      + | FBtr0346692 FBgn0267363
+#&gt;   [2]     chr4     42724-42873      + | FBtr0344900 FBgn0266617
+#&gt;   [3]     chr4 1230614-1230763      - | FBtr0100402 FBgn0027101
+#&gt;   [4]     chr4 1230614-1230763      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='fu'>genebodies</span>(<span class='no'>txs</span>, -<span class='fl'>50</span>, <span class='fl'>100</span>, <span class='kw'>fix.end</span> <span class='kw'>=</span> <span class='st'>"start"</span>)</div><div class='output co'>#&gt; GRanges object with 4 ranges and 2 metadata columns:
+#&gt;       seqnames          ranges strand |     tx_name     gene_id
+#&gt;          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;   [1]     chr4         829-979      + | FBtr0346692 FBgn0267363
+#&gt;   [2]     chr4     42724-42874      + | FBtr0344900 FBgn0266617
+#&gt;   [3]     chr4 1230613-1230763      - | FBtr0100402 FBgn0027101
+#&gt;   [4]     chr4 1230613-1230763      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># region from 500 to 1000 bases after the poly-A site</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>genebodies</span>(<span class='no'>txs</span>, <span class='fl'>500</span>, <span class='fl'>1000</span>, <span class='kw'>fix.start</span> <span class='kw'>=</span> <span class='st'>"end"</span>)</div><div class='output co'>#&gt; GRanges object with 4 ranges and 2 metadata columns:
+#&gt;       seqnames          ranges strand |     tx_name     gene_id
+#&gt;          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;   [1]     chr4       5539-6039      + | FBtr0346692 FBgn0267363
+#&gt;   [2]     chr4     43874-44374      + | FBtr0344900 FBgn0266617
+#&gt;   [3]     chr4 1224737-1225237      - | FBtr0100402 FBgn0027101
+#&gt;   [4]     chr4 1224737-1225237      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -192,6 +253,7 @@ width, and <code>min.window</code> simply size-filters the input ranges.</p></td
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
       <li><a href="#see-also">See also</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>

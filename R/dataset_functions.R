@@ -35,6 +35,19 @@
 #' @seealso \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
 #'   \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}
 #' @export
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' range(width(PROseq))
+#'
+#' # simulate the format of a bigWig file, using arbitrary scores
+#' bw <- reduce(PROseq)
+#' score(bw) <- score(PROseq)[seq_along(bw)]
+#' range(width(bw))
+#' length(bw)
+#'
+#' gr <- makeGRangesBPres(bw)
+#' range(width(gr))
+#' length(gr)
 makeGRangesBPres <- function(dataset.gr) {
 
     if (!isDisjoint(dataset.gr)) {
@@ -72,6 +85,34 @@ makeGRangesBPres <- function(dataset.gr) {
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 #' @export
+#' @examples
+#' #--------------------------------------------------#
+#' # Using included full-read data
+#' #--------------------------------------------------#
+#'
+#' data("PROseq_paired")
+#'
+#' PROseq_paired[1:6]
+#'
+#' getStrandedCoverage(PROseq_paired)[1:6]
+#'
+#' #--------------------------------------------------#
+#' # Re-creating score for included single-base data
+#' #--------------------------------------------------#
+#'
+#' data("PROseq")
+#'
+#' PROseq[1:6]
+#'
+#' # undo coverage for the first 100 positions
+#' ps <- PROseq[1:100]
+#'
+#' ps_reads <- rep(ps, times = ps$score)
+#' mcols(ps_reads) <- NULL
+#' ps_reads[1:6]
+#'
+#' # re-create coverage
+#' getStrandedCoverage(ps_reads, field = NULL)[1:6]
 getStrandedCoverage <- function(dataset.gr, field = "score") {
 
     if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
@@ -126,6 +167,16 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
 #' @author Mike DeBerardine
 #' @export
 #' @examples
+#' data("PROseq") # load included PROseq data
+#'
+#' length(PROseq)
+#' sum(score(PROseq))
+#'
+#' # sample 10% of the reads
+#' ps_sample <- subsampleGRanges(PROseq, prop = 0.1)
+#'
+#' length(ps_sample)
+#' sum(score(ps_sample)) # 1/10th the score is sampled
 subsampleGRanges <- function(dataset.gr,
                              n = NULL,
                              prop = NULL,
@@ -143,7 +194,7 @@ subsampleGRanges <- function(dataset.gr,
     }
 
     signal_counts <- mcols(dataset.gr)[[field]]
-    if (is.null(n))  n <- floor(prop * sum(signal_counts))
+    if (is.null(n))  n <- round(prop * sum(signal_counts))
 
     if (all( round(signal_counts, 3) %% 1 == 0 )) {
         normed_signal <- FALSE
@@ -192,6 +243,25 @@ subsampleGRanges <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 #' @export
+#' @examples
+#' data("PROseq") # load included PROseq data
+#'
+#' #--------------------------------------------------#
+#' # divide PROseq data into thirds
+#' #--------------------------------------------------#
+#'
+#' thirds <- floor( (1:3)/3 * length(PROseq) )
+#' ps_1 <- PROseq[1:thirds[1]]
+#' ps_2 <- PROseq[(thirds[1]+1):thirds[2]]
+#' ps_3 <- PROseq[(thirds[2]+1):thirds[3]]
+#'
+#' #--------------------------------------------------#
+#' # re-merge PROseq data
+#' #--------------------------------------------------#
+#'
+#' length(PROseq)
+#' length(mergeGRangesData(ps_1, ps_2))
+#' length(mergeGRangesData(ps_1, ps_2, ps_3))
 mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     data_in <- list(...)
 

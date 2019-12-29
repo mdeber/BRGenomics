@@ -28,6 +28,18 @@ signal found in the specified field. This function can also subsample ranges
 directly if \code{field = NULL}, but the \code{sample} function can be used
 in this scenario.
 }
+\examples{
+data("PROseq") # load included PROseq data
+
+length(PROseq)
+sum(score(PROseq))
+
+# sample 10\% of the reads
+ps_sample <- subsampleGRanges(PROseq, prop = 0.1)
+
+length(ps_sample)
+sum(score(ps_sample)) # 1/10th the score is sampled
+}
 \author{
 Mike DeBerardine
 }

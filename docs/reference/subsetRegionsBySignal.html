@@ -178,6 +178,88 @@ function only considers the total signal in each range.</p></td>
 
     <div class='dont-index'><p><code>getCountsByRegion</code></p></div>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"PROseq"</span>) <span class='co'># load included PROseq data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"txs_dm6_chr4"</span>) <span class='co'># load included transcripts</span>
+
+<span class='no'>txs_dm6_chr4</span></div><div class='output co'>#&gt; GRanges object with 339 ranges and 2 metadata columns:
+#&gt;         seqnames          ranges strand |     tx_name     gene_id
+#&gt;            &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;     [1]     chr4        879-5039      + | FBtr0346692 FBgn0267363
+#&gt;     [2]     chr4     42774-43374      + | FBtr0344900 FBgn0266617
+#&gt;     [3]     chr4     44774-46074      + | FBtr0340499 FBgn0265633
+#&gt;     [4]     chr4     56497-60974      + | FBtr0333704 FBgn0264617
+#&gt;     [5]     chr4     56497-63124      + | FBtr0333705 FBgn0264617
+#&gt;     ...      ...             ...    ... .         ...         ...
+#&gt;   [335]     chr4 1192419-1196848      - | FBtr0100543 FBgn0039924
+#&gt;   [336]     chr4 1192419-1196848      - | FBtr0100544 FBgn0039924
+#&gt;   [337]     chr4 1225089-1230713      - | FBtr0100406 FBgn0027101
+#&gt;   [338]     chr4 1225737-1230713      - | FBtr0100402 FBgn0027101
+#&gt;   [339]     chr4 1225737-1230713      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># get the top 50% of transcripts by signal</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>subsetRegionsBySignal</span>(<span class='no'>txs_dm6_chr4</span>, <span class='no'>PROseq</span>)</div><div class='output co'>#&gt; GRanges object with 170 ranges and 2 metadata columns:
+#&gt;         seqnames          ranges strand |     tx_name     gene_id
+#&gt;            &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;     [1]     chr4    69326-101419      + | FBtr0100246 FBgn0085432
+#&gt;     [2]     chr4    69326-108694      + | FBtr0089159 FBgn0085432
+#&gt;     [3]     chr4    69326-108694      + | FBtr0334301 FBgn0085432
+#&gt;     [4]     chr4    69326-109770      + | FBtr0100245 FBgn0085432
+#&gt;     [5]     chr4    69326-110059      + | FBtr0308615 FBgn0085432
+#&gt;     ...      ...             ...    ... .         ...         ...
+#&gt;   [166]     chr4 1192419-1196848      - | FBtr0100543 FBgn0039924
+#&gt;   [167]     chr4 1192419-1196848      - | FBtr0100544 FBgn0039924
+#&gt;   [168]     chr4 1225089-1230713      - | FBtr0100406 FBgn0027101
+#&gt;   [169]     chr4 1225737-1230713      - | FBtr0100402 FBgn0027101
+#&gt;   [170]     chr4 1225737-1230713      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># get the middle 50% of transcripts by signal</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>subsetRegionsBySignal</span>(<span class='no'>txs_dm6_chr4</span>, <span class='no'>PROseq</span>, <span class='kw'>quantiles</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.25</span>, <span class='fl'>0.75</span>))</div><div class='output co'>#&gt; GRanges object with 169 ranges and 2 metadata columns:
+#&gt;         seqnames          ranges strand |     tx_name     gene_id
+#&gt;            &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;     [1]     chr4     56497-60974      + | FBtr0333704 FBgn0264617
+#&gt;     [2]     chr4     56497-63124      + | FBtr0333705 FBgn0264617
+#&gt;     [3]     chr4   136272-140083      + | FBtr0089450 FBgn0052000
+#&gt;     [4]     chr4   136272-143123      + | FBtr0089448 FBgn0052000
+#&gt;     [5]     chr4   136272-143123      + | FBtr0089449 FBgn0052000
+#&gt;     ...      ...             ...    ... .         ...         ...
+#&gt;   [165]     chr4 1192419-1196848      - | FBtr0100543 FBgn0039924
+#&gt;   [166]     chr4 1192419-1196848      - | FBtr0100544 FBgn0039924
+#&gt;   [167]     chr4 1225089-1230713      - | FBtr0100406 FBgn0027101
+#&gt;   [168]     chr4 1225737-1230713      - | FBtr0100402 FBgn0027101
+#&gt;   [169]     chr4 1225737-1230713      - | FBtr0100404 FBgn0027101
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># get the top 10% of transcripts by signal, and sort them by highest signal</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'>subsetRegionsBySignal</span>(<span class='no'>txs_dm6_chr4</span>, <span class='no'>PROseq</span>,
+                      <span class='kw'>quantiles</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.9</span>, <span class='fl'>1</span>),
+                      <span class='kw'>order.by.rank</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; GRanges object with 34 ranges and 2 metadata columns:
+#&gt;        seqnames        ranges strand |     tx_name     gene_id
+#&gt;           &lt;Rle&gt;     &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+#&gt;    [1]     chr4 649041-663103      - | FBtr0310542 FBgn0051992
+#&gt;    [2]     chr4  69653-114270      + | FBtr0309803 FBgn0085432
+#&gt;    [3]     chr4  69326-110059      + | FBtr0308615 FBgn0085432
+#&gt;    [4]     chr4  69326-109770      + | FBtr0100245 FBgn0085432
+#&gt;    [5]     chr4  69326-108694      + | FBtr0334301 FBgn0085432
+#&gt;    ...      ...           ...    ... .         ...         ...
+#&gt;   [30]     chr4 649971-659983      - | FBtr0089097 FBgn0051992
+#&gt;   [31]     chr4 184225-193489      - | FBtr0089150 FBgn0039890
+#&gt;   [32]     chr4 184225-193489      - | FBtr0089149 FBgn0039890
+#&gt;   [33]     chr4 132220-140083      + | FBtr0089447 FBgn0052000
+#&gt;   [34]     chr4 132220-140083      + | FBtr0089446 FBgn0052000
+#&gt;   -------
+#&gt;   seqinfo: 7 sequences from dm6 genome</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -186,6 +268,7 @@ function only considers the total signal in each range.</p></td>
       <li><a href="#value">Value</a></li>
       <li><a href="#details">Details</a></li>
       <li><a href="#see-also">See also</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>

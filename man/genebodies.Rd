@@ -54,6 +54,32 @@ default arguments return ranges that begin 300 bases downstream of the
 original start positions, and end 300 bases upstream of the original end
 positions.
 }
+\examples{
+data("txs_dm6_chr4") # load included transcript data
+len <- length(txs_dm6_chr4)
+txs <- txs_dm6_chr4[c(1:2, len - 1, len)]
+txs
+
+#--------------------------------------------------#
+# genebodies from +300 (300 bp after TSS) to 300 bp before the poly-A site
+#--------------------------------------------------#
+
+genebodies(txs, 300, -300)
+
+#--------------------------------------------------#
+# promoters from -50 to +100
+#--------------------------------------------------#
+
+promoters(txs, 50, 100)
+
+genebodies(txs, -50, 100, fix.end = "start")
+
+#--------------------------------------------------#
+# region from 500 to 1000 bases after the poly-A site
+#--------------------------------------------------#
+
+genebodies(txs, 500, 1000, fix.start = "end")
+}
 \seealso{
 \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
 }

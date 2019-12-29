@@ -21,6 +21,33 @@ signal in the "score" metadata column. Function also works for
 non-strand-specific data. Note that output is not automatically converted
 into a "basepair-resolution" GRanges object.
 }
+\examples{
+#--------------------------------------------------#
+# Using included full-read data
+#--------------------------------------------------#
+
+data("PROseq_paired")
+PROseq_paired[1:6]
+
+getStrandedCoverage(PROseq_paired)[1:6]
+
+#--------------------------------------------------#
+# Re-creating score for included single-base data
+#--------------------------------------------------#
+
+data("PROseq")
+PROseq[1:6]
+
+# undo coverage for the first 100 positions
+ps <- PROseq[1:100]
+
+ps_reads <- rep(ps, times = ps$score)
+mcols(ps_reads) <- NULL
+ps_reads[1:6]
+
+# re-create coverage
+getStrandedCoverage(ps_reads, field = NULL)[1:6]
+}
 \seealso{
 \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
 }

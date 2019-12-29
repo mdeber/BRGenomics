@@ -73,6 +73,31 @@ This function performs bootstrap subsampling of mean readcounts at different
 positions within regions of interest. Mean signal counts can be estimated at
 base-pair resolution, or smoothed over larger bins.
 }
+\examples{
+data("PROseq") # import included PROseq data
+data("txs_dm6_chr4") # import included transcripts
+
+# for each transcript, use promoter-proximal region from TSS to +100
+pr <- promoters(txs_dm6_chr4, 0, 100)
+
+#--------------------------------------------------#
+# Bootstrap average signal in each 5 bp bin across all transcripts,
+# and get confidence bands for middle 30\% of bootstrapped means
+#--------------------------------------------------#
+
+set.seed(11)
+df <- metaSubsample(PROseq, pr, binsize = 5, lower = 0.35, upper = 0.65)
+df[1:10, ]
+
+#--------------------------------------------------#
+# Plot bootstrapped means with confidence intervals
+#--------------------------------------------------#
+
+plot(mean ~ x, df, type = "l", main = "PROseq Signal",
+     ylab = "Mean + 30\% CI", xlab = "Distance from TSS")
+polygon(c(df$x, rev(df$x)), c(df$lower, rev(df$upper)),
+        col = adjustcolor("black", 0.1), border = FALSE)
+}
 \seealso{
 \code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}

@@ -33,6 +33,31 @@
 #' @export
 #'
 #' @examples
+#' data("PROseq") # import included PROseq data
+#' data("txs_dm6_chr4") # import included transcripts
+#'
+#' #--------------------------------------------------#
+#' # find counts in promoter, early genebody, and near CPS
+#' #--------------------------------------------------#
+#'
+#' pr <- promoters(txs_dm6_chr4, 0, 100)
+#' early_gb <- genebodies(txs_dm6_chr4, 500, 1000, fix.end = "start")
+#' cps <- genebodies(txs_dm6_chr4, -500, 500, fix.start = "end")
+#'
+#' counts_pr <- getCountsByRegions(PROseq, pr)
+#' counts_gb <- getCountsByRegions(PROseq, early_gb)
+#' counts_cps <- getCountsByRegions(PROseq, cps)
+#'
+#' #--------------------------------------------------#
+#' # divide genes into 20 quantiles for each measurement
+#' #--------------------------------------------------#
+#'
+#' count_quantiles <- binNdimensions(counts_pr, counts_gb, counts_cps,
+#'                                   quantiles = 20)
+#'
+#' length(txs_dm6_chr4)
+#' nrow(count_quantiles)
+#' count_quantiles[1:10, ]
 binNdimensions <- function(..., quantiles = 10) {
 
     data_in <- list(...)

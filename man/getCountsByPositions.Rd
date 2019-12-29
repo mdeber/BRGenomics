@@ -55,6 +55,40 @@ If the widths of all ranges in \code{regions.gr} are equal, a matrix
   positions outside of each range are either set to \code{0} or \code{NA},
   depending on the argument.
 }
+\examples{
+data("PROseq") # load included PROseq data
+data("txs_dm6_chr4") # load included transcripts
+
+#--------------------------------------------------#
+# counts from 0 to 50 bp after the TSS
+#--------------------------------------------------#
+
+txs_pr <- promoters(txs_dm6_chr4, 0, 50) # first 50 bases
+countsmat <- getCountsByPositions(PROseq, txs_pr)
+countsmat[1:6, 40:50] # show only 40-50 bp after TSS
+
+#--------------------------------------------------#
+# redo with 10 bp bins from 0 to 100
+#--------------------------------------------------#
+
+txs_pr <- promoters(txs_dm6_chr4, 0, 100)
+countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10)
+countsmat[1:6, ]
+
+#--------------------------------------------------#
+# same as the above, but with the average signal in each bin
+#--------------------------------------------------#
+
+countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = mean)
+countsmat[1:6, ]
+
+#--------------------------------------------------#
+# standard deviation of signal in each bin
+#--------------------------------------------------#
+
+countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
+round(countsmat[1:6, ], 2)
+}
 \seealso{
 \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 }

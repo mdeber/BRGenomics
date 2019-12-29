@@ -54,6 +54,32 @@ Typical uses may include removing the 5% of genes with the lowest
   returned, but the returned regions will be sorted by position, or by score
   if \code{order.by.rank = TRUE}.
 }
+\examples{
+data("PROseq") # load included PROseq data
+data("txs_dm6_chr4") # load included transcripts
+
+txs_dm6_chr4
+
+#--------------------------------------------------#
+# get the top 50\% of transcripts by signal
+#--------------------------------------------------#
+
+subsetRegionsBySignal(txs_dm6_chr4, PROseq)
+
+#--------------------------------------------------#
+# get the middle 50\% of transcripts by signal
+#--------------------------------------------------#
+
+subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.25, 0.75))
+
+#--------------------------------------------------#
+# get the top 10\% of transcripts by signal, and sort them by highest signal
+#--------------------------------------------------#
+
+subsetRegionsBySignal(txs_dm6_chr4, PROseq,
+                      quantiles = c(0.9, 1),
+                      order.by.rank = TRUE)
+}
 \seealso{
 \code{\link[BRGenomics:getCountsByRegion]{getCountsByRegion}}
 }

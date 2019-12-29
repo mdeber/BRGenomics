@@ -200,6 +200,51 @@ parallel processing doesn't show any benefit for short computation times
     <div class='dont-index'><p><code><a href='metaSubsample.html'>metaSubsample</a></code>,
   <code><a href='getCountsByPositions.html'>getCountsByPositions</a></code></p></div>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"PROseq"</span>) <span class='co'># load included PROseq data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"txs_dm6_chr4"</span>) <span class='co'># load included transcripts</span>
+
+<span class='co'># for each transcript, use promoter-proximal region from TSS to +100</span>
+<span class='no'>pr</span> <span class='kw'>&lt;-</span> <span class='fu'>promoters</span>(<span class='no'>txs_dm6_chr4</span>, <span class='fl'>0</span>, <span class='fl'>100</span>)
+
+<span class='co'># generate a matrix of counts in each region</span>
+<span class='no'>countsmat</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getCountsByPositions.html'>getCountsByPositions</a></span>(<span class='no'>PROseq</span>, <span class='no'>pr</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/dim.html'>dim</a></span>(<span class='no'>countsmat</span>)</div><div class='output co'>#&gt; [1] 339 100</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># bootstrap average signal in 10 bp bins across all transcripts</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>11</span>)
+<span class='no'>df</span> <span class='kw'>&lt;-</span> <span class='fu'>metaSubsampleMatrix</span>(<span class='no'>countsmat</span>, <span class='kw'>binsize</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='kw'>sample.name</span> <span class='kw'>=</span> <span class='st'>"PROseq"</span>)
+<span class='no'>df</span>[<span class='fl'>1</span>:<span class='fl'>10</span>, ]</div><div class='output co'>#&gt;     x       mean     lower     upper sample.name
+#&gt; 1   6  0.4705882 0.2352941  1.147059      PROseq
+#&gt; 2  16  0.7058824 0.3529412  1.735294      PROseq
+#&gt; 3  26  1.2058824 0.7058824  2.176471      PROseq
+#&gt; 4  36  3.6470588 1.7647059 11.687500      PROseq
+#&gt; 5  46  5.6617647 2.9963235 11.709559      PROseq
+#&gt; 6  56 10.3382353 6.0000000 15.709559      PROseq
+#&gt; 7  66  5.2058824 3.2941176  7.411765      PROseq
+#&gt; 8  76  5.4558824 2.1433824 10.003676      PROseq
+#&gt; 9  86  3.0588235 2.0588235  4.441176      PROseq
+#&gt; 10 96  2.8676471 1.6470588  4.558824      PROseq</div><div class='input'>
+<span class='co'>#--------------------------------------------------#</span>
+<span class='co'># the same, using a normalization factor, and changing the x-values</span>
+<span class='co'>#--------------------------------------------------#</span>
+
+<span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>11</span>)
+<span class='no'>df</span> <span class='kw'>&lt;-</span> <span class='fu'>metaSubsampleMatrix</span>(<span class='no'>countsmat</span>, <span class='kw'>binsize</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='kw'>first.output.xval</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+                          <span class='kw'>NF</span> <span class='kw'>=</span> <span class='fl'>0.75</span>, <span class='kw'>sample.name</span> <span class='kw'>=</span> <span class='st'>"PROseq"</span>)
+<span class='no'>df</span>[<span class='fl'>1</span>:<span class='fl'>10</span>, ]</div><div class='output co'>#&gt;     x      mean     lower      upper sample.name
+#&gt; 1   5 0.3529412 0.1764706  0.8602941      PROseq
+#&gt; 2  15 0.5294118 0.2647059  1.3014706      PROseq
+#&gt; 3  25 0.9044118 0.5294118  1.6323529      PROseq
+#&gt; 4  35 2.7352941 1.3235294  8.7656250      PROseq
+#&gt; 5  45 4.2463235 2.2472426  8.7821691      PROseq
+#&gt; 6  55 7.7536765 4.5000000 11.7821691      PROseq
+#&gt; 7  65 3.9044118 2.4705882  5.5588235      PROseq
+#&gt; 8  75 4.0919118 1.6075368  7.5027574      PROseq
+#&gt; 9  85 2.2941176 1.5441176  3.3308824      PROseq
+#&gt; 10 95 2.1507353 1.2352941  3.4191176      PROseq</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -207,6 +252,7 @@ parallel processing doesn't show any benefit for short computation times
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
       <li><a href="#see-also">See also</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>

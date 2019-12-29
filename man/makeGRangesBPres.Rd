@@ -35,6 +35,20 @@ Note that this function doesn't perform any transformation on the
   single-base coverage can be calculated using
   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
 }
+\examples{
+data("PROseq") # load included PROseq data
+range(width(PROseq))
+
+# simulate the format of a bigWig file, using arbitrary scores
+bw <- reduce(PROseq)
+score(bw) <- score(PROseq)[seq_along(bw)]
+range(width(bw))
+length(bw)
+
+gr <- makeGRangesBPres(bw)
+range(width(gr))
+length(gr)
+}
 \seealso{
 \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
   \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}

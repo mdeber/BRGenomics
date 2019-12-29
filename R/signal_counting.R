@@ -16,6 +16,20 @@
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' data("txs_dm6_chr4") # load included transcripts
+#'
+#' counts <- getCountsByRegions(PROseq, txs_dm6_chr4)
+#'
+#' length(txs_dm6_chr4)
+#' length(counts)
+#' head(counts)
+#'
+#' # Assign as metadata to the transcript GRanges
+#' txs_dm6_chr4$PROseq <- counts
+#' txs_dm6_chr4[1:6]
 getCountsByRegions <- function(dataset.gr,
                                regions.gr,
                                field = "score",
@@ -80,6 +94,40 @@ getCountsByRegions <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' data("txs_dm6_chr4") # load included transcripts
+#'
+#' #--------------------------------------------------#
+#' # counts from 0 to 50 bp after the TSS
+#' #--------------------------------------------------#
+#'
+#' txs_pr <- promoters(txs_dm6_chr4, 0, 50) # first 50 bases
+#' countsmat <- getCountsByPositions(PROseq, txs_pr)
+#' countsmat[1:6, 40:50] # show only 40-50 bp after TSS
+#'
+#' #--------------------------------------------------#
+#' # redo with 10 bp bins from 0 to 100
+#' #--------------------------------------------------#
+#'
+#' txs_pr <- promoters(txs_dm6_chr4, 0, 100)
+#' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10)
+#' countsmat[1:6, ]
+#'
+#' #--------------------------------------------------#
+#' # same as the above, but with the average signal in each bin
+#' #--------------------------------------------------#
+#'
+#' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = mean)
+#' countsmat[1:6, ]
+#'
+#' #--------------------------------------------------#
+#' # standard deviation of signal in each bin
+#' #--------------------------------------------------#
+#'
+#' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
+#' round(countsmat[1:6, ], 2)
 getCountsByPositions <- function(dataset.gr,
                                  regions.gr,
                                  binsize = 1,
@@ -200,6 +248,47 @@ getCountsByPositions <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
+#'
+#' @examples
+#' data("PROseq") # load included PROseq data
+#' data("txs_dm6_chr4") # load included transcripts
+#'
+#' #--------------------------------------------------#
+#' # Get promoter-proximal and genebody regions
+#' #--------------------------------------------------#
+#'
+#' # genebodies from +300 to 300 bp before the poly-A site
+#' gb <- genebodies(txs_dm6_chr4, 300, -300, min.window = 400)
+#'
+#' # get the transcripts that are large enough (>1kb in size)
+#' txs <- subset(txs_dm6_chr4, tx_name %in% gb$tx_name)
+#'
+#' # for the same transcripts, promoter-proximal region from 0 to +100
+#' pr <- promoters(txs, 0, 100)
+#'
+#' #--------------------------------------------------#
+#' # Calculate pausing indices
+#' #--------------------------------------------------#
+#'
+#' pidx <- getPausingIndices(PROseq, pr, gb)
+#'
+#' length(txs_dm6_chr4)
+#' length(pidx)
+#' head(pidx)
+#'
+#' #--------------------------------------------------#
+#' # Without length normalization
+#' #--------------------------------------------------#
+#'
+#' head( getPausingIndices(PROseq, pr, gb, length.normalize = FALSE) )
+#'
+#' #--------------------------------------------------#
+#' # Removing empty means the values no longer match the genelist
+#' #--------------------------------------------------#
+#'
+#' pidx_signal <- getPausingIndices(PROseq, pr, gb, remove.empty = TRUE)
+#'
+#' length(pidx_signal)
 getPausingIndices <- function(dataset.gr,
                               promoters.gr,
                               genebodies.gr,

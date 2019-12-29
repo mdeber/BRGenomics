@@ -50,6 +50,29 @@ For each signal-containing region of interest, find the single site with the
 most signal. Sites can be found at base-pair resolution, or defined for
 larger bins.
 }
+\examples{
+data("PROseq") # load included PROseq data
+data("txs_dm6_chr4") # load included transcripts
+
+#--------------------------------------------------#
+# first 50 bases of transcripts
+#--------------------------------------------------#
+
+pr <- promoters(txs_dm6_chr4, 0, 50)
+pr[1:3]
+
+#--------------------------------------------------#
+# max sites
+#--------------------------------------------------#
+
+getMaxPositionsBySignal(pr[1:3], PROseq, keep.score = TRUE)
+
+#--------------------------------------------------#
+# max sites in 5 bp bins
+#--------------------------------------------------#
+
+getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.score = TRUE)
+}
 \seealso{
 \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 }

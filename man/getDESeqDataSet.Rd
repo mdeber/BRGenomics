@@ -84,6 +84,36 @@ regions.
   GSEA or Go analysis).
 }
 
+\examples{
+suppressPackageStartupMessages(require(DESeq2))
+data("PROseq") # import included PROseq data
+data("txs_dm6_chr4") # import included transcripts
+
+# divide PROseq data into 6 toy datasets
+ps_a_rep1 <- PROseq[seq(1, length(PROseq), 6)]
+ps_b_rep1 <- PROseq[seq(2, length(PROseq), 6)]
+ps_c_rep1 <- PROseq[seq(3, length(PROseq), 6)]
+
+ps_a_rep2 <- PROseq[seq(4, length(PROseq), 6)]
+ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
+ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
+
+ps_list <- list(A_rep1 = ps_a_rep1,
+                A_rep2 = ps_a_rep2,
+                B_rep1 = ps_b_rep1,
+                B_rep2 = ps_b_rep2,
+                C_rep1 = ps_c_rep1,
+                C_rep2 = ps_c_rep2)
+
+# make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
+#    this means there is double-counting
+# also using discontinuous gene regions, as gene_ids are repeated
+dds <- getDESeqDataSet(ps_list,
+                       txs_dm6_chr4,
+                       gene_names = txs_dm6_chr4$gene_id,
+                       quiet = TRUE)
+dds
+}
 \seealso{
 \code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
   \code{\link[BRGenomics:getDESeqResults]{getDESeqResults}},
