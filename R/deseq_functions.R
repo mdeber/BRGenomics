@@ -348,7 +348,7 @@ getDESeqResults <- function(dds,
         if (exist_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
         DESeq2::sizeFactors(dds) <- sizeFactors
-        sizeFactors <- NULL
+        sizeFactors <- NULL # avoid re-application
     }
 
     if (is.null(comparisons.list)) {

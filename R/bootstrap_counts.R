@@ -85,14 +85,7 @@ metaSubsampleMatrix <- function(counts.mat,
                                 ncores = 1) {
 
     # Check that enough iterations are given for meaningful quantiles
-    if (n.iter != 1 & (round(n.iter*lower) == 0 |
-                       round(n.iter*lower) == 0.5*n.iter |
-                       round(n.iter*upper) == 0.5*n.iter |
-                       round(n.iter*upper) == n.iter)) {
-        msg <- "Insufficient iterations to obtain distinct values of quantiles"
-        stop(message = msg)
-        return(geterrmessage())
-    }
+    if (n.iter != 1) .check_iter(n.iter, lower, upper)
 
     nbins <- floor(ncol(counts.mat) / binsize)
     ngenes <- nrow(counts.mat)
@@ -106,20 +99,17 @@ metaSubsampleMatrix <- function(counts.mat,
     if (ncores == 1) {
         # Randomly subsample rows of counts.mat
         # -> Matrix of dim = (nsample, n.iter)
-        idx_mat <- replicate(n.iter,
-                             sample(ngenes, size = nsample),
+        idx_mat <- replicate(n.iter, sample(ngenes, size = nsample),
                              simplify = "array")
 
         # For each iteration, get average signal in each bin
         # -> Matrix of dim = (nbins, n.iter)
-        binavg_mat <- apply(idx_mat,
-                            2,
+        binavg_mat <- apply(idx_mat, 2,
                             function(idx) colMeans(counts.mat[idx, ]))
     } else {
         # Randomly subsample rows of the counts.mat
         # -> List of length = n.iter, containing vectors of length = nsample
-        idx_mat <- replicate(n.iter,
-                             sample(ngenes, size = nsample),
+        idx_mat <- replicate(n.iter, sample(ngenes, size = nsample),
                              simplify = FALSE)
 
         # For each iteration, get average signal in each bin
@@ -149,13 +139,28 @@ metaSubsampleMatrix <- function(counts.mat,
     # Also return x-values and sample names for plotting;
     #   x-values centered in bins
     if (binsize == 1) {
-        x <- seq(0, nbins - 1) + first.output.xval
+        x <- first.output.xval + seq(0, nbins - 1)
     } else {
-        x <- seq(0.5*binsize,
-                 nbins*binsize - 0.5*binsize, binsize) + first.output.xval
+        x <- first.output.xval + seq(0.5 * binsize,
+                                     nbins * binsize - 0.5 * binsize,
+                                     binsize)
     }
 
     return(data.frame(x, mean, lower, upper, sample.name))
+}
+
+
+.check_iter <- function(n.iter, lower, upper) {
+    checks <- c(round(n.iter*lower) == 0,
+                round(n.iter*lower) == 0.5*n.iter,
+                round(n.iter*upper) == 0.5*n.iter,
+                round(n.iter*upper) == n.iter)
+
+    if (any(checks)) {
+        msg <- "Insufficient iterations to obtain distinct values of quantiles"
+        stop(message = msg)
+        return(geterrmessage())
+    }
 }
 
 
@@ -293,12 +298,12 @@ metaSubsample <- function(dataset.gr,
     )
 
     # fix x-values to match bins, and binsize-normalize the returned values
-    if (binsize != 1)  metamat <- .fix_bin_sizes(metamat, binsize)
+    if (binsize != 1) metamat <- .fix_bins(metamat, binsize, first.output.xval)
     return(metamat)
 }
 
 
-.fix_bin_sizes <- function(metamat, binsize) {
+.fix_bins <- function(metamat, binsize, first.output.xval) {
     nbins <- nrow(metamat)
     binstart <- 0.5*binsize
     binstep <- nbins*binsize - 0.5*binsize
@@ -308,6 +313,7 @@ metaSubsample <- function(dataset.gr,
     metamat[, y_vals] <- metamat[, y_vals] / binsize
     return(metamat)
 }
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Bootstrapping signal means over variable-length ranges

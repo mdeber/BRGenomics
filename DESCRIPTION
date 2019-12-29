@@ -14,16 +14,12 @@ RoxygenNote: 7.0.2
 Depends:
     R (>= 4.0),
     GenomicRanges,
-    GenomeInfoDb,
-    BiocParallel
+    GenomeInfoDb
 Imports:
     rtracklayer,
-    stats4,
-    BiocGenerics,
     parallel,
-    S4Vectors,
     IRanges,
-    AnnotationDbi,
+    stats,
     DESeq2,
     SummarizedExperiment
 Suggests:
