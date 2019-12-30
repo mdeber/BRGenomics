@@ -44,7 +44,7 @@ df_bin <- metaSubsample(PROseq, txs_pr, binsize = 10, first.output.xval = -10)
 
 test_that("binning correct with bootstrapping", {
     expect_equivalent(nrow(df_bin), 10)
-    expect_equivalent(df_bin$x, seq(-5, 85, 10))
+    expect_equivalent(df_bin$x, seq(-5.5, 84.5, 10))
 })
 
 test_that("binning correct with bootstrapping counts matrix", {

@@ -141,9 +141,7 @@ metaSubsampleMatrix <- function(counts.mat,
     if (binsize == 1) {
         x <- first.output.xval + seq(0, nbins - 1)
     } else {
-        x <- first.output.xval + seq(0.5 * binsize,
-                                     nbins * binsize - 0.5 * binsize,
-                                     binsize)
+        x <- .binxval(nbins, binsize, first.output.xval)
     }
 
     return(data.frame(x, mean, lower, upper, sample.name))
@@ -161,6 +159,14 @@ metaSubsampleMatrix <- function(counts.mat,
         stop(message = msg)
         return(geterrmessage())
     }
+}
+
+
+#' @importFrom stats quantile
+.binxval <- function(nbins, binsize, first.output.xval) {
+    firstbin <- seq(first.output.xval, by = 1, length.out = binsize)
+    binstart <- quantile(firstbin, 0.5) # center of first bin
+    seq(binstart, by = binsize, length.out = nbins)
 }
 
 
@@ -298,16 +304,14 @@ metaSubsample <- function(dataset.gr,
     )
 
     # fix x-values to match bins, and binsize-normalize the returned values
-    if (binsize != 1) metamat <- .fix_bins(metamat, binsize, first.output.xval)
+    if (binsize != 1) metamat <- .fixbins(metamat, binsize, first.output.xval)
     return(metamat)
 }
 
 
-.fix_bins <- function(metamat, binsize, first.output.xval) {
+.fixbins <- function(metamat, binsize, first.output.xval) {
     nbins <- nrow(metamat)
-    binstart <- 0.5*binsize
-    binstep <- nbins*binsize - 0.5*binsize
-    metamat$x <- seq(binstart, binstep, binsize) + first.output.xval
+    metamat$x <- .binxval(nbins, binsize, first.output.xval)
 
     y_vals <- c("mean", "lower", "upper")
     metamat[, y_vals] <- metamat[, y_vals] / binsize
