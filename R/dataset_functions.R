@@ -20,11 +20,11 @@
 #'
 #'   The motivating case for this function is a bigWig file (e.g. one imported
 #'   by \code{rtracklayer}), as bigWig files typically use run-length
-#'   compression on the data signal (the 'score' column), such that when
-#'   adjacent bases sharing the same signal will combined into a single range.
-#'   The base-pair resolution GRanges objects produced by this function remove
-#'   this compression, resulting in each index (each range) of the GRanges
-#'   object addressing a single genomic position.
+#'   compression on the data signal (the 'score' column), such that adjacent
+#'   bases sharing the same signal are combined into a single range. The
+#'   base-pair resolution GRanges objects produced by this function remove this
+#'   compression, resulting in each index (each range) of the GRanges object
+#'   addressing a single genomic position.
 #'
 #' @section Generating basepair-resolution GRanges from whole reads: If working
 #'   with a GRanges object containing whole reads, one can obtain base-pair
@@ -49,7 +49,7 @@
 #' bw_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
 #'                        package = "BRGenomics")
 #'
-#' # BRGenomics::import_bigWig automatically applies makeGRangesBPres;
+#' # BRGenomics::import_bigWig automatically applies makeGRangesBRG;
 #' # therefore will import using rtracklayer
 #' bw <- rtracklayer::import.bw(bw_file)
 #' strand(bw) <- "+"
@@ -58,7 +58,7 @@
 #' length(bw)
 #'
 #' # make basepair-resolution (single-width)
-#' gr <- makeGRangesBPres(bw)
+#' gr <- makeGRangesBRG(bw)
 #'
 #' range(width(gr))
 #' length(gr)
@@ -68,14 +68,14 @@
 #' #--------------------------------------------------#
 #' # Reverse using getStrandedCoverage
 #' #--------------------------------------------------#
-#' # -> for more examples, see getStranded Coverage
+#' # -> for more examples, see getStrandedCoverage
 #'
 #' undo <- getStrandedCoverage(gr)
 #'
 #' range(width(undo))
 #' length(undo) == length(bw)
 #' all(score(undo) == score(bw))
-makeGRangesBPres <- function(dataset.gr) {
+makeGRangesBRG <- function(dataset.gr) {
 
     if (!isDisjoint(dataset.gr)) {
         stop("Input dataset.gr is not disjoint. See documentation")
@@ -110,13 +110,17 @@ makeGRangesBPres <- function(dataset.gr) {
 #'   read, set to NULL.
 #'
 #' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
+#' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}},
+#'   \code{\link[GenomicRanges:coverage]{GenomicRanges::coverage}}
 #' @export
 #' @importFrom GenomicRanges mcols
 #' @examples
 #' #--------------------------------------------------#
 #' # Using included full-read data
 #' #--------------------------------------------------#
+#' # -> whole-read coverage sacrifices meaningful readcount
+#' #    information, but can be useful for visualization,
+#' #    e.g. for looking at RNA-seq data in a genome browser
 #'
 #' data("PROseq_paired")
 #'
@@ -130,8 +134,7 @@ makeGRangesBPres <- function(dataset.gr) {
 #'
 #' # included PROseq data is already single-base coverage
 #' data("PROseq")
-#'
-#' PROseq[1:6]
+#' range(width(PROseq))
 #'
 #' # undo coverage for the first 100 positions
 #' ps <- PROseq[1:100]
@@ -144,11 +147,11 @@ makeGRangesBPres <- function(dataset.gr) {
 #' getStrandedCoverage(ps_reads, field = NULL)[1:6]
 #'
 #' #--------------------------------------------------#
-#' # Reversing makeGRangesBPres
+#' # Reversing makeGRangesBRG
 #' #--------------------------------------------------#
-#' # -> this function doesn't return single-width GRanges,
-#' #    which is useful because coverage tracks will merge
-#' #    adjacent bases with equivalent scores
+#' # -> getStrandedCoverage doesn't return single-width
+#' #    GRanges, which is useful because getting coverage
+#' #    will merge adjacent bases with equivalent scores
 #'
 #' # included PROseq data is already single-width
 #' range(width(PROseq))
@@ -161,7 +164,6 @@ makeGRangesBPres <- function(dataset.gr) {
 #'
 #' # -> Look specifically at ranges that could be combined
 #' neighbors <- c(shift(PROseq, 1), shift(PROseq, -1))
-#' neighbors <- sort(unique(neighbors))
 #' hits <- findOverlaps(PROseq, neighbors)
 #' idx <- unique(hits@from) # indices for PROseq with neighbor
 #'
@@ -315,9 +317,9 @@ subsampleGRanges <- function(dataset.gr,
 #' @param field One or more metadata fields to be combined, typically the
 #'   "score" field. Fields typically contain coverage information.
 #' @param ncores More than one core can be used to coerce non-single-width
-#'   GRanges objects using \code{makeGRangesBPres}.
+#'   GRanges objects using \code{makeGRangesBRG}.
 #' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
+#' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export
 #' @importFrom parallel detectCores mclapply
 #' @importFrom GenomicRanges GRanges width findOverlaps mcols mcols<-
@@ -325,7 +327,7 @@ subsampleGRanges <- function(dataset.gr,
 #' data("PROseq") # load included PROseq data
 #'
 #' #--------------------------------------------------#
-#' # divide PROseq data into thirds
+#' # divide & recombine PROseq (no overlapping positions)
 #' #--------------------------------------------------#
 #'
 #' thirds <- floor( (1:3)/3 * length(PROseq) )
@@ -333,21 +335,28 @@ subsampleGRanges <- function(dataset.gr,
 #' ps_2 <- PROseq[(thirds[1]+1):thirds[2]]
 #' ps_3 <- PROseq[(thirds[2]+1):thirds[3]]
 #'
-#' #--------------------------------------------------#
-#' # re-merge PROseq data
-#' #--------------------------------------------------#
-#'
+#' # re-merge
 #' length(PROseq)
 #' length(ps_1)
 #' length(mergeGRangesData(ps_1, ps_2))
-#' length(mergeGRangesData(ps_1, ps_3))
 #' length(mergeGRangesData(ps_1, ps_2, ps_3))
+#'
+#' #--------------------------------------------------#
+#' # combine PRO-seq with overlapping positions
+#' #--------------------------------------------------#
+#'
+#' gr1 <- PROseq[10:13]
+#' gr2 <- PROseq[12:15]
+#'
+#' PROseq[10:15]
+#'
+#' mergeGRangesData(gr1, gr2)
 mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     data_in <- list(...)
 
     if (length(data_in) < 2) {
         warning("Running mergeGRangesData on less than 2 GRanges objects")
-        if (length(data_in) == 1)  return(makeGRangesBPres(data_in[[1]]))
+        if (length(data_in) == 1)  return(makeGRangesBRG(data_in[[1]]))
         return(GRanges())
     }
 
@@ -357,11 +366,10 @@ mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
                           FUN.VALUE = logical(1))
     if (any(width_check == FALSE)) {
         warning(.nicemsg("One or more inputs are not single-width GRanges
-                         objects. Will coerce them using
-                         makeGRangesBPres()..."),
+                         objects. Will coerce them using makeGRangesBRG()..."),
                 immediate. = TRUE)
         data_in <- mclapply(data_in,
-                            makeGRangesBPres,
+                            makeGRangesBRG,
                             mc.cores = ncores)
     }
 

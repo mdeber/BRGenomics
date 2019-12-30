@@ -49,33 +49,36 @@ start and end sites of regions of interest (usually genes). Unlike
 can be upstream or downstream based on the sign, and both the start and end
 of the returned regions can be defined in terms of either the start of end
 site of the input ranges. For example, \code{genebodies(txs, -50, 150,
-fix.end = "start")} is equivalent to \code{promoters(txs, 50, 150)}. The
-default arguments return ranges that begin 300 bases downstream of the
-original start positions, and end 300 bases upstream of the original end
-positions.
+fix.end = "start")} is equivalent to \code{promoters(txs, 50, 151)} (the
+downstream edge is off by 1 because \code{promoters} keeps the downstream
+interval closed). The default arguments return ranges that begin 300 bases
+downstream of the original start positions, and end 300 bases upstream of the
+original end positions.
 }
 \examples{
 data("txs_dm6_chr4") # load included transcript data
-len <- length(txs_dm6_chr4)
-txs <- txs_dm6_chr4[c(1:2, len - 1, len)]
+txs <- txs_dm6_chr4[c(1, 2, 167, 168)]
+
 txs
 
 #--------------------------------------------------#
-# genebodies from +300 (300 bp after TSS) to 300 bp before the poly-A site
+# genebody regions from 300 bp after the TSS to
+# 300 bp before the polyA site
 #--------------------------------------------------#
 
 genebodies(txs, 300, -300)
 
 #--------------------------------------------------#
-# promoters from -50 to +100
+# promoter-proximal region from 50 bp upstream of
+# the TSS to 100 bp downstream of the TSS
 #--------------------------------------------------#
 
-promoters(txs, 50, 100)
+promoters(txs, 50, 101)
 
 genebodies(txs, -50, 100, fix.end = "start")
 
 #--------------------------------------------------#
-# region from 500 to 1000 bases after the poly-A site
+# region from 500 to 1000 bp after the polyA site
 #--------------------------------------------------#
 
 genebodies(txs, 500, 1000, fix.start = "end")

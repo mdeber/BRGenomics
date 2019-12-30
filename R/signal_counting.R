@@ -32,6 +32,7 @@
 #'
 #' # Assign as metadata to the transcript GRanges
 #' txs_dm6_chr4$PROseq <- counts
+#'
 #' txs_dm6_chr4[1:6]
 getCountsByRegions <- function(dataset.gr,
                                regions.gr,
@@ -147,7 +148,7 @@ getCountsByPositions <- function(dataset.gr,
 
     # function makes practical use of single-width dataset.gr, but the output
     # is always valid regardless of the input data type
-    if (any(width(dataset.gr) != 1)) dataset.gr <- makeGRangesBPres(dataset.gr)
+    if (any(width(dataset.gr) != 1)) dataset.gr <- makeGRangesBRG(dataset.gr)
 
     multi_width <- length(unique(width(regions.gr))) > 1 # (logical)
 

@@ -29,9 +29,23 @@ removed from \code{seqinfo}. Standard chromosomes are defined using the
 from the \code{GenomeInfoDb} package.
 }
 \examples{
-data("PROseq") # load included PROseq data
-# (only data on chr4, so nothing actually changes)
-PROseq_tidy <- tidyChromosomes(PROseq)
+# make a GRanges
+chrom <- c("chr2", "chr3", "chrX", "chrY", "chrM", "junk")
+gr <- GRanges(seqnames = chrom,
+              ranges = IRanges(start = 2*(1:6), end = 3*(1:6)),
+              strand = "+",
+              seqinfo = Seqinfo(chrom))
+genome(gr) <- "hg38"
+
+gr
+
+tidyChromosomes(gr)
+
+tidyChromosomes(gr, keep.M = TRUE)
+
+tidyChromosomes(gr, keep.M = TRUE, keep.Y = FALSE)
+
+tidyChromosomes(gr, keep.nonstandard = TRUE)
 }
 \seealso{
 \code{\link[GenomeInfoDb:standardChromosomes]{

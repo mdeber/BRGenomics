@@ -39,6 +39,7 @@ head(counts)
 
 # Assign as metadata to the transcript GRanges
 txs_dm6_chr4$PROseq <- counts
+
 txs_dm6_chr4[1:6]
 }
 \seealso{

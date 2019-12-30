@@ -14,7 +14,7 @@ are contained within metadata.}
 "score" field. Fields typically contain coverage information.}
 
 \item{ncores}{More than one core can be used to coerce non-single-width
-GRanges objects using \code{makeGRangesBPres}.}
+GRanges objects using \code{makeGRangesBRG}.}
 }
 \description{
 Merges 2 or more GRanges objects. For each object, the range widths must all
@@ -26,7 +26,7 @@ of the input objects, and the sum of all scores at all sites.
 data("PROseq") # load included PROseq data
 
 #--------------------------------------------------#
-# divide PROseq data into thirds
+# divide & recombine PROseq (no overlapping positions)
 #--------------------------------------------------#
 
 thirds <- floor( (1:3)/3 * length(PROseq) )
@@ -34,18 +34,25 @@ ps_1 <- PROseq[1:thirds[1]]
 ps_2 <- PROseq[(thirds[1]+1):thirds[2]]
 ps_3 <- PROseq[(thirds[2]+1):thirds[3]]
 
-#--------------------------------------------------#
-# re-merge PROseq data
-#--------------------------------------------------#
-
+# re-merge
 length(PROseq)
 length(ps_1)
 length(mergeGRangesData(ps_1, ps_2))
-length(mergeGRangesData(ps_1, ps_3))
 length(mergeGRangesData(ps_1, ps_2, ps_3))
+
+#--------------------------------------------------#
+# combine PRO-seq with overlapping positions
+#--------------------------------------------------#
+
+gr1 <- PROseq[10:13]
+gr2 <- PROseq[12:15]
+
+PROseq[10:15]
+
+mergeGRangesData(gr1, gr2)
 }
 \seealso{
-\code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
+\code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 }
 \author{
 Mike DeBerardine

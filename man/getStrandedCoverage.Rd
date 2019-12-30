@@ -25,6 +25,9 @@ into a "basepair-resolution" GRanges object.
 #--------------------------------------------------#
 # Using included full-read data
 #--------------------------------------------------#
+# -> whole-read coverage sacrifices meaningful readcount
+#    information, but can be useful for visualization,
+#    e.g. for looking at RNA-seq data in a genome browser
 
 data("PROseq_paired")
 
@@ -38,8 +41,7 @@ getStrandedCoverage(PROseq_paired)[1:6]
 
 # included PROseq data is already single-base coverage
 data("PROseq")
-
-PROseq[1:6]
+range(width(PROseq))
 
 # undo coverage for the first 100 positions
 ps <- PROseq[1:100]
@@ -52,11 +54,11 @@ ps_reads[1:6]
 getStrandedCoverage(ps_reads, field = NULL)[1:6]
 
 #--------------------------------------------------#
-# Reversing makeGRangesBPres
+# Reversing makeGRangesBRG
 #--------------------------------------------------#
-# -> this function doesn't return single-width GRanges,
-#    which is useful because coverage tracks will merge
-#    adjacent bases with equivalent scores
+# -> getStrandedCoverage doesn't return single-width
+#    GRanges, which is useful because getting coverage
+#    will merge adjacent bases with equivalent scores
 
 # included PROseq data is already single-width
 range(width(PROseq))
@@ -69,7 +71,6 @@ sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
 
 # -> Look specifically at ranges that could be combined
 neighbors <- c(shift(PROseq, 1), shift(PROseq, -1))
-neighbors <- sort(unique(neighbors))
 hits <- findOverlaps(PROseq, neighbors)
 idx <- unique(hits@from) # indices for PROseq with neighbor
 
@@ -78,7 +79,8 @@ PROseq[idx]
 getStrandedCoverage(PROseq[idx])
 }
 \seealso{
-\code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}
+\code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}},
+  \code{\link[GenomicRanges:coverage]{GenomicRanges::coverage}}
 }
 \author{
 Mike DeBerardine

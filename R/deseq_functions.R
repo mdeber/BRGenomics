@@ -322,7 +322,7 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 #'                            ncores = 1)
 #' names(reslist)
 #'
-#' reslist[[1]]
+#' reslist$B_vs_A
 getDESeqResults <- function(dds,
                             contrast.numer,
                             contrast.denom,

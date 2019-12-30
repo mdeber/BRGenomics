@@ -59,21 +59,21 @@ test_that("error on invalid field", {
 })
 
 
-# Testing makeGRangesBPres ------------------------------------------------
+# Test makeGRangesBRG -----------------------------------------------------
 
 context("making GRanges BP-resolution")
 
-test_that("disJoint input for makeGRangesBPres makes error", {
-    expect_error(makeGRangesBPres(PROseq_paired))
-    expect_error(makeGRangesBPres(paired_3p_ends))
+test_that("disJoint input for makeGRangesBRG makes error", {
+    expect_error(makeGRangesBRG(PROseq_paired))
+    expect_error(makeGRangesBRG(paired_3p_ends))
 })
 
 test_that("Making GRangesBPres doesn't affect BPres GRanges object", {
     data("PROseq")
-    expect_identical(makeGRangesBPres(PROseq), PROseq)
+    expect_identical(makeGRangesBRG(PROseq), PROseq)
 })
 
-paired_3p_bpres <- makeGRangesBPres(paired_3p_cov)
+paired_3p_bpres <- makeGRangesBRG(paired_3p_cov)
 
 test_that("Can make single-width GRanges", {
     expect_is(paired_3p_bpres, "GRanges")

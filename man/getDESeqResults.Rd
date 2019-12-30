@@ -133,7 +133,7 @@ reslist <- getDESeqResults(dds,
                            ncores = 1)
 names(reslist)
 
-reslist[[1]]
+reslist$B_vs_A
 }
 \seealso{
 \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},

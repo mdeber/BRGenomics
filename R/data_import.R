@@ -36,9 +36,23 @@
 #' @importFrom GenomeInfoDb standardChromosomes seqlevels keepSeqlevels
 #'   sortSeqlevels
 #' @examples
-#' data("PROseq") # load included PROseq data
-#' # (only data on chr4, so nothing actually changes)
-#' PROseq_tidy <- tidyChromosomes(PROseq)
+#' # make a GRanges
+#' chrom <- c("chr2", "chr3", "chrX", "chrY", "chrM", "junk")
+#' gr <- GRanges(seqnames = chrom,
+#'               ranges = IRanges(start = 2*(1:6), end = 3*(1:6)),
+#'               strand = "+",
+#'               seqinfo = Seqinfo(chrom))
+#' genome(gr) <- "hg38"
+#'
+#' gr
+#'
+#' tidyChromosomes(gr)
+#'
+#' tidyChromosomes(gr, keep.M = TRUE)
+#'
+#' tidyChromosomes(gr, keep.M = TRUE, keep.Y = FALSE)
+#'
+#' tidyChromosomes(gr, keep.nonstandard = TRUE)
 tidyChromosomes <- function(gr,
                             keep.X = TRUE,
                             keep.Y = TRUE,
@@ -138,7 +152,7 @@ import_bigWig <- function(plus_file,
     gr <- .try_int_score(gr)
 
     # Make the width of each range equal to 1
-    gr <- makeGRangesBPres(gr)
+    gr <- makeGRangesBRG(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
