@@ -53,10 +53,7 @@
 #' tidyChromosomes(gr, keep.M = TRUE, keep.Y = FALSE)
 #'
 #' tidyChromosomes(gr, keep.nonstandard = TRUE)
-tidyChromosomes <- function(gr,
-                            keep.X = TRUE,
-                            keep.Y = TRUE,
-                            keep.M = FALSE,
+tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                             keep.nonstandard = FALSE) {
 
     chrom <- standardChromosomes(gr)
@@ -129,12 +126,8 @@ NULL
 #' @export
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
-import_bigWig <- function(plus_file,
-                          minus_file,
-                          genome = NULL,
-                          keep.X = TRUE,
-                          keep.Y = TRUE,
-                          keep.M = FALSE,
+import_bigWig <- function(plus_file, minus_file, genome = NULL,
+                          keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                           keep.nonstandard = FALSE) {
 
     # make possible to import only plus or minus
@@ -156,9 +149,7 @@ import_bigWig <- function(plus_file,
 
     if (!is.null(genome)) {
         genome(gr) <- genome
-        gr <- tidyChromosomes(gr,
-                              keep.X = keep.X,
-                              keep.Y = keep.Y,
+        gr <- tidyChromosomes(gr, keep.X = keep.X, keep.Y = keep.Y,
                               keep.M = keep.M,
                               keep.nonstandard = keep.nonstandard)
     }
@@ -171,12 +162,8 @@ import_bigWig <- function(plus_file,
 #' @export
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
-import_bedGraph <- function(plus_file,
-                            minus_file,
-                            genome = NULL,
-                            keep.X = TRUE,
-                            keep.Y = TRUE,
-                            keep.M = FALSE,
+import_bedGraph <- function(plus_file, minus_file, genome = NULL,
+                            keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                             keep.nonstandard = FALSE) {
     # import bedgraph as GRanges objects
     p_bg <- rtracklayer::import.bedGraph(plus_file)
@@ -192,9 +179,7 @@ import_bedGraph <- function(plus_file,
 
     if (!is.null(genome)) {
         genome(gr) <- genome
-        gr <- tidyChromosomes(gr,
-                              keep.X = keep.X,
-                              keep.Y = keep.Y,
+        gr <- tidyChromosomes(gr, keep.X = keep.X, keep.Y = keep.Y,
                               keep.M = keep.M,
                               keep.nonstandard = keep.nonstandard)
     }
@@ -202,7 +187,29 @@ import_bedGraph <- function(plus_file,
 }
 
 
-
+### convenience function for getting TxDb objects
+#
+# .getTxDb <- function(genome) {
+#     if (genome == "hg38") {
+#         db.txs <-
+#             TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+#     } else if (genome == "hg19") {
+#         db.txs <-
+#             TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene
+#     } else if (genome == "mm10") {
+#         db.txs <-
+#             TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene
+#     } else if (genome == "mm9") {
+#         db.txs <-
+#             TxDb.Mmusculus.UCSC.mm9.knownGene::TxDb.Mmusculus.UCSC.mm9.knownGene
+#     } else if (genome == "dm6") {
+#         db.txs <-
+#             TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene
+#     } else if (genome == "dm3") {
+#         db.txs <-
+#             TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene
+#     }
+# }
 
 
 # #' Import transcripts from UCSC

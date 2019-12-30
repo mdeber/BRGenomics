@@ -34,26 +34,21 @@
 #' txs_dm6_chr4$PROseq <- counts
 #'
 #' txs_dm6_chr4[1:6]
-getCountsByRegions <- function(dataset.gr,
-                               regions.gr,
-                               field = "score",
+getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
                                ncores = detectCores()) {
     if (length(field) == 1) {
         hits <- findOverlaps(regions.gr, dataset.gr)
         counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
-                            by = list(hits@from),
-                            FUN = sum)
+                            by = list(hits@from), FUN = sum)
         names(counts) <- c("gene.idx", "signal")
         counts.all <- rep(0, length(regions.gr)) # include regions without hits
         counts.all[counts$gene.idx] <- counts$signal
         return(counts.all)
+
     } else {
         # recursive call
-        counts <- mclapply(field,
-                           function(i) getCountsByRegions(dataset.gr,
-                                                          regions.gr,
-                                                          field = i),
-                           mc.cores = ncores)
+        call_each <- function(x) getCountsByRegions(dataset.gr, regions.gr, x)
+        counts <- mclapply(field, call_each, mc.cores = ncores)
         names(counts) <- field
         return(as.data.frame(counts))
     }
@@ -136,15 +131,12 @@ getCountsByRegions <- function(dataset.gr,
 #'
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
 #' round(countsmat[10:15, ], 2)
-getCountsByPositions <- function(dataset.gr,
-                                 regions.gr,
-                                 binsize = 1,
-                                 FUN = sum,
+getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  simplify.multi.widths = c("list",
                                                            "pad 0",
                                                            "pad NA"),
-                                 field = "score",
-                                 ncores = detectCores()) {
+                                 field = "score", ncores = detectCores()) {
+    # this function should be split into smaller functions
 
     # function makes practical use of single-width dataset.gr, but the output
     # is always valid regardless of the input data type
@@ -153,14 +145,10 @@ getCountsByPositions <- function(dataset.gr,
     multi_width <- length(unique(width(regions.gr))) > 1 # (logical)
 
     if (length(field) > 1) {
-        # recursive call
+        # recursive call; can cleanup using match.call
         reslist <- mclapply(field, function(i) {
-            getCountsByPositions(dataset.gr = dataset.gr,
-                                 regions.gr = regions.gr,
-                                 binsize = binsize,
-                                 FUN = FUN,
-                                 simplify.multi.widths = simplify.multi.widths,
-                                 field = i)
+            getCountsByPositions(dataset.gr,  regions.gr, binsize = binsize,
+                                 FUN, simplify.multi.widths, field = i)
         }, mc.cores = ncores)
         names(reslist) <- field
         return(reslist)
@@ -298,13 +286,9 @@ getCountsByPositions <- function(dataset.gr,
 #' pidx_signal <- getPausingIndices(PROseq, pr, gb, remove.empty = TRUE)
 #'
 #' length(pidx_signal)
-getPausingIndices <- function(dataset.gr,
-                              promoters.gr,
-                              genebodies.gr,
-                              field = "score",
-                              length.normalize = TRUE,
-                              remove.empty = FALSE,
-                              ncores = detectCores()) {
+getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
+                              field = "score", length.normalize = TRUE,
+                              remove.empty = FALSE, ncores = detectCores()) {
 
     if (length(promoters.gr) != length(genebodies.gr)) {
         stop(message = .nicemsg("Number of ranges in promoters.gr != number of

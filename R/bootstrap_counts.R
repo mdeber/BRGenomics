@@ -73,16 +73,11 @@
 #' df <- metaSubsampleMatrix(countsmat, binsize = 10, first.output.xval = 0,
 #'                           NF = 0.75, sample.name = "PROseq")
 #' df[1:10, ]
-metaSubsampleMatrix <- function(counts.mat,
-                                binsize = 1,
-                                first.output.xval = 1,
+metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                                 sample.name = deparse(substitute(counts.mat)),
-                                n.iter = 1000,
-                                prop.sample = 0.1,
-                                lower = 0.125,
-                                upper = 0.875,
-                                NF = 1,
-                                ncores = 1) {
+                                n.iter = 1000, prop.sample = 0.1,
+                                lower = 0.125, upper = 0.875,
+                                NF = 1, ncores = 1) {
 
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
@@ -96,6 +91,7 @@ metaSubsampleMatrix <- function(counts.mat,
         counts.mat <- t(counts.mat) # apply will cbind rather than rbind
     }
 
+    # to do: remove this bifurcation if no performance benefit
     if (ncores == 1) {
         # Randomly subsample rows of counts.mat
         # -> Matrix of dim = (nsample, n.iter)
@@ -245,19 +241,14 @@ metaSubsampleMatrix <- function(counts.mat,
 #'      ylab = "Mean + 30% CI", xlab = "Distance from TSS")
 #' polygon(c(df$x, rev(df$x)), c(df$lower, rev(df$upper)),
 #'         col = adjustcolor("black", 0.1), border = FALSE)
-metaSubsample <- function(dataset.gr,
-                          regions.gr,
-                          binsize = 1,
+metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                           first.output.xval = 1,
                           sample.name = deparse(substitute(dataset.gr)),
-                          n.iter = 1000,
-                          prop.sample = 0.1,
-                          lower = 0.125,
-                          upper = 0.875,
-                          NF = 1,
-                          field = "score",
-                          remove.empty = FALSE,
+                          n.iter = 1000, prop.sample = 0.1,
+                          lower = 0.125, upper = 0.875,
+                          NF = 1, field = "score", remove.empty = FALSE,
                           ncores = 1) {
+    # should probably make S3 and use method dispatch when multiple fields
 
     if (length(unique(width(regions.gr))) > 1) {
         stop(message = "Not all ranges in regions.gr are the same width")

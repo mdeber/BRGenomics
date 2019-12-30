@@ -22,28 +22,3 @@
     apply(mat, 2, FUN)
 }
 
-### convenience function for getting TxDb objects
-#
-# .getTxDb <- function(genome) {
-#     if (genome == "hg38") {
-#         db.txs <-
-#             TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
-#     } else if (genome == "hg19") {
-#         db.txs <-
-#             TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene
-#     } else if (genome == "mm10") {
-#         db.txs <-
-#             TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene
-#     } else if (genome == "mm9") {
-#         db.txs <-
-#             TxDb.Mmusculus.UCSC.mm9.knownGene::TxDb.Mmusculus.UCSC.mm9.knownGene
-#     } else if (genome == "dm6") {
-#         db.txs <-
-#             TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene
-#     } else if (genome == "dm3") {
-#         db.txs <-
-#             TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene
-#     }
-# }
-
-

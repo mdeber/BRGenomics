@@ -34,8 +34,9 @@
 #'   \code{min.window} defines the minimum size (width) of a returned range.
 #'   However, when \code{fix.end = fix.start}, all returned ranges have the same
 #'   width, and \code{min.window} simply size-filters the input ranges.
-#' @return A GRanges object that may be shorter than \code{genelist} due to loss
-#'   of short ranges.
+#' @return A GRanges object that may be shorter than \code{genelist} due to
+#'   filtering of short ranges. For example, using the default arguments, genes
+#'   shorter than 600 bp would be removed.
 #' @author Mike DeBerardine
 #' @seealso \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
 #' @export
@@ -69,11 +70,8 @@
 #' #--------------------------------------------------#
 #'
 #' genebodies(txs, 500, 1000, fix.start = "end")
-genebodies <- function(genelist,
-                       start = 300,
-                       end = -300,
-                       fix.start = "start",
-                       fix.end = "end",
+genebodies <- function(genelist, start = 300, end = -300,
+                       fix.start = "start", fix.end = "end",
                        min.window = 0) {
 
     .check_args_genebodies(start, end, fix.start, fix.end)
@@ -206,11 +204,8 @@ genebodies <- function(genelist,
 #' #--------------------------------------------------#
 #'
 #' getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.score = TRUE)
-getMaxPositionsBySignal <- function(regions.gr,
-                                    dataset.gr,
-                                    binsize = 1,
-                                    bin.centers = FALSE,
-                                    field = "score",
+getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
+                                    bin.centers = FALSE, field = "score",
                                     keep.score = FALSE) {
 
     # keep only ranges with signal
@@ -340,11 +335,8 @@ getMaxPositionsBySignal <- function(regions.gr,
 #' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
 #'                       quantiles = c(0.9, 1),
 #'                       order.by.rank = TRUE)
-subsetRegionsBySignal <- function(regions.gr,
-                                  dataset.gr,
-                                  quantiles = c(0.5, 1),
-                                  field = "score",
-                                  order.by.rank = FALSE,
+subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
+                                  field = "score", order.by.rank = FALSE,
                                   density = FALSE) {
 
     if (quantiles[1] == 1 | quantiles[2] == 0)  return(regions.gr[0])

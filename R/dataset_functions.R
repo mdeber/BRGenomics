@@ -361,16 +361,13 @@ mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     }
 
     # check if input data are base-pair resolution coverage data
-    width_check <- vapply(data_in,
-                          function(x) all(width(x) == 1),
+    width_check <- vapply(data_in, function(x) all(width(x) == 1),
                           FUN.VALUE = logical(1))
     if (any(width_check == FALSE)) {
         warning(.nicemsg("One or more inputs are not single-width GRanges
                          objects. Will coerce them using makeGRangesBRG()..."),
                 immediate. = TRUE)
-        data_in <- mclapply(data_in,
-                            makeGRangesBRG,
-                            mc.cores = ncores)
+        data_in <- mclapply(data_in, makeGRangesBRG, mc.cores = ncores)
     }
 
     # merge input GRanges

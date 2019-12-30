@@ -116,6 +116,7 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             field = "score",
                             ncores = detectCores(),
                             quiet = FALSE) {
+    # function needs to be split up
 
     if (is.null(sample_names)) {
         stop(message = .nicemsg("sample_names are required, but none were
@@ -323,16 +324,10 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
 #' names(reslist)
 #'
 #' reslist$B_vs_A
-getDESeqResults <- function(dds,
-                            contrast.numer,
-                            contrast.denom,
-                            comparisons.list = NULL,
-                            sizeFactors = NULL,
-                            alpha = 0.1,
-                            args.DESeq = NULL,
-                            args.results = NULL,
-                            ncores = detectCores(),
-                            quiet = FALSE) {
+getDESeqResults <- function(dds, contrast.numer, contrast.denom,
+                            comparisons.list = NULL, sizeFactors = NULL,
+                            alpha = 0.1, args.DESeq = NULL, args.results = NULL,
+                            ncores = detectCores(), quiet = FALSE) {
 
     # check only one set of contrast args used
     # and, if given, check format of contrasts.list
@@ -387,7 +382,7 @@ getDESeqResults <- function(dds,
     }
 }
 
-## Helper functions
+## Helper functions for getDESeqResults
 
 .check_contrast_args <- function(args) {
     num <- "contrast.numer" %in% names(args)
@@ -450,15 +445,10 @@ getDESeqResults <- function(dds,
 }
 
 # Function dispatched by getDESeqResults
-.get_deseq_results <- function(dds,
-                               contrast.numer,
-                               contrast.denom,
-                               sizeFactors,
-                               alpha,
-                               args.DESeq,
-                               args.results,
-                               ncores,
-                               quiet) {
+.get_deseq_results <- function(dds, contrast.numer, contrast.denom,
+                               sizeFactors, alpha, args.DESeq, args.results,
+                               ncores, quiet) {
+    # should make another function for late application of sizeFactors
 
     # Subset for pairwise comparison
     dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]

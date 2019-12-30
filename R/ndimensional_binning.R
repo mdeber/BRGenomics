@@ -58,6 +58,7 @@
 #' nrow(count_bins)
 #' count_bins[1:10, ]
 binNdimensions <- function(..., nbins = 10) {
+    # should split this function up more
 
     data_in <- list(...)
 
