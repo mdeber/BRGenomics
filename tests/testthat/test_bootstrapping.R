@@ -8,7 +8,7 @@ txs_pr <- promoters(txs_dm6_chr4, 0, 100)
 countsmat <- getCountsByPositions(PROseq, txs_pr)
 
 set.seed(11)
-df <- metaSubsampleMatrix(countsmat, first.output.xval = -10)
+df <- metaSubsampleMatrix(countsmat, first.output.xval = -10, ncores = 1)
 
 test_that("can get bootstrapped means from counts matrix", {
     expect_is(df, "data.frame")
@@ -23,24 +23,25 @@ test_that("sampling GRanges same as sampling matrix", {
     set.seed(11)
     expect_equivalent(df, metaSubsample(PROseq, txs_pr,
                                         first.output.xval = -10,
-                                        sample.name = "countsmat"))
+                                        sample.name = "countsmat", ncores = 1))
 })
 
 test_that("error produced for variable-width regions", {
-    expect_error(metaSubsample(PROseq, txs_dm6_chr4))
+    expect_error(metaSubsample(PROseq, txs_dm6_chr4, ncores = 1))
 })
 
 test_that("error produced for too few iterations", {
-    expect_silent(metaSubsample(PROseq, txs_pr, n.iter = 5))
-    expect_error(metaSubsample(PROseq, txs_pr, n.iter = 4))
+    expect_silent(metaSubsample(PROseq, txs_pr, n.iter = 5, ncores = 1))
+    expect_error(metaSubsample(PROseq, txs_pr, n.iter = 4, ncores = 1))
 })
 
 test_that("message produced when n.iter = 1", {
-    expect_message(metaSubsample(PROseq, txs_pr, n.iter = 1))
+    expect_message(metaSubsample(PROseq, txs_pr, n.iter = 1, ncores = 1))
 })
 
 set.seed(11)
-df_bin <- metaSubsample(PROseq, txs_pr, binsize = 10, first.output.xval = -10)
+df_bin <- metaSubsample(PROseq, txs_pr, binsize = 10,
+                        first.output.xval = -10, ncores = 1)
 
 test_that("binning correct with bootstrapping", {
     expect_equivalent(nrow(df_bin), 10)
@@ -49,10 +50,9 @@ test_that("binning correct with bootstrapping", {
 
 test_that("binning correct with bootstrapping counts matrix", {
     set.seed(11)
-    df_binmat <- metaSubsampleMatrix(countsmat,
-                                     binsize = 10,
+    df_binmat <- metaSubsampleMatrix(countsmat, binsize = 10,
                                      first.output.xval = -10,
-                                     sample.name = "PROseq")
+                                     sample.name = "PROseq", ncores = 1)
     expect_equivalent(df_bin$x, df_binmat$x)
 })
 
@@ -71,15 +71,14 @@ ps_rename$posnum <- seq_along(ps_rename)
 test_that("bootstrapping successful over several fields", {
     set.seed(11)
     df_alt <- metaSubsample(ps_rename, txs_pr, field = "signal",
-                            first.output.xval = -10,
-                            sample.name = "countsmat")
+                            first.output.xval = -10, sample.name = "countsmat",
+                            ncores = 2)
     expect_equivalent(df, df_alt)
 
     set.seed(11)
-    dflist <- metaSubsample(ps_rename, txs_pr,
-                            field = c("signal", "posnum"),
-                            first.output.xval = -10,
-                            sample.name = "countsmat")
+    dflist <- metaSubsample(ps_rename, txs_pr, field = c("signal", "posnum"),
+                            first.output.xval = -10, sample.name = "countsmat",
+                            ncores = 2)
     expect_is(dflist, "list")
     expect_equal(length(dflist), 2)
     expect_equivalent(names(dflist), c("signal", "posnum"))

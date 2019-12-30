@@ -14,7 +14,7 @@ metaSubsampleMatrix(
   lower = 0.125,
   upper = 0.875,
   NF = 1,
-  ncores = 1
+  ncores = detectCores()
 )
 }
 \arguments{
@@ -45,9 +45,7 @@ default is 0.875 (85.5th percentile).}
 
 \item{NF}{Optional normalization factor by which to multiply the counts.}
 
-\item{ncores}{Number of cores to use for parallel computation. As of writing,
-parallel processing doesn't show any benefit for short computation times
-(e.g. <1 minute for our typical experience on a laptop).}
+\item{ncores}{Number of cores to use for computations.}
 }
 \value{
 Dataframe containing x-values, means, lower quantiles, upper

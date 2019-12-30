@@ -17,7 +17,7 @@ metaSubsample(
   NF = 1,
   field = "score",
   remove.empty = FALSE,
-  ncores = 1
+  ncores = detectCores()
 )
 }
 \arguments{

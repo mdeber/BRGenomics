@@ -22,7 +22,7 @@ getMaxPositionsBySignal(
 \item{binsize}{The size of bin in which to calculate signal scores.}
 
 \item{bin.centers}{Logical indicating if the centers of bins are returned, as
-opposed to the entire bin. If \code{TRUE},}
+opposed to the entire bin. By default, entire bins are returned.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
 

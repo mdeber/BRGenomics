@@ -32,9 +32,7 @@
 #' @param upper The upper quantile of subsampled signal means to return. The
 #'   default is 0.875 (85.5th percentile).
 #' @param NF Optional normalization factor by which to multiply the counts.
-#' @param ncores Number of cores to use for parallel computation. As of writing,
-#'   parallel processing doesn't show any benefit for short computation times
-#'   (e.g. <1 minute for our typical experience on a laptop).
+#' @param ncores Number of cores to use for computations.
 #'
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
@@ -43,7 +41,7 @@
 #' @seealso \code{\link[BRGenomics:metaSubsample]{metaSubsample}},
 #'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
-#' @importFrom parallel mclapply
+#' @importFrom parallel mclapply detectCores
 #' @importFrom stats quantile
 #'
 #' @examples
@@ -77,7 +75,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                                 sample.name = deparse(substitute(counts.mat)),
                                 n.iter = 1000, prop.sample = 0.1,
                                 lower = 0.125, upper = 0.875,
-                                NF = 1, ncores = 1) {
+                                NF = 1, ncores = detectCores()) {
 
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
@@ -91,49 +89,36 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
         counts.mat <- t(counts.mat) # apply will cbind rather than rbind
     }
 
-    # to do: remove this bifurcation if no performance benefit
-    if (ncores == 1) {
-        # Randomly subsample rows of counts.mat
-        # -> Matrix of dim = (nsample, n.iter)
-        idx_mat <- replicate(n.iter, sample(ngenes, size = nsample),
-                             simplify = "array")
+    # Randomly subsample rows of the counts.mat
+    # -> List of length = n.iter, containing vectors of length = nsample
+    idx.list <- replicate(n.iter, sample(ngenes, size = nsample),
+                          simplify = FALSE)
 
-        # For each iteration, get average signal in each bin
-        # -> Matrix of dim = (nbins, n.iter)
-        binavg_mat <- apply(idx_mat, 2,
-                            function(idx) colMeans(counts.mat[idx, ]))
-    } else {
-        # Randomly subsample rows of the counts.mat
-        # -> List of length = n.iter, containing vectors of length = nsample
-        idx_mat <- replicate(n.iter, sample(ngenes, size = nsample),
-                             simplify = FALSE)
+    # For each iteration, get average signal in each bin
+    # -> List of length = n.iter containing vectors of length = nbins
+    binavg.list <- mclapply(idx.list,
+                            function(idx) colMeans(counts.mat[idx, ]),
+                            mc.cores = ncores)
 
-        # For each iteration, get average signal in each bin
-        # -> List of length = n.iter containing vectors of length = nbins
-        binavg_mat <- mclapply(idx_mat,
-                               function(idx) colMeans(counts.mat[idx, ]),
-                               mc.cores = ncores)
-
-        # Collapse list into matrix
-        # -> Matrix of dim = (nbins, n.iter)
-        binavg_mat <- matrix(unlist(binavg_mat), ncol = n.iter)
-    }
+    # Collapse list into matrix
+    # -> Matrix of dim = (nbins, n.iter)
+    binavg.mat <- matrix(unlist(binavg.list), ncol = n.iter)
 
     # calculate final outputs
     if (n.iter == 1) {
         message(.nicemsg("With n.iter = 1, output mean and quantiles are not
                          bootstrapped"))
-        mean <- NF * binavg_mat
-        lower <- NF * apply(counts.mat[idx_mat,], 2, quantile, lower)
-        lower <- NF * apply(counts.mat[idx_mat,], 2, quantile, upper)
+        idx <- unlist(idx.list)
+        mean <- NF * binavg.mat
+        lower <- NF * apply(counts.mat[idx, ], 2, quantile, lower)
+        lower <- NF * apply(counts.mat[idx, ], 2, quantile, upper)
     } else {
-        mean <- NF * apply(binavg_mat, 1, quantile, 0.5, names = FALSE)
-        lower <- NF * apply(binavg_mat, 1, quantile, lower, names = FALSE)
-        upper <- NF * apply(binavg_mat, 1, quantile, upper, names = FALSE)
+        mean <- NF * apply(binavg.mat, 1, quantile, 0.5, names = FALSE)
+        lower <- NF * apply(binavg.mat, 1, quantile, lower, names = FALSE)
+        upper <- NF * apply(binavg.mat, 1, quantile, upper, names = FALSE)
     }
 
-    # Also return x-values and sample names for plotting;
-    #   x-values centered in bins
+    # Also return x-values, sample names for plotting; x-vals centered in bins
     if (binsize == 1) {
         x <- first.output.xval + seq(0, nbins - 1)
     } else {
@@ -214,7 +199,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
 #' @seealso \code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
 #'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
-#' @importFrom parallel mclapply
+#' @importFrom parallel mclapply detectCores
 #' @importFrom GenomicRanges width
 #'
 #' @examples
@@ -247,8 +232,7 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                           n.iter = 1000, prop.sample = 0.1,
                           lower = 0.125, upper = 0.875,
                           NF = 1, field = "score", remove.empty = FALSE,
-                          ncores = 1) {
-    # should probably make S3 and use method dispatch when multiple fields
+                          ncores = detectCores()) {
 
     if (length(unique(width(regions.gr))) > 1) {
         stop(message = "Not all ranges in regions.gr are the same width")
@@ -256,25 +240,19 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     }
 
     if (length(field) > 1) {
-        ## reset seed, or get user's seed, and store to sample the same
-        ## ranges for each field
+        # use seed for same genelist sampling for each field
         if ( !exists(".Random.seed") | is.null(.Random.seed) ) set.seed(NULL)
-        seed <- .Random.seed
+        seed <- .Random.seed # save the current seed state
 
         # get and alter arguments
         fun_args <- as.list(match.call())[-1]
-        fun_args$ncores <- 1
-        fun_args$remove.empty <- FALSE
+        args.force <- c("dataset.gr", "regions.gr", "remove.empty", "field")
 
-        # normally not required, but can be when running package tests...
-        fun_args$dataset.gr <- dataset.gr
-        fun_args$regions.gr <- regions.gr
-
-        dflist <- mclapply(field, function(i) {
+        dflist <- lapply(field, function(i) {
             .Random.seed <- seed
-            fun_args$field <- i
+            fun_args[args.force] <- list(dataset.gr, regions.gr, FALSE, i)
             do.call(metaSubsample, fun_args)
-        }, mc.cores = ncores)
+        })
         names(dflist) <- field
         return(dflist)
     }

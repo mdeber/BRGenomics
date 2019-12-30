@@ -39,8 +39,9 @@ However, when \code{fix.end = fix.start}, all returned ranges have the same
 width, and \code{min.window} simply size-filters the input ranges.}
 }
 \value{
-A GRanges object that may be shorter than \code{genelist} due to loss
-  of short ranges.
+A GRanges object that may be shorter than \code{genelist} due to
+  filtering of short ranges. For example, using the default arguments, genes
+  shorter than 600 bp would be removed.
 }
 \description{
 This function returns ranges that are defined relative to the strand-specific

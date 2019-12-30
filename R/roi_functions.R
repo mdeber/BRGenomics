@@ -156,7 +156,7 @@ genebodies <- function(genelist, start = 300, end = -300,
 #'   (typically in the "score" field).
 #' @param binsize The size of bin in which to calculate signal scores.
 #' @param bin.centers Logical indicating if the centers of bins are returned, as
-#' opposed to the entire bin. If \code{TRUE},
+#' opposed to the entire bin. By default, entire bins are returned.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
 #' @param keep.score Logical indicating if the signal value at the max site
 #'   should be reported. If set to \code{TRUE}, the values are kept as a new
