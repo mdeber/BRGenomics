@@ -10,44 +10,72 @@ makeGRangesBPres(dataset.gr)
 \item{dataset.gr}{A disjoint GRanges object}
 }
 \description{
-Splits up all ranges in \code{gr} to be each 1 basepair wide. All information
-is preserved, including all metadata. To wit, \code{length(output.gr) =
-sum(width(dataset.gr))}.
+Splits up all ranges in \code{gr} to be each 1 basepair wide. For any range
+that is split up, all metadata information belonging to that range is
+inherited by its daughter ranges, and therefore the transformation is
+non-destructive.
 }
 \details{
 Note that this function doesn't perform any transformation on the
-  metadata in the input; for any ranges of width > 1, the metadata is simply
-  copied to the daughters of that range (whose widths are all equal to 1).
+  metadata in the input. This function assumes that for an input GRanges
+  object, any metadata for each range is equally correct when inherited by
+  each individual base in that range. In other words, the dataset's "signal"
+  (usually readcounts) is derived from a single basepair position.
 
-  This function is intended to work on datasets at single-base resolution.
-  Data of this type is often formatted as a bigWig file, and any data
-  imported from a bigWig file by rtracklayer is suitable for processing.
-  bigWig files will typically use run-length compression on the data signal
-  (the 'score' column), such that when imported by rtracklayer, adjacent
-  bases sharing the same signal will combined into a single range. The
-  base-pair resolution GRanges objects produced by this function remove this
-  compression, resulting in each index (each range) of the GRanges object
-  addressing a single genomic position.
-
-  To properly use base-pair resolution information, the user should be
-  selecting a single-base from each read, which can be accomplished using
-  \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}. Then,
-  single-base coverage can be calculated using
+  The motivating case for this function is a bigWig file (e.g. one imported
+  by \code{rtracklayer}), as bigWig files typically use run-length
+  compression on the data signal (the 'score' column), such that when
+  adjacent bases sharing the same signal will combined into a single range.
+  The base-pair resolution GRanges objects produced by this function remove
+  this compression, resulting in each index (each range) of the GRanges
+  object addressing a single genomic position.
+}
+\section{Generating basepair-resolution GRanges from whole reads}{
+ If working
+  with a GRanges object containing whole reads, one can obtain base-pair
+  resolution information by using the strand-specific function
+  \code{\link[GenomicRanges:resize]{GenomicRanges::resize}} to select a
+  single base from each read: set \code{width = 1} and use the \code{fix}
+  argument to choose the strand-specific 5' or 3' end. Then, strand-specific
+  coverage can be calculated using
   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
 }
-\examples{
-data("PROseq") # load included PROseq data
-range(width(PROseq))
 
-# simulate the format of a bigWig file, using arbitrary scores
-bw <- reduce(PROseq)
-score(bw) <- score(PROseq)[seq_along(bw)]
+\examples{
+#--------------------------------------------------#
+# Make a bigWig file single width
+#--------------------------------------------------#
+
+# get local address for an included bigWig file
+bw_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
+                       package = "BRGenomics")
+
+# BRGenomics::import_bigWig automatically applies makeGRangesBPres;
+# therefore will import using rtracklayer
+bw <- rtracklayer::import.bw(bw_file)
+strand(bw) <- "+"
+
 range(width(bw))
 length(bw)
 
+# make basepair-resolution (single-width)
 gr <- makeGRangesBPres(bw)
+
 range(width(gr))
 length(gr)
+length(gr) == sum(width(bw))
+sum(score(gr)) == sum(score(bw) * width(bw))
+
+#--------------------------------------------------#
+# Reverse using getStrandedCoverage
+#--------------------------------------------------#
+# -> for more examples, see getStranded Coverage
+
+undo <- getStrandedCoverage(gr)
+
+range(width(undo))
+length(undo) == length(bw)
+all(score(undo) == score(bw))
 }
 \seealso{
 \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},

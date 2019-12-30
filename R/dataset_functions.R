@@ -5,30 +5,34 @@
 
 #' Make base-pair resolution GRanges object
 #'
-#' Splits up all ranges in \code{gr} to be each 1 basepair wide. All information
-#' is preserved, including all metadata. To wit, \code{length(output.gr) =
-#' sum(width(dataset.gr))}.
+#' Splits up all ranges in \code{gr} to be each 1 basepair wide. For any range
+#' that is split up, all metadata information belonging to that range is
+#' inherited by its daughter ranges, and therefore the transformation is
+#' non-destructive.
 #'
 #' @param dataset.gr A disjoint GRanges object
 #'
 #' @details Note that this function doesn't perform any transformation on the
-#'   metadata in the input; for any ranges of width > 1, the metadata is simply
-#'   copied to the daughters of that range (whose widths are all equal to 1).
+#'   metadata in the input. This function assumes that for an input GRanges
+#'   object, any metadata for each range is equally correct when inherited by
+#'   each individual base in that range. In other words, the dataset's "signal"
+#'   (usually readcounts) is derived from a single basepair position.
 #'
-#'   This function is intended to work on datasets at single-base resolution.
-#'   Data of this type is often formatted as a bigWig file, and any data
-#'   imported from a bigWig file by rtracklayer is suitable for processing.
-#'   bigWig files will typically use run-length compression on the data signal
-#'   (the 'score' column), such that when imported by rtracklayer, adjacent
-#'   bases sharing the same signal will combined into a single range. The
-#'   base-pair resolution GRanges objects produced by this function remove this
-#'   compression, resulting in each index (each range) of the GRanges object
-#'   addressing a single genomic position.
+#'   The motivating case for this function is a bigWig file (e.g. one imported
+#'   by \code{rtracklayer}), as bigWig files typically use run-length
+#'   compression on the data signal (the 'score' column), such that when
+#'   adjacent bases sharing the same signal will combined into a single range.
+#'   The base-pair resolution GRanges objects produced by this function remove
+#'   this compression, resulting in each index (each range) of the GRanges
+#'   object addressing a single genomic position.
 #'
-#'   To properly use base-pair resolution information, the user should be
-#'   selecting a single-base from each read, which can be accomplished using
-#'   \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}. Then,
-#'   single-base coverage can be calculated using
+#' @section Generating basepair-resolution GRanges from whole reads: If working
+#'   with a GRanges object containing whole reads, one can obtain base-pair
+#'   resolution information by using the strand-specific function
+#'   \code{\link[GenomicRanges:resize]{GenomicRanges::resize}} to select a
+#'   single base from each read: set \code{width = 1} and use the \code{fix}
+#'   argument to choose the strand-specific 5' or 3' end. Then, strand-specific
+#'   coverage can be calculated using
 #'   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
 #'
 #' @author Mike DeBerardine
@@ -37,18 +41,40 @@
 #' @export
 #' @importFrom GenomicRanges GRanges GPos mcols mcols<- isDisjoint findOverlaps
 #' @examples
-#' data("PROseq") # load included PROseq data
-#' range(width(PROseq))
+#' #--------------------------------------------------#
+#' # Make a bigWig file single width
+#' #--------------------------------------------------#
 #'
-#' # simulate the format of a bigWig file, using arbitrary scores
-#' bw <- reduce(PROseq)
-#' score(bw) <- score(PROseq)[seq_along(bw)]
+#' # get local address for an included bigWig file
+#' bw_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
+#'                        package = "BRGenomics")
+#'
+#' # BRGenomics::import_bigWig automatically applies makeGRangesBPres;
+#' # therefore will import using rtracklayer
+#' bw <- rtracklayer::import.bw(bw_file)
+#' strand(bw) <- "+"
+#'
 #' range(width(bw))
 #' length(bw)
 #'
+#' # make basepair-resolution (single-width)
 #' gr <- makeGRangesBPres(bw)
+#'
 #' range(width(gr))
 #' length(gr)
+#' length(gr) == sum(width(bw))
+#' sum(score(gr)) == sum(score(bw) * width(bw))
+#'
+#' #--------------------------------------------------#
+#' # Reverse using getStrandedCoverage
+#' #--------------------------------------------------#
+#' # -> for more examples, see getStranded Coverage
+#'
+#' undo <- getStrandedCoverage(gr)
+#'
+#' range(width(undo))
+#' length(undo) == length(bw)
+#' all(score(undo) == score(bw))
 makeGRangesBPres <- function(dataset.gr) {
 
     if (!isDisjoint(dataset.gr)) {
@@ -99,22 +125,49 @@ makeGRangesBPres <- function(dataset.gr) {
 #' getStrandedCoverage(PROseq_paired)[1:6]
 #'
 #' #--------------------------------------------------#
-#' # Re-creating score for included single-base data
+#' # Getting coverage from single bases of single reads
 #' #--------------------------------------------------#
 #'
+#' # included PROseq data is already single-base coverage
 #' data("PROseq")
 #'
 #' PROseq[1:6]
 #'
 #' # undo coverage for the first 100 positions
 #' ps <- PROseq[1:100]
-#'
 #' ps_reads <- rep(ps, times = ps$score)
 #' mcols(ps_reads) <- NULL
+#'
 #' ps_reads[1:6]
 #'
 #' # re-create coverage
 #' getStrandedCoverage(ps_reads, field = NULL)[1:6]
+#'
+#' #--------------------------------------------------#
+#' # Reversing makeGRangesBPres
+#' #--------------------------------------------------#
+#' # -> this function doesn't return single-width GRanges,
+#' #    which is useful because coverage tracks will merge
+#' #    adjacent bases with equivalent scores
+#'
+#' # included PROseq data is already single-width
+#' range(width(PROseq))
+#' isDisjoint(PROseq)
+#'
+#' ps_cov <- getStrandedCoverage(PROseq)
+#'
+#' range(width(ps_cov))
+#' sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
+#'
+#' # -> Look specifically at ranges that could be combined
+#' neighbors <- c(shift(PROseq, 1), shift(PROseq, -1))
+#' neighbors <- sort(unique(neighbors))
+#' hits <- findOverlaps(PROseq, neighbors)
+#' idx <- unique(hits@from) # indices for PROseq with neighbor
+#'
+#' PROseq[idx]
+#'
+#' getStrandedCoverage(PROseq[idx])
 getStrandedCoverage <- function(dataset.gr, field = "score") {
 
     if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
@@ -174,14 +227,32 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
-#' length(PROseq)
-#' sum(score(PROseq))
+#' #--------------------------------------------------#
+#' # sample 10% of the reads of a GRanges with signal coverage
+#' #--------------------------------------------------#
 #'
-#' # sample 10% of the reads
 #' ps_sample <- subsampleGRanges(PROseq, prop = 0.1)
 #'
+#' # cannot predict number of ranges (positions) that will be sampled
+#' length(PROseq)
 #' length(ps_sample)
-#' sum(score(ps_sample)) # 1/10th the score is sampled
+#'
+#' # 1/10th the score is sampled
+#' sum(score(PROseq))
+#' sum(score(ps_sample))
+#'
+#' #--------------------------------------------------#
+#' # Sample 10% of ranges (e.g. if each range represents one read)
+#' #--------------------------------------------------#
+#'
+#' ps_sample <- subsampleGRanges(PROseq, prop = 0.1, field = NULL)
+#'
+#' length(PROseq)
+#' length(ps_sample)
+#'
+#' # Alternatively
+#' ps_sample <- sample(PROseq, 0.1 * length(PROseq))
+#' length(ps_sample)
 subsampleGRanges <- function(dataset.gr,
                              n = NULL,
                              prop = NULL,
@@ -267,7 +338,9 @@ subsampleGRanges <- function(dataset.gr,
 #' #--------------------------------------------------#
 #'
 #' length(PROseq)
+#' length(ps_1)
 #' length(mergeGRangesData(ps_1, ps_2))
+#' length(mergeGRangesData(ps_1, ps_3))
 #' length(mergeGRangesData(ps_1, ps_2, ps_3))
 mergeGRangesData <- function(..., field = "score", ncores = detectCores()) {
     data_in <- list(...)

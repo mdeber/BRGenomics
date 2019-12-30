@@ -31,14 +31,32 @@ in this scenario.
 \examples{
 data("PROseq") # load included PROseq data
 
-length(PROseq)
-sum(score(PROseq))
+#--------------------------------------------------#
+# sample 10\% of the reads of a GRanges with signal coverage
+#--------------------------------------------------#
 
-# sample 10\% of the reads
 ps_sample <- subsampleGRanges(PROseq, prop = 0.1)
 
+# cannot predict number of ranges (positions) that will be sampled
+length(PROseq)
 length(ps_sample)
-sum(score(ps_sample)) # 1/10th the score is sampled
+
+# 1/10th the score is sampled
+sum(score(PROseq))
+sum(score(ps_sample))
+
+#--------------------------------------------------#
+# Sample 10\% of ranges (e.g. if each range represents one read)
+#--------------------------------------------------#
+
+ps_sample <- subsampleGRanges(PROseq, prop = 0.1, field = NULL)
+
+length(PROseq)
+length(ps_sample)
+
+# Alternatively
+ps_sample <- sample(PROseq, 0.1 * length(PROseq))
+length(ps_sample)
 }
 \author{
 Mike DeBerardine

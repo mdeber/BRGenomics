@@ -81,11 +81,33 @@ tidyChromosomes <- function(gr,
 #'   \code{\link[rtracklayer:import]{rtracklayer::import}}
 #' @name import-functions
 #' @examples
+#' #--------------------------------------------------#
+#' # Import PRO-seq bigWigs -> coverage of 3' bases
+#' #--------------------------------------------------#
+#'
 #' # get local address for included bigWig files
-#' p.bw <- system.file("extdata", "PROseq_dm6_chr4_plus.bw", package = "BRGenomics")
-#' m.bw <- system.file("extdata", "PROseq_dm6_chr4_minus.bw", package = "BRGenomics")
+#' p.bw <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
+#'                     package = "BRGenomics")
+#' m.bw <- system.file("extdata", "PROseq_dm6_chr4_minus.bw",
+#'                     package = "BRGenomics")
+#'
 #' # import bigWigs
 #' PROseq <- import_bigWig(p.bw, m.bw, genome = "dm6")
+#' PROseq
+#'
+#' #--------------------------------------------------#
+#' # Import PRO-seq bedGraphs -> whole reads (matched 5' and 3' ends)
+#' #--------------------------------------------------#
+#'
+#' # get local address for included bedGraph files
+#' p.bg <- system.file("extdata", "PROseq_dm6_chr4_plus.bedGraph",
+#'                     package = "BRGenomics")
+#' m.bg <- system.file("extdata", "PROseq_dm6_chr4_minus.bedGraph",
+#'                     package = "BRGenomics")
+#'
+#' # import bedGraphs
+#' PROseq_paired <- import_bedGraph(p.bg, m.bg, genome = "dm6")
+#' PROseq_paired
 NULL
 
 

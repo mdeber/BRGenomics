@@ -39,7 +39,9 @@ ps_3 <- PROseq[(thirds[2]+1):thirds[3]]
 #--------------------------------------------------#
 
 length(PROseq)
+length(ps_1)
 length(mergeGRangesData(ps_1, ps_2))
+length(mergeGRangesData(ps_1, ps_3))
 length(mergeGRangesData(ps_1, ps_2, ps_3))
 }
 \seealso{

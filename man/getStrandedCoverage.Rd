@@ -33,22 +33,49 @@ PROseq_paired[1:6]
 getStrandedCoverage(PROseq_paired)[1:6]
 
 #--------------------------------------------------#
-# Re-creating score for included single-base data
+# Getting coverage from single bases of single reads
 #--------------------------------------------------#
 
+# included PROseq data is already single-base coverage
 data("PROseq")
 
 PROseq[1:6]
 
 # undo coverage for the first 100 positions
 ps <- PROseq[1:100]
-
 ps_reads <- rep(ps, times = ps$score)
 mcols(ps_reads) <- NULL
+
 ps_reads[1:6]
 
 # re-create coverage
 getStrandedCoverage(ps_reads, field = NULL)[1:6]
+
+#--------------------------------------------------#
+# Reversing makeGRangesBPres
+#--------------------------------------------------#
+# -> this function doesn't return single-width GRanges,
+#    which is useful because coverage tracks will merge
+#    adjacent bases with equivalent scores
+
+# included PROseq data is already single-width
+range(width(PROseq))
+isDisjoint(PROseq)
+
+ps_cov <- getStrandedCoverage(PROseq)
+
+range(width(ps_cov))
+sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
+
+# -> Look specifically at ranges that could be combined
+neighbors <- c(shift(PROseq, 1), shift(PROseq, -1))
+neighbors <- sort(unique(neighbors))
+hits <- findOverlaps(PROseq, neighbors)
+idx <- unique(hits@from) # indices for PROseq with neighbor
+
+PROseq[idx]
+
+getStrandedCoverage(PROseq[idx])
 }
 \seealso{
 \code{\link[BRGenomics:makeGRangesBPres]{makeGRangesBPres}}

@@ -65,11 +65,13 @@ data("txs_dm6_chr4") # load included transcripts
 
 txs_pr <- promoters(txs_dm6_chr4, 0, 50) # first 50 bases
 countsmat <- getCountsByPositions(PROseq, txs_pr)
-countsmat[10:15, 40:50] # show only 40-50 bp after TSS
+countsmat[10:15, 41:50] # show only 41-50 bp after TSS
 
 #--------------------------------------------------#
 # redo with 10 bp bins from 0 to 100
 #--------------------------------------------------#
+
+# column 5 is sums of rows shown above
 
 txs_pr <- promoters(txs_dm6_chr4, 0, 100)
 countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10)
