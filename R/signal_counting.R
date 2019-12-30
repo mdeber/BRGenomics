@@ -281,7 +281,7 @@ getCountsByPositions <- function(dataset.gr,
 #'
 #' pidx <- getPausingIndices(PROseq, pr, gb)
 #'
-#' length(txs_dm6_chr4)
+#' length(txs)
 #' length(pidx)
 #' head(pidx)
 #'
