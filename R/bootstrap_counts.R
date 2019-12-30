@@ -4,52 +4,83 @@
 ###
 
 
-#' Iterative Subsampling for Metaplotting (On Count Matrices)
+#' Bootsrapping Mean Signal by Position for Metaplotting
 #'
-#' In the most general sense, this function performs iterations of randomly
-#' subsampling rows of a matrix, and returns a summary of mean values calculated
-#' for each column. The typical application is for generating metaplots, with
-#' the typical input being a matrix in which each row is a gene or other region
-#' of interest, each column is a position within that gene (either a specific
-#' basepair or a bin), and element values are signal (e.g. read counts) within
-#' those positions.
+#' These functions perform bootstrap subsampling of mean readcounts at different
+#' positions within regions of interest (\code{metaSubsample}), or, in the more
+#' general case of \code{metaSubsampleMatrix}, column means of a matrix are
+#' bootstrapped by sampling the rows. Mean signal counts can be calculated at
+#' base-pair resolution, or over larger bins.
 #'
-#' @param counts.mat A matrix of signal counts in which rows are regions of
-#'   interest and columns are sites/bins in each region.
-#' @param binsize The size of bin (number of columns, e.g. basepairs) to use for
-#'   metaplotting. Especially important for metaplots over large/sparse regions.
+#' @param dataset.gr A GRanges object in which signal is contained in metadata
+#'   (typically in the \code{"score"} field).
+#' @param regions.gr A GRanges object containing intervals over which to
+#'   metaplot. All ranges must have the same width.
+#' @param counts.mat A matrix over which to bootstrap column means by
+#'   subsampling its rows. Typically, a matrix of readcounts with rows for genes
+#'   and columns for positions within those genes.
+#' @param binsize The size of bin (in basepairs, or number of columns for
+#'   \code{metaSubsampleMatrix}) to use for counting signal. Especially
+#'   important for counting signal over large or sparse regions.
 #' @param first.output.xval The relative start position of the first bin, e.g.
 #'   if regions.gr begins at 50 bases upstream of the TSS, set
 #'   \code{first.output.xval = -50}. This number only affects the x-values that
 #'   are returned, which are provided as a convenience.
-#' @param sample.name Defaults to the name of \code{dataset.gr}.
+#' @param sample.name Defaults to the name of the input dataset, either
+#'   \code{dataset.gr} or \code{counts.mat}. This is included in the output as a
+#'   convenience, as it allows row-binding outputs from different samples.
 #' @param n.iter Number of random subsampling iterations to perform. Default is
-#'   1000.
-#' @param prop.sample The proportion of rows to subsample in each iteration.
-#'   The default is 0.1.
-#' @param lower The lower quantile of subsampled signal means to return. The
-#'   default is 0.125 (12.5th percentile).
-#' @param upper The upper quantile of subsampled signal means to return. The
-#'   default is 0.875 (85.5th percentile).
+#'   \code{1000}.
+#' @param prop.sample The proportion of the ranges in \code{regions.gr} (e.g.
+#'   the proportion of genes) or the proportion of rows in \code{counts.mat} to
+#'   subsample in each iteration. The default is \code{0.1} (10 percent).
+#' @param lower,upper The lower and upper quantiles of subsampled signal means
+#'   to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
+#'   85.5th percentiles) return a 75% confidence interval about the bootstrapped
+#'   mean.
 #' @param NF Optional normalization factor by which to multiply the counts.
+#' @param field The metadata field of \code{dataset.gr} to be counted.
+#' @param remove.empty A logical indicating whether regions
+#'   (\code{metaSubsample}) or rows (\code{metaSubsampleMatrix}) without signal
+#'   should be removed from the analysis.
 #' @param ncores Number of cores to use for computations.
 #'
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   of these dataframes).
 #' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:metaSubsample]{metaSubsample}},
-#'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
-#' @export
-#' @importFrom parallel mclapply detectCores
-#' @importFrom stats quantile
+#' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
+#' @name bootstrap-signal-by-position
 #'
 #' @examples
-#' data("PROseq") # load included PROseq data
-#' data("txs_dm6_chr4") # load included transcripts
+#' data("PROseq") # import included PROseq data
+#' data("txs_dm6_chr4") # import included transcripts
 #'
 #' # for each transcript, use promoter-proximal region from TSS to +100
 #' pr <- promoters(txs_dm6_chr4, 0, 100)
+#'
+#' #--------------------------------------------------#
+#' # Bootstrap average signal in each 5 bp bin across all transcripts,
+#' # and get confidence bands for middle 30% of bootstrapped means
+#' #--------------------------------------------------#
+#'
+#' set.seed(11)
+#' df <- metaSubsample(PROseq, pr, binsize = 5, lower = 0.35, upper = 0.65)
+#' df[1:10, ]
+#'
+#' #--------------------------------------------------#
+#' # Plot bootstrapped means with confidence intervals
+#' #--------------------------------------------------#
+#'
+#' plot(mean ~ x, df, type = "l", main = "PROseq Signal",
+#'      ylab = "Mean + 30% CI", xlab = "Distance from TSS")
+#' polygon(c(df$x, rev(df$x)), c(df$lower, rev(df$upper)),
+#'         col = adjustcolor("black", 0.1), border = FALSE)
+#'
+#' #==================================================#
+#' #==================================================#
+#' # Using a matrix as input
+#' #==================================================#
 #'
 #' # generate a matrix of counts in each region
 #' countsmat <- getCountsByPositions(PROseq, pr)
@@ -71,14 +102,99 @@
 #' df <- metaSubsampleMatrix(countsmat, binsize = 10, first.output.xval = 0,
 #'                           NF = 0.75, sample.name = "PROseq")
 #' df[1:10, ]
+NULL
+
+
+
+
+#' @rdname bootstrap-signal-by-position
+#' @export
+#' @importFrom parallel mclapply detectCores
+#' @importFrom GenomicRanges width
+metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
+                          first.output.xval = 1,
+                          sample.name = deparse(substitute(dataset.gr)),
+                          n.iter = 1000, prop.sample = 0.1,
+                          lower = 0.125, upper = 0.875,
+                          NF = 1, field = "score", remove.empty = FALSE,
+                          ncores = detectCores()) {
+
+    if (length(unique(width(regions.gr))) > 1) {
+        stop(message = "Not all ranges in regions.gr are the same width")
+        return(geterrmessage())
+    }
+
+    if (length(field) > 1) {
+        # use seed for same genelist sampling for each field
+        if ( !exists(".Random.seed") | is.null(.Random.seed) ) set.seed(NULL)
+        seed <- .Random.seed # save the current seed state
+
+        # get and alter arguments
+        fun_args <- as.list(match.call())[-1]
+        args.force <- c("dataset.gr", "regions.gr", "remove.empty", "field")
+
+        dflist <- lapply(field, function(i) {
+            .Random.seed <- seed
+            fun_args[args.force] <- list(dataset.gr, regions.gr, FALSE, i)
+            do.call(metaSubsample, fun_args)
+        })
+        names(dflist) <- field
+        return(dflist)
+    }
+
+    # Get signal in each bin of each gene
+    # -> Matrix of dim = (ngenes, nbins)
+    signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
+                                        regions.gr = regions.gr,
+                                        binsize = binsize, field = field)
+
+    metamat <- metaSubsampleMatrix(
+        counts.mat = signal.bins, binsize = 1,
+        first.output.xval = first.output.xval, sample.name = sample.name,
+        n.iter = n.iter, prop.sample = prop.sample, lower = lower,
+        upper = upper, NF = NF, remove.empty = remove.empty, ncores = ncores
+    )
+
+    # fix x-values to match bins, and binsize-normalize the returned values
+    if (binsize != 1) metamat <- .fixbins(metamat, binsize, first.output.xval)
+    return(metamat)
+}
+
+
+.fixbins <- function(metamat, binsize, first.output.xval) {
+    nbins <- nrow(metamat)
+    metamat$x <- .binxval(nbins, binsize, first.output.xval)
+
+    y_vals <- c("mean", "lower", "upper")
+    metamat[, y_vals] <- metamat[, y_vals] / binsize
+    return(metamat)
+}
+
+
+#' @importFrom stats quantile
+.binxval <- function(nbins, binsize, first.output.xval) {
+    firstbin <- seq(first.output.xval, by = 1, length.out = binsize)
+    binstart <- quantile(firstbin, 0.5) # center of first bin
+    seq(binstart, by = binsize, length.out = nbins)
+}
+
+
+
+#' @rdname bootstrap-signal-by-position
+#' @export
+#' @importFrom parallel mclapply detectCores
+#' @importFrom stats quantile
 metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                                 sample.name = deparse(substitute(counts.mat)),
                                 n.iter = 1000, prop.sample = 0.1,
                                 lower = 0.125, upper = 0.875,
-                                NF = 1, ncores = detectCores()) {
+                                NF = 1, remove.empty = FALSE,
+                                ncores = detectCores()) {
 
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
+
+    if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
 
     nbins <- floor(ncol(counts.mat) / binsize)
     ngenes <- nrow(counts.mat)
@@ -143,149 +259,9 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
 }
 
 
-#' @importFrom stats quantile
-.binxval <- function(nbins, binsize, first.output.xval) {
-    firstbin <- seq(first.output.xval, by = 1, length.out = binsize)
-    binstart <- quantile(firstbin, 0.5) # center of first bin
-    seq(binstart, by = binsize, length.out = nbins)
-}
 
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Bootstrapping signal means from GRanges
-###
 
-
-#' Iterative Subsampling for Metaplotting
-#'
-#' This function performs bootstrap subsampling of mean readcounts at different
-#' positions within regions of interest. Mean signal counts can be estimated at
-#' base-pair resolution, or smoothed over larger bins.
-#'
-#' @param dataset.gr A GRanges object in which signal is contained in metadata
-#'   (typically in the \code{"score"} field).
-#' @param regions.gr A GRanges object containing intervals over which to
-#'   metaplot. All ranges must have the same width.
-#' @param binsize The size of bin (number of columns, e.g. basepairs) to use for
-#'   metaplotting. Especially important for metaplots over large/sparse regions.
-#' @param first.output.xval The relative start position of the first bin, e.g.
-#'   if regions.gr begins at 50 bases upstream of the TSS, set
-#'   \code{first.output.xval = -50}. This number only affects the x-values that
-#'   are returned, which are provided as a convenience.
-#' @param sample.name Defaults to the name of \code{dataset.gr}. This is
-#'   included in the output as a convenience for row-binding outputs from
-#'   different samples.
-#' @param n.iter Number of random subsampling iterations to perform. Default is
-#'   \code{1000}.
-#' @param prop.sample The proportion of the ranges in \code{regions.gr} (e.g.
-#'   the proportion of genes) to subsample in each iteration. The default is
-#'   \code{0.1} (10 percent).
-#' @param lower The lower quantile of subsampled signal means to return. The
-#'   default is \code{0.125} (12.5th percentile).
-#' @param upper The upper quantile of subsampled signal means to return. The
-#'   default is \code{0.875} (85.5th percentile).
-#' @param NF Optional normalization factor by which to multiply the counts.
-#' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param remove.empty A logical indicating whether regions without signal
-#'   should be removed from the analysis.
-#' @param ncores Number of cores to use for parallel computation. No parallel
-#'   processing is used by default, as there's no performance benefit for
-#'   typical usage with short computation times.
-#'
-#' @return Dataframe containing x-values, means, lower quantiles, upper
-#'   quantiles, and the sample name (as a convenience for row-binding multiple
-#'   of these dataframes).
-#' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:metaSubsampleMatrix]{metaSubsampleMatrix}},
-#'   \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
-#' @export
-#' @importFrom parallel mclapply detectCores
-#' @importFrom GenomicRanges width
-#'
-#' @examples
-#' data("PROseq") # import included PROseq data
-#' data("txs_dm6_chr4") # import included transcripts
-#'
-#' # for each transcript, use promoter-proximal region from TSS to +100
-#' pr <- promoters(txs_dm6_chr4, 0, 100)
-#'
-#' #--------------------------------------------------#
-#' # Bootstrap average signal in each 5 bp bin across all transcripts,
-#' # and get confidence bands for middle 30% of bootstrapped means
-#' #--------------------------------------------------#
-#'
-#' set.seed(11)
-#' df <- metaSubsample(PROseq, pr, binsize = 5, lower = 0.35, upper = 0.65)
-#' df[1:10, ]
-#'
-#' #--------------------------------------------------#
-#' # Plot bootstrapped means with confidence intervals
-#' #--------------------------------------------------#
-#'
-#' plot(mean ~ x, df, type = "l", main = "PROseq Signal",
-#'      ylab = "Mean + 30% CI", xlab = "Distance from TSS")
-#' polygon(c(df$x, rev(df$x)), c(df$lower, rev(df$upper)),
-#'         col = adjustcolor("black", 0.1), border = FALSE)
-metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
-                          first.output.xval = 1,
-                          sample.name = deparse(substitute(dataset.gr)),
-                          n.iter = 1000, prop.sample = 0.1,
-                          lower = 0.125, upper = 0.875,
-                          NF = 1, field = "score", remove.empty = FALSE,
-                          ncores = detectCores()) {
-
-    if (length(unique(width(regions.gr))) > 1) {
-        stop(message = "Not all ranges in regions.gr are the same width")
-        return(geterrmessage())
-    }
-
-    if (length(field) > 1) {
-        # use seed for same genelist sampling for each field
-        if ( !exists(".Random.seed") | is.null(.Random.seed) ) set.seed(NULL)
-        seed <- .Random.seed # save the current seed state
-
-        # get and alter arguments
-        fun_args <- as.list(match.call())[-1]
-        args.force <- c("dataset.gr", "regions.gr", "remove.empty", "field")
-
-        dflist <- lapply(field, function(i) {
-            .Random.seed <- seed
-            fun_args[args.force] <- list(dataset.gr, regions.gr, FALSE, i)
-            do.call(metaSubsample, fun_args)
-        })
-        names(dflist) <- field
-        return(dflist)
-    }
-
-    # Get signal in each bin of each gene
-    # -> Matrix of dim = (ngenes, nbins)
-    signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
-                                        regions.gr = regions.gr,
-                                        binsize = binsize, field = field)
-
-    if (remove.empty)  signal.bins <- signal.bins[rowSums(signal.bins) > 0, ]
-
-    metamat <- metaSubsampleMatrix(
-        counts.mat = signal.bins, binsize = 1,
-        first.output.xval = first.output.xval, sample.name = sample.name,
-        n.iter = n.iter, prop.sample = prop.sample, lower = lower,
-        upper = upper, NF = NF, ncores = ncores
-    )
-
-    # fix x-values to match bins, and binsize-normalize the returned values
-    if (binsize != 1) metamat <- .fixbins(metamat, binsize, first.output.xval)
-    return(metamat)
-}
-
-
-.fixbins <- function(metamat, binsize, first.output.xval) {
-    nbins <- nrow(metamat)
-    metamat$x <- .binxval(nbins, binsize, first.output.xval)
-
-    y_vals <- c("mean", "lower", "upper")
-    metamat[, y_vals] <- metamat[, y_vals] / binsize
-    return(metamat)
-}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -570,3 +546,9 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
 #                              NF = NF,
 #                              ncores = ncores)
 # }
+
+
+
+
+
+
