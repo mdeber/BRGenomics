@@ -72,7 +72,7 @@ sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
 # -> Look specifically at ranges that could be combined
 neighbors <- c(shift(PROseq, 1), shift(PROseq, -1))
 hits <- findOverlaps(PROseq, neighbors)
-idx <- unique(hits@from) # indices for PROseq with neighbor
+idx <- unique(from(hits)) # indices for PROseq with neighbor
 
 PROseq[idx]
 
