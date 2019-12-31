@@ -141,22 +141,25 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     if (any(width(dataset.gr) != 1)) dataset.gr <- makeGRangesBRG(dataset.gr)
 
     if (length(field) > 1) {
+        # recursive call for each field; return a list of matrices
         environment(.recursive_cbp) <- environment()
         return(.recursive_cbp())
     }
 
-    multi_width <- length(unique(width(regions.gr))) > 1 # (logical)
+    multi_width <- length(unique(width(regions.gr))) > 1
 
-    if (!multi_width) {
-        .get_signal_mat(dataset.gr, regions.gr, binsize, FUN, field)
-    } else {
+    if (multi_width) {
         environment(.get_cbp_mw) <- environment()
         .get_cbp_mw()
+    } else {
+        .get_signal_mat(dataset.gr, regions.gr, binsize, FUN, field)
     }
 }
 
 #' @importFrom parallel mclapply
 .recursive_cbp <- function() {
+
+    # inefficient because gets hits for each field
     reslist <- mclapply(field, function(i) {
         getCountsByPositions(dataset.gr, regions.gr, binsize = binsize,
                              FUN = FUN, simplify.multi.widths, field = i)
@@ -167,6 +170,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 #' @importFrom GenomicRanges findOverlaps start mcols
 .get_signal_mat <- function(dataset.gr, regions.gr, binsize, FUN, field) {
+
     # initialize signal matrix of dim = (region, position within region)
     mat <- matrix(0, length(regions.gr), unique(width(regions.gr)))
     hits <- findOverlaps(regions.gr, dataset.gr)
