@@ -115,8 +115,8 @@ test_that("can get single result from simple dds", {
 })
 
 res2 <- getDESeqResults(dds,
-                         comparisons.list = list(c("B", "A"), c("C", "A")),
-                         ncores = 1, quiet = TRUE)
+                        comparisons.list = list(c("B", "A"), c("C", "A")),
+                        ncores = 1, quiet = TRUE)
 
 test_that("get proper results from list of comparisons", {
     expect_is(res2, "list")

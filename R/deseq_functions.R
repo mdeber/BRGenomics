@@ -339,25 +339,16 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                             alpha = 0.1, args.DESeq = NULL, args.results = NULL,
                             ncores = detectCores(), quiet = FALSE) {
 
-    # check only one set of contrast args used
-    # and, if given, check format of contrasts.list
-    .check_contrast_args(as.list(match.call()[-1]))
-    if (!is.null(comparisons.list)) .check_list(comparisons.list)
+    # check inputs
+    environment(.check_args) <- environment()
+    .check_args(match.call())
 
-    # determine if/when to apply sizeFactors, and whether dds already has them
-    when_sf <- .when_sf(dds, sizeFactors)
-    exist_sf <- .exist_sizeFactors(dds)
-
-    # apply early NFs
-    if (when_sf == "early") {
-        if (exist_sf & !quiet)
-            warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        DESeq2::sizeFactors(dds) <- sizeFactors
-        sizeFactors <- NULL # avoid re-application
-    }
+    # if length(sizeFactors) matches dds, apply them ("apply early")
+    # else, hold on to them and apply later (after subsetting)
+    environment(.apply_sf_early) <- environment()
+    .apply_sf_early()
 
     if (is.null(comparisons.list)) {
-
         res <- .get_deseq_results(
             dds, contrast.numer, contrast.denom, sizeFactors = sizeFactors,
             alpha = alpha, args.DESeq = args.DESeq, args.results = args.results,
@@ -366,16 +357,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         return(res)
 
     } else {
-
-        # if multiple comparisons, return error if trying to apply NFs late
-        if (length(comparisons.list) > 1)  {
-            if (when_sf == "late") {
-                stop(message = .nicemsg("Length of sizeFactors not equal to
-                                        number of samples in dds"))
-                return(geterrmessage())
-            }
-            sizeFactors <- NULL
-        }
 
         args.DESeq <- args.DESeq[names(args.DESeq) != "quiet"]
         comparisons <- mclapply(comparisons.list, function(x) {
@@ -392,9 +373,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     }
 }
 
-## Helper functions for getDESeqResults
 
-.check_contrast_args <- function(args) {
+.check_args <- function(args) {
+    args <- as.list(args)[-1]
     num <- "contrast.numer" %in% names(args)
     denom <- "contrast.denom" %in% names(args)
     clist <- !is.null(args$comparisons.list)
@@ -405,18 +386,20 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                                 but not both"))
         return(geterrmessage())
     }
-}
 
-.check_list <- function(comparisons.list) {
-    class_ok <- .class_check(comparisons.list)
-    lengths_ok <- all(lengths(comparisons.list) == 2)
-    if (!(class_ok & lengths_ok)) {
-        stop(message = .nicemsg("comparisons.list provided as input, but
-                                it's not a list of length = 2 character
-                                vectors"))
-        return(geterrmessage())
+    # Check list
+    if (!is.null(comparisons.list)) {
+        class_ok <- .class_check(comparisons.list)
+        lengths_ok <- all(lengths(comparisons.list) == 2)
+        if (!(class_ok & lengths_ok)) {
+            stop(message = .nicemsg("comparisons.list provided as input, but
+                                    it's not a list of length = 2 character
+                                    vectors"))
+            return(geterrmessage())
+        }
     }
 }
+
 
 .class_check <- function(comparisons) {
     if (!is.list(comparisons)) return(FALSE)
@@ -425,16 +408,89 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     return(FALSE)
 }
 
+.apply_sf_early <- function() {
+    when_sf <- .when_sf(dds, sizeFactors)
+    already_sf <- !is.null(sizeFactors(dds))
+
+    if (when_sf == "early") {
+        if (already_sf & !quiet)
+            warning("Overwriting previous sizeFactors", immediate. = TRUE)
+        DESeq2::sizeFactors(dds) <<- sizeFactors
+        sizeFactors <<- NULL # avoid re-application
+    }
+
+    if (length(comparisons.list) > 1)  {
+        if (when_sf == "late") {
+            stop(message = .nicemsg("Length of sizeFactors not equal to
+                                    number of samples in dds"))
+            return(geterrmessage())
+        }
+    }
+}
+
 .when_sf <- function(dds, sizeFactors) {
     if (is.null(sizeFactors)) return("never")
     if (length(sizeFactors) == nrow(dds@colData)) return("early")
     return("late")
 }
 
-#' @importFrom DESeq2 sizeFactors
-.exist_sizeFactors <- function(dds) {
-    if (!is.null(sizeFactors(dds))) return(TRUE)
-    return(FALSE)
+.apply_sf_late <- function() {
+    when_sf <- .when_sf(dds, sizeFactors)
+    already_sf <- !is.null(sizeFactors(dds))
+
+    if (when_sf == "late") {
+        stop(message = .nicemsg("Length of sizeFactors not equal to number of
+                                samples in dds nor the number of samples in
+                                comparison group"))
+        return(geterrmessage())
+    }
+
+    if (when_sf == "early") {
+        if (already_sf & !quiet)
+            warning("Overwriting previous sizeFactors", immediate. = TRUE)
+        DESeq2::sizeFactors(dds) <<- sizeFactors
+    }
+}
+
+# Function dispatched by getDESeqResults
+.get_deseq_results <- function(dds, contrast.numer, contrast.denom,
+                               sizeFactors, alpha, args.DESeq, args.results,
+                               ncores, quiet) {
+    # should make another function for late application of sizeFactors
+
+    # Subset for pairwise comparison
+    dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
+    dds$condition <- factor(dds$condition) # remove unused levels
+
+    # try to apply sizeFactors that weren't the same size as original dds
+    environment(.apply_sf_late) <- environment()
+    .apply_sf_late()
+
+    #---------------# Call DESeq() #---------------#
+    # Get args; only use parent function 'quiet' arg if not in args.DESeq
+    args.DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
+                              user_args = args.DESeq,
+                              exclude = c("object", "parallel"))
+    if (!"quiet" %in% names(args.DESeq))
+        args.DESeq <- .merge_args(args.DESeq, list(quiet = quiet))
+
+    dds <- do.call(DESeq2::DESeq, args.DESeq)
+
+    #--------------# Call results() #--------------#
+    # Get args
+    contrast.arg <- c("condition", contrast.numer, contrast.denom)
+    args.results <- .merge_args(
+        expression(object = dds, contrast = contrast.arg, alpha = alpha),
+        args.results, exclude = c("object", "contrast", "alpha", "parallel")
+    )
+    if (quiet) {
+        suppressWarnings(suppressMessages(
+            res <- do.call(DESeq2::results, args.results)
+        ))
+    } else {
+        res <- do.call(DESeq2::results, args.results)
+    }
+    return(res)
 }
 
 .merge_args <- function(rqd_args, user_args, exclude = NULL) {
@@ -453,70 +509,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     user_args <- user_args[!names(user_args) %in% exclude]
     return(as.list(c(rqd_args, user_args)))
 }
-
-# Function dispatched by getDESeqResults
-.get_deseq_results <- function(dds, contrast.numer, contrast.denom,
-                               sizeFactors, alpha, args.DESeq, args.results,
-                               ncores, quiet) {
-    # should make another function for late application of sizeFactors
-
-    # Subset for pairwise comparison
-    dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
-    dds$condition <- factor(dds$condition) # remove unused levels
-
-    # try to apply sizeFactors that weren't the same size as original dds
-    when_sf <- .when_sf(dds, sizeFactors)
-    exist_sf <- .exist_sizeFactors(dds)
-
-    if (when_sf == "late") {
-        stop(message = .nicemsg("Length of sizeFactors not equal to number of
-                                samples in dds nor the number of samples in
-                                comparison group"))
-        return(geterrmessage())
-    }
-
-    if (when_sf == "early") {
-        if (exist_sf & !quiet)
-            warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        DESeq2::sizeFactors(dds) <- sizeFactors
-    }
-
-    #---------------#
-    # Call DESeq()
-    #---------------#
-
-    # Get args; only use parent function 'quiet' arg if not in args.DESeq
-    args.DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
-                              user_args = args.DESeq,
-                              exclude = c("object", "parallel"))
-    if (!"quiet" %in% names(args.DESeq))
-        args.DESeq <- .merge_args(args.DESeq, list(quiet = quiet))
-
-    dds <- do.call(DESeq2::DESeq, args.DESeq)
-
-    #---------------#
-    # Call results()
-    #---------------#
-
-    # Get args
-    args.results <- .merge_args(expression(object = dds,
-                                           contrast = c("condition",
-                                                        contrast.numer,
-                                                        contrast.denom),
-                                           alpha = alpha),
-                                args.results,
-                                exclude = c("object", "contrast",
-                                            "alpha", "parallel"))
-    if (quiet) {
-        suppressWarnings(suppressMessages(
-            res <- do.call(DESeq2::results, args.results)
-        ))
-    } else {
-        res <- do.call(DESeq2::results, args.results)
-    }
-    return(res)
-}
-
 
 ### ========================================================================= #
 ### Get Batches of DESeq2 Results from DESeqDataSet
