@@ -108,7 +108,7 @@
 #'                        quiet = TRUE,
 #'                        ncores = 2)
 #' dds
-getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
+getDESeqDataSet <- function(dataset.list,
                             regions.gr,
                             sample_names = names(dataset.list),
                             gene_names = NULL,
@@ -117,6 +117,7 @@ getDESeqDataSet <- function(dataset.list, # assumes names end in "_rep#"
                             ncores = detectCores(),
                             quiet = FALSE) {
     # function needs to be split up
+    # check if any assumption about dataset.list names
 
     if (is.null(sample_names)) {
         stop(message = .nicemsg("sample_names are required, but none were

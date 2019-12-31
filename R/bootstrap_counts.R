@@ -193,7 +193,6 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
 
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
-
     if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
 
     nbins <- floor(ncol(counts.mat) / binsize)
@@ -212,8 +211,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
 
     # For each iteration, get average signal in each bin
     # -> List of length = n.iter containing vectors of length = nbins
-    binavg.list <- mclapply(idx.list,
-                            function(idx) colMeans(counts.mat[idx, ]),
+    binavg.list <- mclapply(idx.list, function(idx) colMeans(counts.mat[idx, ]),
                             mc.cores = ncores)
 
     # Collapse list into matrix
@@ -240,7 +238,6 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     } else {
         x <- .binxval(nbins, binsize, first.output.xval)
     }
-
     return(data.frame(x, mean, lower, upper, sample.name))
 }
 
