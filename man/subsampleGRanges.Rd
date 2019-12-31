@@ -19,15 +19,25 @@ given.}
 for reach position. If each range represents a single read, set \code{field
 = NULL}}
 }
+\value{
+A GRanges object identical in format to \code{dataset.gr}, but
+  containing a random subset of its data. If \code{field != NULL}, the length
+  of the output cannot be known \emph{a priori}, but the sum of its score
+  can.
+}
 \description{
 Random subsampling is not performed on ranges, but on reads. Readcounts
-should be given as a metadata field (usually "score"), and should normally be
-integers. If normalized readcounts are given, an attempt will be made to
-infer the normalization factor based on the least-common-multiple of the
-signal found in the specified field. This function can also subsample ranges
-directly if \code{field = NULL}, but the \code{sample} function can be used
-in this scenario.
+should be given as a metadata field (usually "score"). This function can also
+subsample ranges directly if \code{field = NULL}, but the \code{sample}
+function can be used in this scenario.
 }
+\section{Use with normalized readcounts}{
+ If the metadata field contains
+  normalized readcounts, an attempt will be made to infer the normalization
+  factor based on the least-common-multiple of the signal found in the
+  specified field.
+}
+
 \examples{
 data("PROseq") # load included PROseq data
 

@@ -13,6 +13,7 @@
 #'   ...
 #' }
 #' @source GEO Accession GSM1032758, run SRR611828.
+#' @importFrom utils data
 "PROseq"
 
 
@@ -31,6 +32,7 @@
 #'   ...
 #' }
 #' @source GEO Accession GSM1032758, run SRR611828.
+#' @importFrom utils data
 "PROseq_paired"
 
 
@@ -48,4 +50,5 @@
 #'   \item{gene_id}{FLybase unique identifiers for the associated genes}
 #' }
 #' @source TxDb.Dmelanogaster.UCSC.dm6.ensGene version 3.4.6
+#' @importFrom utils data
 "txs_dm6_chr4"

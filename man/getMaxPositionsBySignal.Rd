@@ -41,8 +41,8 @@ Output is a GRanges object with regions.gr metadata, but each range
   If \code{keep.score = TRUE}, the output will also contain metadata for the
   signal at the max site. The output is \emph{not} necessarily same length as
   \code{regions.gr}, as regions without signal are not returned. If \emph{no
-  regions} have signal (e.g. as could happen if running this function on a
-  single region), the function will return an empty GRanges object with
+  regions} have signal (e.g. as could happen if running this function on
+  single regions), the function will return an empty GRanges object with
   intact metadata columns.
 }
 \description{

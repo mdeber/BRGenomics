@@ -48,6 +48,7 @@
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
 #'   of these dataframes).
+#'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @name bootstrap-signal-by-position

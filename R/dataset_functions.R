@@ -12,19 +12,23 @@
 #'
 #' @param dataset.gr A disjoint GRanges object
 #'
+#' @return A GRanges object for which \code{length(output) ==
+#'   sum(width(dataset.gr))}, and for which \code{all(width(output) == 1)}.
+#'
 #' @details Note that this function doesn't perform any transformation on the
 #'   metadata in the input. This function assumes that for an input GRanges
 #'   object, any metadata for each range is equally correct when inherited by
 #'   each individual base in that range. In other words, the dataset's "signal"
-#'   (usually readcounts) is derived from a single basepair position.
+#'   (usually readcounts) fundamentally belongs to a single basepair position.
 #'
-#'   The motivating case for this function is a bigWig file (e.g. one imported
-#'   by \code{rtracklayer}), as bigWig files typically use run-length
-#'   compression on the data signal (the 'score' column), such that adjacent
-#'   bases sharing the same signal are combined into a single range. The
-#'   base-pair resolution GRanges objects produced by this function remove this
-#'   compression, resulting in each index (each range) of the GRanges object
-#'   addressing a single genomic position.
+#' @section Motivation: The motivating case for this function is a bigWig file
+#'   (e.g. one imported by \code{rtracklayer}), as bigWig files typically use
+#'   run-length compression on the data signal (the 'score' column), such that
+#'   adjacent bases sharing the same signal are combined into a single range. As
+#'   basepair-resolution genomic data is typically sparse, this compression has
+#'   a minimal impact on memory usage, and removing it greatly enhances data
+#'   handling as each index (each range) of the GRanges object corresponds to a
+#'   single genomic position.
 #'
 #' @section Generating basepair-resolution GRanges from whole reads: If working
 #'   with a GRanges object containing whole reads, one can obtain base-pair
@@ -34,6 +38,15 @@
 #'   argument to choose the strand-specific 5' or 3' end. Then, strand-specific
 #'   coverage can be calculated using
 #'   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
+#'
+#' @section On the use of GRanges instead of GPos: The
+#'   \code{\link[GenomicRanges:GPos]{GPos}} class is a more suitable container
+#'   for data of this type, as the GPos class is specific to 1-bp-wide ranges.
+#'   However, in early testing, we encountered some kind of compatibility
+#'   limitations with the newer GPos class, and have not re-tested it since. If
+#'   you have feedback on switching to this class, please contact the author.
+#'   Users can readily coerce a basepair-resolution GRanges object to a GPos
+#'   object via \code{gp <- GPos(gr, score = score(gr))}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
@@ -207,12 +220,9 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
 #' Randomly subsample reads from GRanges dataset
 #'
 #' Random subsampling is not performed on ranges, but on reads. Readcounts
-#' should be given as a metadata field (usually "score"), and should normally be
-#' integers. If normalized readcounts are given, an attempt will be made to
-#' infer the normalization factor based on the least-common-multiple of the
-#' signal found in the specified field. This function can also subsample ranges
-#' directly if \code{field = NULL}, but the \code{sample} function can be used
-#' in this scenario.
+#' should be given as a metadata field (usually "score"). This function can also
+#' subsample ranges directly if \code{field = NULL}, but the \code{sample}
+#' function can be used in this scenario.
 #'
 #' @param dataset.gr A GRanges object in which signal (e.g. readcounts) are
 #'   contained within metadata.
@@ -222,6 +232,16 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
 #' @param field The metadata field of \code{dataset.gr} that contains readcounts
 #'   for reach position. If each range represents a single read, set \code{field
 #'   = NULL}
+#'
+#' @return A GRanges object identical in format to \code{dataset.gr}, but
+#'   containing a random subset of its data. If \code{field != NULL}, the length
+#'   of the output cannot be known \emph{a priori}, but the sum of its score
+#'   can.
+#'
+#' @section Use with normalized readcounts: If the metadata field contains
+#'   normalized readcounts, an attempt will be made to infer the normalization
+#'   factor based on the least-common-multiple of the signal found in the
+#'   specified field.
 #'
 #' @author Mike DeBerardine
 #' @export
@@ -305,19 +325,23 @@ subsampleGRanges <- function(dataset.gr,
 
 
 
-#' Merge base-pair resolution GRanges objects
+#' Merge basepair-resolution GRanges objects
 #'
-#' Merges 2 or more GRanges objects. For each object, the range widths must all
-#' be 1, and the \code{score} metadata column contains coverage information at
-#' each site. This function returns a single GRange object containing all sites
-#' of the input objects, and the sum of all scores at all sites.
+#' Merges 2 or more basepair-resolution (single-width) GRanges objects by
+#' combining all of their ranges and associated signal (e.g. readcounts).
 #'
 #' @param ... Any number of GRanges objects in which signal (e.g. readcounts)
-#'   are contained within metadata.
+#'   are contained within metadata. GRanges not single-width will be coerced
+#'   using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}.
 #' @param field One or more metadata fields to be combined, typically the
 #'   "score" field. Fields typically contain coverage information.
 #' @param ncores More than one core can be used to coerce non-single-width
 #'   GRanges objects using \code{makeGRangesBRG}.
+#'
+#' @return A disjoint, basepair-resolution (single-width) GRanges object
+#'   comprised of all ranges found in the input GRanges objects, and whose total
+#'   readcount is the sum of all input GRanges.
+#'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export

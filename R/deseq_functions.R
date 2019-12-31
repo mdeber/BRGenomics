@@ -396,8 +396,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
 .class_check <- function(comparisons) {
     if (!is.list(comparisons)) return(FALSE)
-    classes <- vapply(comparisons, class, FUN.VALUE = character(1))
-    if (all(classes == "character")) return(TRUE)
+    classes <- vapply(comparisons, is.character, FUN.VALUE = logical(1))
+    if (all(classes)) return(TRUE)
     return(FALSE)
 }
 
@@ -423,7 +423,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 }
 
 
-#' Function dispatched by getDESeqResults
 #' @importFrom DESeq2 DESeq results
 .get_deseq_results <- function(dds, contrast.numer, contrast.denom,
                                sizeFactors, alpha, args.DESeq, args.results,

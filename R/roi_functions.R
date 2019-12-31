@@ -5,16 +5,7 @@
 #' Extract Genebodies
 #'
 #' This function returns ranges that are defined relative to the strand-specific
-#' start and end sites of regions of interest (usually genes). Unlike
-#' \code{\link[GenomicRanges:promoters]{GenomicRanges::promoters}}, distances
-#' can be upstream or downstream based on the sign, and both the start and end
-#' of the returned regions can be defined in terms of either the start of end
-#' site of the input ranges. For example, \code{genebodies(txs, -50, 150,
-#' fix.end = "start")} is equivalent to \code{promoters(txs, 50, 151)} (the
-#' downstream edge is off by 1 because \code{promoters} keeps the downstream
-#' interval closed). The default arguments return ranges that begin 300 bases
-#' downstream of the original start positions, and end 300 bases upstream of the
-#' original end positions.
+#' start and end sites of regions of interest (usually genes).
 #'
 #' @param genelist A GRanges object containing genes of interest.
 #' @param start Depending on \code{fix.start}, the distance from either the
@@ -34,9 +25,22 @@
 #'   \code{min.window} defines the minimum size (width) of a returned range.
 #'   However, when \code{fix.end = fix.start}, all returned ranges have the same
 #'   width, and \code{min.window} simply size-filters the input ranges.
+#'
 #' @return A GRanges object that may be shorter than \code{genelist} due to
 #'   filtering of short ranges. For example, using the default arguments, genes
 #'   shorter than 600 bp would be removed.
+#'
+#' @details Unlike
+#'   \code{\link[GenomicRanges:promoters]{GenomicRanges::promoters}}, distances
+#'   can be defined to be upstream or downstream by changing the sign of the
+#'   argument, and both the start and end of the returned regions can be defined
+#'   in terms of the strand-specific start or end site of the input ranges. For
+#'   example, \code{genebodies(txs, -50, 150, fix.end = "start")} is equivalent
+#'   to \code{promoters(txs, 50, 151)} (the downstream edge is off by 1 because
+#'   \code{promoters} keeps the downstream interval closed). The default
+#'   arguments return ranges that begin 300 bases downstream of the original
+#'   start positions, and end 300 bases upstream of the original end positions.
+#'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}
 #' @export
@@ -156,7 +160,7 @@ genebodies <- function(genelist, start = 300, end = -300,
 #'   (typically in the "score" field).
 #' @param binsize The size of bin in which to calculate signal scores.
 #' @param bin.centers Logical indicating if the centers of bins are returned, as
-#' opposed to the entire bin. By default, entire bins are returned.
+#'   opposed to the entire bin. By default, entire bins are returned.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
 #' @param keep.score Logical indicating if the signal value at the max site
 #'   should be reported. If set to \code{TRUE}, the values are kept as a new
@@ -172,8 +176,8 @@ genebodies <- function(genelist, start = 300, end = -300,
 #'   If \code{keep.score = TRUE}, the output will also contain metadata for the
 #'   signal at the max site. The output is \emph{not} necessarily same length as
 #'   \code{regions.gr}, as regions without signal are not returned. If \emph{no
-#'   regions} have signal (e.g. as could happen if running this function on a
-#'   single region), the function will return an empty GRanges object with
+#'   regions} have signal (e.g. as could happen if running this function on
+#'   single regions), the function will return an empty GRanges object with
 #'   intact metadata columns.
 #'
 #' @author Mike DeBerardine

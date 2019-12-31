@@ -37,19 +37,25 @@ mitochondrial chromosomes are applied.}
 non-autosomes should be kept. By default, sex chromosomes are kept, but
 mitochondrial and non-standard chromosomes are removed.}
 }
-\description{
-Import basepair-resolution files
-}
-\details{
+\value{
 Imports a GRanges object containing base-pair resolution data, with
   the \code{score} metadata column indicating the number of reads represented
   by each range.
+}
+\description{
+Import functions for plus/minus pairs of \code{bigWig} or \code{bedGraph}
+files.
+}
+\details{
+For \code{import_bigWig}, the output GRanges is formatted by
+  \code{\link[BRGenomics:makeGRangesBR]{makeGRangesBR}}, such that all ranges
+  are disjoint and have width = 1, and the \code{score} is single-base
+  coverage, i.e. the number of reads for each position.
 
   \code{import_bedGraph} is useful for when both 5'- and 3'-end information
   is to be maintained for each sequenced molecule. It effectively imports the
-  entire read.
-
-  For \code{import_bigWig}, all ranges are of width = 1.
+  entire read, and the \code{score} represents the number of reads sharing
+  identical 5' and 3' ends.
 }
 \examples{
 #--------------------------------------------------#

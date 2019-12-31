@@ -15,7 +15,7 @@ getCountsByRegions(
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
 (typically in the "score" field).}
 
-\item{regions.gr}{A GRanges object containing all the regions of interest.}
+\item{regions.gr}{A GRanges object containing regions of interest.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, a dataframe is returned containing the counts for
@@ -23,9 +23,13 @@ each region in each field.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
+\value{
+An atomic vector the same length as \code{regions.gr} containing
+the sum of the signal overlapping each range of \code{regions.gr}.
+}
 \description{
-Returns a vector the same length as \code{regions.gr} containing signal found
-in each range.
+Get the sum of the signal in \code{dataset.gr} that overlaps each range in
+\code{regions.gr}.
 }
 \examples{
 data("PROseq") # load included PROseq data

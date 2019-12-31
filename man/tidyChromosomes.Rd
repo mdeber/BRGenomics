@@ -20,11 +20,16 @@ genome set, e.g. \code{genome(gr) <- "hg38"}}
 non-autosomes should be kept. By default, sex chromosomes are kept, but
 mitochondrial and non-standard chromosomes are removed.}
 }
+\value{
+A GRanges object in which both ranges and \code{seqinfo} associated
+  with trimmed chromosomes have been removed.
+}
 \description{
 This convenience function removes non-standard, mitochondrial, and/or sex
-chromosomes from any GRanges object. For the chromosomes being removed, any
-ranges found on those chromosomes are removed, and the chromosomes are also
-removed from \code{seqinfo}. Standard chromosomes are defined using the
+chromosomes from any GRanges object.
+}
+\details{
+Standard chromosomes are defined using the
 \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}} function
 from the \code{GenomeInfoDb} package.
 }

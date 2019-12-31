@@ -37,24 +37,30 @@ output for generated each field.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
-\description{
-Generate a matrix containing a row for each region of interest, and
-columns for each position (each base if \code{binsize = 1}) within each
-region.
-}
-\details{
+\value{
 If the widths of all ranges in \code{regions.gr} are equal, a matrix
-  is returned containing a row for each range in \code{regions.gr}, and a
-  column for each bin. For input \code{regions.gr} with varying widths,
-  setting \code{simplify.multi.widths = "list"} will output a list of
-  variable-length vectors, with each vector corresponding to an input region.
-  If \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output
-  is a matrix containing a row for each range in \code{regions.gr}, and a
-  column for each position in each range. The number of columns is determined
-  by the largest range in \code{regions.gr}, and columns corresponding to
-  positions outside of each range are either set to \code{0} or \code{NA},
+  is returned that contains a row for each region of interest, and a column
+  for each position (each base if \code{binsize = 1}) within each region.
+}
+\description{
+Get the sum of the signal in \code{dataset.gr} that overlaps each position
+within each range in \code{regions.gr}. If binning is used (i.e. positions
+are wider than 1 bp), any function can be used to summarize the signal
+overlapping each bin.
+}
+\section{Use of multi-width regions of interest}{
+ If the input
+  \code{regions.gr} contains ranges of varying widths, setting
+  \code{simplify.multi.widths = "list"} will output a list of variable-length
+  vectors, with each vector corresponding to an individual input region. If
+  \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output is a
+  matrix containing a row for each range in \code{regions.gr}, but the number
+  of columns is determined by the \emph{largest} range in \code{regions.gr}.
+  For each region of interest, columns that correspond to positions outside
+  of the outside of the input range are either set to \code{0} or \code{NA},
   depending on the argument.
 }
+
 \examples{
 data("PROseq") # load included PROseq data
 data("txs_dm6_chr4") # load included transcripts

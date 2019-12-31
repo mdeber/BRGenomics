@@ -38,9 +38,9 @@ is recommended, especially if input regions don't all have the same width.}
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
 \value{
-A vector of length given by the length of the genelist (or possibly
-  shorter if \code{remove.empty = TRUE}). If \code{length(field) > 1}, a
-  dataframe is returned, containing a column for each field.
+A vector parallel to the input genelist, unless \code{remove.empty =
+  TRUE}, in which case the vector may be shorter. If \code{length(field) >
+  1}, a dataframe is returned, containing a column for each field.
 }
 \description{
 Pausing index (PI) is calculated for each gene (within matched

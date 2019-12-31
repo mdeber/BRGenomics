@@ -15,17 +15,20 @@
 #' Remove odd chromosomes from GRanges objects
 #'
 #' This convenience function removes non-standard, mitochondrial, and/or sex
-#' chromosomes from any GRanges object. For the chromosomes being removed, any
-#' ranges found on those chromosomes are removed, and the chromosomes are also
-#' removed from \code{seqinfo}. Standard chromosomes are defined using the
-#' \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}} function
-#' from the \code{GenomeInfoDb} package.
+#' chromosomes from any GRanges object.
 #'
 #' @param gr Any GRanges object, however the object should have a standard
 #'   genome set, e.g. \code{genome(gr) <- "hg38"}
 #' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
+#'
+#' @return A GRanges object in which both ranges and \code{seqinfo} associated
+#'   with trimmed chromosomes have been removed.
+#'
+#' @details Standard chromosomes are defined using the
+#' \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}} function
+#' from the \code{GenomeInfoDb} package.
 #'
 #' @author Mike DeBerardine
 #' @seealso
@@ -69,6 +72,9 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 
 #' Import basepair-resolution files
 #'
+#' Import functions for plus/minus pairs of \code{bigWig} or \code{bedGraph}
+#' files.
+#'
 #' @param plus_file,minus_file Paths for strand-specific input files.
 #' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
 #'   given, non-standard chromosomes are trimmed, and options for sex and
@@ -77,15 +83,19 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
 #'
-#' @details Imports a GRanges object containing base-pair resolution data, with
+#' @return Imports a GRanges object containing base-pair resolution data, with
 #'   the \code{score} metadata column indicating the number of reads represented
 #'   by each range.
 #'
+#' @details For \code{import_bigWig}, the output GRanges is formatted by
+#'   \code{\link[BRGenomics:makeGRangesBR]{makeGRangesBR}}, such that all ranges
+#'   are disjoint and have width = 1, and the \code{score} is single-base
+#'   coverage, i.e. the number of reads for each position.
+#'
 #'   \code{import_bedGraph} is useful for when both 5'- and 3'-end information
 #'   is to be maintained for each sequenced molecule. It effectively imports the
-#'   entire read.
-#'
-#'   For \code{import_bigWig}, all ranges are of width = 1.
+#'   entire read, and the \code{score} represents the number of reads sharing
+#'   identical 5' and 3' ends.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
@@ -242,10 +252,10 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #
 #     # add gene_id
 #     suppressMessages(
-#         gene_names <- AnnotationDbi::select(db.txs,
-#                                            keys = keys(db.txs),
-#                                            columns = c("TXNAME"),
-#                                            keytype = "GENEID")
+#         gene_names <- AnnotationDbi::select(
+#             db.txs, keys = keys(db.txs),
+#             columns = c("TXNAME"), keytype = "GENEID"
+#         )
 #     )
 #     txs <- txs[order(txs$tx_name)] # pre-sort for speed
 #     gene_names <- gene_names[order(gene_names$TXNAME), ]
@@ -254,11 +264,9 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #         txs$gene_id <- gene_names$GENEID
 #
 #     # remove non-standard & mitochondrial chromosomes
-#     txs <- tidyChromosomes(txs,
-#                        keep.X = keep.X,
-#                        keep.Y = keep.Y,
-#                        keep.M = keep.M,
-#                        keep.nonstandard = keep.nonstandard)
+#     txs <- tidyChromosomes(txs, keep.X = keep.X, keep.Y = keep.Y,
+#                            keep.M = keep.M,
+#                            keep.nonstandard = keep.nonstandard)
 #
 #     return(sort(txs))
 # }

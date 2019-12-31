@@ -2,13 +2,14 @@
 % Please edit documentation in R/dataset_functions.R
 \name{mergeGRangesData}
 \alias{mergeGRangesData}
-\title{Merge base-pair resolution GRanges objects}
+\title{Merge basepair-resolution GRanges objects}
 \usage{
 mergeGRangesData(..., field = "score", ncores = detectCores())
 }
 \arguments{
 \item{...}{Any number of GRanges objects in which signal (e.g. readcounts)
-are contained within metadata.}
+are contained within metadata. GRanges not single-width will be coerced
+using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}.}
 
 \item{field}{One or more metadata fields to be combined, typically the
 "score" field. Fields typically contain coverage information.}
@@ -16,11 +17,14 @@ are contained within metadata.}
 \item{ncores}{More than one core can be used to coerce non-single-width
 GRanges objects using \code{makeGRangesBRG}.}
 }
+\value{
+A disjoint, basepair-resolution (single-width) GRanges object
+  comprised of all ranges found in the input GRanges objects, and whose total
+  readcount is the sum of all input GRanges.
+}
 \description{
-Merges 2 or more GRanges objects. For each object, the range widths must all
-be 1, and the \code{score} metadata column contains coverage information at
-each site. This function returns a single GRange object containing all sites
-of the input objects, and the sum of all scores at all sites.
+Merges 2 or more basepair-resolution (single-width) GRanges objects by
+combining all of their ranges and associated signal (e.g. readcounts).
 }
 \examples{
 data("PROseq") # load included PROseq data

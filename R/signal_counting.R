@@ -2,16 +2,19 @@
 
 #' Get signal counts in regions of interest
 #'
-#' Returns a vector the same length as \code{regions.gr} containing signal found
-#' in each range.
+#' Get the sum of the signal in \code{dataset.gr} that overlaps each range in
+#' \code{regions.gr}.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
-#' @param regions.gr A GRanges object containing all the regions of interest.
+#' @param regions.gr A GRanges object containing regions of interest.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, a dataframe is returned containing the counts for
 #'   each region in each field.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
+#'
+#' @return An atomic vector the same length as \code{regions.gr} containing
+#' the sum of the signal overlapping each range of \code{regions.gr}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -58,9 +61,10 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 
 #' Get signal counts at each position within regions of interest
 #'
-#' Generate a matrix containing a row for each region of interest, and
-#' columns for each position (each base if \code{binsize = 1}) within each
-#' region.
+#' Get the sum of the signal in \code{dataset.gr} that overlaps each position
+#' within each range in \code{regions.gr}. If binning is used (i.e. positions
+#' are wider than 1 bp), any function can be used to summarize the signal
+#' overlapping each bin.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
@@ -78,16 +82,19 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   output for generated each field.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
-#' @details If the widths of all ranges in \code{regions.gr} are equal, a matrix
-#'   is returned containing a row for each range in \code{regions.gr}, and a
-#'   column for each bin. For input \code{regions.gr} with varying widths,
-#'   setting \code{simplify.multi.widths = "list"} will output a list of
-#'   variable-length vectors, with each vector corresponding to an input region.
-#'   If \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output
-#'   is a matrix containing a row for each range in \code{regions.gr}, and a
-#'   column for each position in each range. The number of columns is determined
-#'   by the largest range in \code{regions.gr}, and columns corresponding to
-#'   positions outside of each range are either set to \code{0} or \code{NA},
+#' @return If the widths of all ranges in \code{regions.gr} are equal, a matrix
+#'   is returned that contains a row for each region of interest, and a column
+#'   for each position (each base if \code{binsize = 1}) within each region.
+#'
+#' @section Use of multi-width regions of interest: If the input
+#'   \code{regions.gr} contains ranges of varying widths, setting
+#'   \code{simplify.multi.widths = "list"} will output a list of variable-length
+#'   vectors, with each vector corresponding to an individual input region. If
+#'   \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output is a
+#'   matrix containing a row for each range in \code{regions.gr}, but the number
+#'   of columns is determined by the \emph{largest} range in \code{regions.gr}.
+#'   For each region of interest, columns that correspond to positions outside
+#'   of the outside of the input range are either set to \code{0} or \code{NA},
 #'   depending on the argument.
 #'
 #' @author Mike DeBerardine
@@ -260,9 +267,10 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #'   \code{promoters.gr} should be removed. No genes are filtered by default.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
-#' @return A vector of length given by the length of the genelist (or possibly
-#'   shorter if \code{remove.empty = TRUE}). If \code{length(field) > 1}, a
-#'   dataframe is returned, containing a column for each field.
+#' @return A vector parallel to the input genelist, unless \code{remove.empty =
+#'   TRUE}, in which case the vector may be shorter. If \code{length(field) >
+#'   1}, a dataframe is returned, containing a column for each field.
+#'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export

@@ -9,6 +9,10 @@ makeGRangesBRG(dataset.gr)
 \arguments{
 \item{dataset.gr}{A disjoint GRanges object}
 }
+\value{
+A GRanges object for which \code{length(output) ==
+  sum(width(dataset.gr))}, and for which \code{all(width(output) == 1)}.
+}
 \description{
 Splits up all ranges in \code{gr} to be each 1 basepair wide. For any range
 that is split up, all metadata information belonging to that range is
@@ -20,16 +24,19 @@ Note that this function doesn't perform any transformation on the
   metadata in the input. This function assumes that for an input GRanges
   object, any metadata for each range is equally correct when inherited by
   each individual base in that range. In other words, the dataset's "signal"
-  (usually readcounts) is derived from a single basepair position.
-
-  The motivating case for this function is a bigWig file (e.g. one imported
-  by \code{rtracklayer}), as bigWig files typically use run-length
-  compression on the data signal (the 'score' column), such that adjacent
-  bases sharing the same signal are combined into a single range. The
-  base-pair resolution GRanges objects produced by this function remove this
-  compression, resulting in each index (each range) of the GRanges object
-  addressing a single genomic position.
+  (usually readcounts) fundamentally belongs to a single basepair position.
 }
+\section{Motivation}{
+ The motivating case for this function is a bigWig file
+  (e.g. one imported by \code{rtracklayer}), as bigWig files typically use
+  run-length compression on the data signal (the 'score' column), such that
+  adjacent bases sharing the same signal are combined into a single range. As
+  basepair-resolution genomic data is typically sparse, this compression has
+  a minimal impact on memory usage, and removing it greatly enhances data
+  handling as each index (each range) of the GRanges object corresponds to a
+  single genomic position.
+}
+
 \section{Generating basepair-resolution GRanges from whole reads}{
  If working
   with a GRanges object containing whole reads, one can obtain base-pair
@@ -39,6 +46,17 @@ Note that this function doesn't perform any transformation on the
   argument to choose the strand-specific 5' or 3' end. Then, strand-specific
   coverage can be calculated using
   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
+}
+
+\section{On the use of GRanges instead of GPos}{
+ The
+  \code{\link[GenomicRanges:GPos]{GPos}} class is a more suitable container
+  for data of this type, as the GPos class is specific to 1-bp-wide ranges.
+  However, in early testing, we encountered some kind of compatibility
+  limitations with the newer GPos class, and have not re-tested it since. If
+  you have feedback on switching to this class, please contact the author.
+  Users can readily coerce a basepair-resolution GRanges object to a GPos
+  object via \code{gp <- GPos(gr, score = score(gr))}.
 }
 
 \examples{
