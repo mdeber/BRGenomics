@@ -93,8 +93,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom GenomicRanges findOverlaps resize width start mcols
-#' @importFrom parallel detectCores mclapply
+#' @importFrom GenomicRanges width
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -136,37 +135,40 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                                            "pad 0",
                                                            "pad NA"),
                                  field = "score", ncores = detectCores()) {
-    # this function should be split into smaller functions
 
     # function makes practical use of single-width dataset.gr, but the output
     # is always valid regardless of the input data type
     if (any(width(dataset.gr) != 1)) dataset.gr <- makeGRangesBRG(dataset.gr)
 
+    if (length(field) > 1) {
+        environment(.recursive_cbp) <- environment()
+        return(.recursive_cbp())
+    }
+
     multi_width <- length(unique(width(regions.gr))) > 1 # (logical)
 
-    if (length(field) > 1) {
-        # recursive call; can cleanup using match.call
-        reslist <- mclapply(field, function(i) {
-            getCountsByPositions(dataset.gr,  regions.gr, binsize = binsize,
-                                 FUN, simplify.multi.widths, field = i)
-        }, mc.cores = ncores)
-        names(reslist) <- field
-        return(reslist)
+    if (!multi_width) {
+        .get_signal_mat(dataset.gr, regions.gr, binsize, FUN, field)
+    } else {
+        environment(.get_cbp_mw) <- environment()
+        .get_cbp_mw()
     }
+}
 
-    if (multi_width) {
-        simplify.multi.widths <- match.arg(simplify.multi.widths,
-                                           c("list", "pad 0", "pad NA"))
-        # expand all regions to be the same width
-        widths <- width(regions.gr) # save widths
-        suppressWarnings(
-            regions.gr <- resize(regions.gr, max(widths))
-        )
-    }
+#' @importFrom parallel mclapply
+.recursive_cbp <- function() {
+    reslist <- mclapply(field, function(i) {
+        getCountsByPositions(dataset.gr, regions.gr, binsize = binsize,
+                             FUN = FUN, simplify.multi.widths, field = i)
+    }, mc.cores = ncores)
+    names(reslist) <- field
+    return(reslist)
+}
 
+#' @importFrom GenomicRanges findOverlaps start mcols
+.get_signal_mat <- function(dataset.gr, regions.gr, binsize, FUN, field) {
     # initialize signal matrix of dim = (region, position within region)
     mat <- matrix(0, length(regions.gr), unique(width(regions.gr)))
-
     hits <- findOverlaps(regions.gr, dataset.gr)
 
     # find (x, y) = (region, position)
@@ -175,7 +177,6 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     y2 <- start(resize(regions.gr[hits@from], 1)) # beginning of window
     y <- abs(y1 - y2) + 1 # position of signal within region
     z <- mcols(dataset.gr)[[field]][hits@to]
-
     mat[cbind(x, y)] <- z
 
     if (binsize > 1) {
@@ -183,30 +184,36 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                                     FUN = FUN))
         mat <- t(mat) # apply will cbind rather than rbind
     }
+    return(mat)
+}
 
-    if (multi_width) {
-        nbins_i <- floor(widths / binsize) # number of bins within each region
+#' @importFrom GenomicRanges width resize
+.get_cbp_mw <- function() {
+    # getCountsByPositions when multi-width regions.gr
+    simplify.multi.widths <- match.arg(simplify.multi.widths,
+                                       c("list", "pad 0", "pad NA"))
+    # expand all regions to be the same width, then get counts
+    widths <- width(regions.gr) # save widths
+    suppressWarnings( regions.gr <- resize(regions.gr, max(widths)) )
+    mat <- .get_signal_mat(dataset.gr, regions.gr, binsize, FUN, field)
 
-        if (simplify.multi.widths == "list") {
+    nbins_i <- floor(widths / binsize) # number of bins within each region
 
-            return(mapply(function(i, nbin) mat[i, seq_len(nbin)],
-                          seq_len(nrow(mat)), nbins_i))
-
+    if (simplify.multi.widths == "list") {
+        return(mapply(function(i, nbin) mat[i, seq_len(nbin)],
+                      seq_len(nrow(mat)), nbins_i))
+    } else {
+        arridx_pad <- vapply(nbins_i,
+                             function(nbin) seq_len(ncol(mat)) > nbin,
+                             logical(ncol(mat)))
+        arridx_pad <- t(arridx_pad) # sapply/vapply cbinds the rows
+        arridx_pad <- which(arridx_pad, arr.ind = TRUE)
+        if (simplify.multi.widths == "pad 0") {
+            mat[arridx_pad] <- 0
         } else {
-            arridx_pad <- vapply(nbins_i,
-                                 function(nbin) seq_len(ncol(mat)) > nbin,
-                                 logical(ncol(mat)))
-            arridx_pad <- t(arridx_pad) # sapply/vapply cbinds the rows
-            arridx_pad <- which(arridx_pad, arr.ind = TRUE)
-
-            if (simplify.multi.widths == "pad 0") {
-                mat[arridx_pad] <- 0
-            } else {
-                mat[arridx_pad] <- NA
-            }
+            mat[arridx_pad] <- NA
         }
     }
-
     return(mat)
 }
 
