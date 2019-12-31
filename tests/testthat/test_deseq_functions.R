@@ -59,7 +59,7 @@ test_that("can add sizeFactors to DESeqDataSet", {
                                                        ncores = 2)))
 })
 
-test_that("gene names and discontinuous ranges supported", {
+test_that("gene names, discontinuous ranges supported; ordering maintained", {
     dds_dsc <- getDESeqDataSet(ps_list, txs, gene_names = txs$gene_id,
                                quiet = TRUE, ncores = 2)
     expect_is(dds_dsc, "DESeqDataSet")
@@ -67,8 +67,8 @@ test_that("gene names and discontinuous ranges supported", {
                                       length(ps_list)))
     expect_equivalent(colSums(assay(dds)), colSums(assay(dds_dsc)))
     expect_equivalent(dds@colData, dds_dsc@colData)
-    expect_equivalent(rownames(assay(dds_dsc)),
-                      unique(txs$gene_id))
+    expect_equivalent(rownames(assay(dds_dsc)), rowRanges(dds_dsc)$gene_id)
+    expect_equivalent(rownames(assay(dds_dsc)), unique(txs$gene_id))
 })
 
 test_that("error if no sample_names found", {

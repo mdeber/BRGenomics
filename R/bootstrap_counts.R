@@ -189,9 +189,8 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
 metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                                 sample.name = deparse(substitute(counts.mat)),
                                 n.iter = 1000, prop.sample = 0.1,
-                                lower = 0.125, upper = 0.875,
-                                NF = 1, remove.empty = FALSE,
-                                ncores = detectCores()) {
+                                lower = 0.125, upper = 0.875, NF = 1,
+                                remove.empty = FALSE, ncores = detectCores()) {
 
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
@@ -201,10 +200,8 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     ngenes <- nrow(counts.mat)
     nsample <- round(prop.sample*ngenes)
 
-    if (binsize > 1) {
-        counts.mat <- apply(counts.mat, 1, .binVector, binsize = binsize)
-        counts.mat <- t(counts.mat) # apply will cbind rather than rbind
-    }
+    if (binsize > 1) # transpose as apply will cbind rather than rbind
+        counts.mat <- t( apply(counts.mat, 1, .binVector, binsize = binsize) )
 
     # Randomly subsample rows of the counts.mat
     # -> List of length = n.iter, containing vectors of length = nsample

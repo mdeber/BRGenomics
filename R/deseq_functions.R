@@ -3,11 +3,6 @@
 ### ------------------------------------------------------------------------- #
 ###
 
-# [Note that supplying gene_names can cause an error in call to `DESeqDataSet`.
-# I notice it can happen if I try to use symbols, but not for flybase unique IDs].
-#   may have fixed by stopping setting names(regions.gr) <- gene_names;
-#   replaced with rownames(counts.mat)
-
 # can speed up this up using the duplicated function that will pull
 # out the repeated gene names; so can avoid calling function on whole genelist
 
@@ -71,6 +66,7 @@
 #'
 #' @export
 #' @importFrom parallel detectCores
+#' @importFrom DESeq2 DESeqDataSet sizeFactors<-
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
@@ -111,37 +107,39 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
                             gene_names = NULL, sizeFactors = NULL,
                             field = "score", ncores = detectCores(),
                             quiet = FALSE) {
+    # check for valid sample_names; check gene_names match regions.gr
+    .check_snames(dataset.list, sample_names)
 
-    .check_names(dataset.list, sample_names) # check for valid sample names
-
-    # check gene_names, and check for non-contiguous genes (>1 range per gene)
-    discont.genes <- .is_discont(regions.gr, gene_names) # logical
-
-    # Get counts matrix for all samples in regions.gr
-    environment(.get_countsmat) <- environment()
-    counts.mat <- .get_countsmat()
-
-    # Make column data (colData) for SummarizedExperiment
-    coldat <- data.frame(condition = sub("_rep.", "", sample_names),
-                         replicate = sub(".*rep", "rep", sample_names),
-                         row.names = sample_names)
-
-    # Make SummarizedExperiment object
-    environment(.get_se) <- environment()
-    se <- .get_se()
-
-    if (quiet) {
-        suppressMessages(dds <- DESeq2::DESeqDataSet(se, design = ~condition))
-    } else {
-        dds <- DESeq2::DESeqDataSet(se, design = ~condition)
+    # if given, check gene_names match regions.gr, and if they match multiple
+    discont.genes <- FALSE
+    if (!is.null(gene_names)) {
+        .check_gnames(regions.gr, gene_names)
+        discont.genes <- length(unique(gene_names)) != length(gene_names)
     }
 
-    if (!is.null(sizeFactors)) DESeq2::sizeFactors(dds) <- sizeFactors
+    # Make column data (colData) for SummarizedExperiment
+    coldat <- .get_coldat(sample_names)
+
+    # Get counts matrix for all samples in each range of regions.gr
+    counts.df <- as.data.frame(mclapply(dataset.list, getCountsByRegions,
+                                        regions.gr = regions.gr, field = field,
+                                        mc.cores = ncores))
+
+    # Make SummarizedExperiment object
+    se <- .get_se(counts.df, regions.gr, gene_names, discont.genes, coldat)
+
+    if (quiet) {
+        suppressMessages(dds <- DESeqDataSet(se, design = ~condition))
+    } else {
+        dds <- DESeqDataSet(se, design = ~condition)
+    }
+
+    if (!is.null(sizeFactors)) sizeFactors(dds) <- sizeFactors
     return(dds)
 }
 
 
-.check_names <- function(dataset.list, sample_names) {
+.check_snames <- function(dataset.list, sample_names) {
     if (length(sample_names) != length(dataset.list)) {
         stop(message = .nicemsg("sample_names are required, and a name is
                                 required for each element of dataset.list"))
@@ -155,62 +153,54 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
     }
 }
 
-
-.is_discont <- function(regions.gr, gene_names) {
-    if (is.null(gene_names))  return(FALSE)
+.check_gnames <- function(regions.gr, gene_names) {
     if (length(gene_names) != length(regions.gr)) {
         stop(message = .nicemsg("gene_names given are not the same length
                                 as regions.gr; gene_names must correspond
                                 1:1 with the ranges in regions.gr"))
         return(geterrmessage())
     }
-    if (length(unique(gene_names)) != length(gene_names)) return(TRUE)
-    return(FALSE)
 }
 
+.get_coldat <- function(sample_names) {
+    data.frame(condition = sub("_rep.", "", sample_names),
+               replicate = sub(".*rep", "rep", sample_names),
+               row.names = sample_names)
+}
 
-#' @importFrom stats aggregate
 #' @importFrom parallel mclapply
-.get_countsmat <- function() {
-    counts.regions <- mclapply(dataset.list, getCountsByRegions,
-                               regions.gr = regions.gr, field = field,
-                               mc.cores = ncores)
-    if (discont.genes) {
-        counts.regions <- lapply(counts.regions, function(x) {
-            aggregate(x, by = list(gene_names), FUN = sum)[,2] })
-        counts.mat <- as.data.frame(counts.regions)
-        # (aggregate outputs in sorted order)
-        rownames(counts.mat) <- sort(unique(gene_names))
-        colnames(counts.mat) <- sample_names
+#' @importFrom stats aggregate
+#' @importFrom GenomicRanges width
+#' @importFrom SummarizedExperiment SummarizedExperiment
+.get_se <- function(counts.df, regions.gr, gene_names, discont.genes, coldat) {
+    if (!discont.genes) {
+        rownames(counts.df) <- gene_names
 
     } else {
-        counts.mat <- as.data.frame(counts.regions)
-        rownames(counts.mat) <- gene_names
-        colnames(counts.mat) <- sample_names
+        # aggregate counts by gene
+        counts.df <- aggregate(counts.df, by = list(gene_names), FUN = sum)
+        rownames(counts.df) <- counts.df[, 1]
+        counts.df <- counts.df[, -1] # alphabatized by aggregate
+
+        # for rowRanges, use longest range for each gene
+        idx.by.width <- order(width(regions.gr), decreasing = TRUE)
+        gnames.by.width <- gene_names[idx.by.width] # sort by range width
+        idx <- which(!duplicated(gnames.by.width)) # keep only non-duplicates
+
+        gnames.sort <- gnames.by.width[idx]
+        regions.gr <- regions.gr[idx.by.width][idx]
+
+        # sort rowRanges & counts.df to match input order
+        # -> counts.df already alphabetized, so use input ordering directly
+        input_ordering <- rank(unique(gene_names))
+        counts.df <- counts.df[input_ordering, ]
+
+        # -> for rowRanges, map to alphabet then to input order
+        map_current_to_input <- order(gnames.sort)[input_ordering]
+        regions.gr <- regions.gr[map_current_to_input]
     }
 
-    return(counts.mat)
-}
-
-#' @importFrom parallel mclapply
-#' @importFrom SummarizedExperiment SummarizedExperiment
-.get_se <- function() {
-    if (discont.genes) {
-        # for setting rowRanges, will use the largest range for each gene
-        idx <- mclapply(rownames(counts.mat), function(i) {
-            idx_i <- which(gene_names == i)
-            idx_i[which.max(GenomicRanges::width(regions.gr[idx_i]))]
-        }, mc.cores = ncores)
-        regions.gr <- regions.gr[unlist(idx)]
-
-        # sort regions.gr to be in input order, and sort counts.mat to match
-        reorder.idx <- rank(unique(gene_names))
-        regions.gr <- regions.gr[reorder.idx]
-        counts.mat <- counts.mat[reorder.idx, ]
-    }
-
-    counts.mat <- as.matrix(counts.mat)
-    SummarizedExperiment(assays = counts.mat, rowRanges = regions.gr,
+    SummarizedExperiment(assays = as.matrix(counts.df), rowRanges = regions.gr,
                          colData = coldat)
 }
 
@@ -284,6 +274,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 #' @seealso \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},
 #'   \code{\link[DESeq2:results]{DESeq2::results}}
 #' @export
+#' @importFrom DESeq2 sizeFactors sizeFactors<-
 #' @importFrom parallel detectCores mclapply
 #'
 #' @examples
@@ -340,13 +331,16 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                             ncores = detectCores(), quiet = FALSE) {
 
     # check inputs
-    environment(.check_args) <- environment()
-    .check_args(match.call())
+    .check_args(match.call(), comparisons.list)
 
-    # if length(sizeFactors) matches dds, apply them ("apply early")
-    # else, hold on to them and apply later (after subsetting)
-    environment(.apply_sf_early) <- environment()
-    .apply_sf_early() # if SFs applied, they become NULL in this environment
+    ## if length(sizeFactors) matches dds, apply them ("apply early");
+    ## else, hold on to them and try to apply after subsetting dds
+    when_sf <- .when_sf(dds, sizeFactors) # early, late, or never
+    .msgs_early_sf(dds, comparisons.list, when_sf, quiet)
+    if (when_sf == "early") {
+        sizeFactors(dds) <- sizeFactors
+        sizeFactors <- NULL # prevent re-application
+    }
 
     if (is.null(comparisons.list)) {
         res <- .get_deseq_results(
@@ -357,7 +351,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         return(res)
 
     } else {
-
         args.DESeq <- args.DESeq[names(args.DESeq) != "quiet"]
         comparisons <- mclapply(comparisons.list, function(x) {
             .get_deseq_results(
@@ -374,11 +367,11 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 }
 
 
-.check_args <- function(args) {
+.check_args <- function(args, comparisons.list) {
     args <- as.list(args)[-1]
     num <- "contrast.numer" %in% names(args)
     denom <- "contrast.denom" %in% names(args)
-    clist <- !is.null(args$comparisons.list)
+    clist <- !is.null(comparisons.list)
 
     if (!xor(clist, num & denom)) {
         stop(message = .nicemsg("Either provide both contrast.numer and
@@ -388,7 +381,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     }
 
     # Check list
-    if (!is.null(comparisons.list)) {
+    if (clist) {
         class_ok <- .class_check(comparisons.list)
         lengths_ok <- all(lengths(comparisons.list) == 2)
         if (!(class_ok & lengths_ok)) {
@@ -408,35 +401,65 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     return(FALSE)
 }
 
-#' @importFrom DESeq2 sizeFactors
-.apply_sf_early <- function() {
-    when_sf <- .when_sf(dds, sizeFactors)
-    already_sf <- !is.null(sizeFactors(dds))
-
-    if (when_sf == "early") {
-        if (already_sf & !quiet)
-            warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        sizeFactors(dds) <<- sizeFactors
-        sizeFactors <<- NULL # avoid re-application
-    }
-
-    if (length(comparisons.list) > 1)  {
-        if (when_sf == "late") {
-            stop(message = .nicemsg("Length of sizeFactors not equal to
-                                    number of samples in dds"))
-            return(geterrmessage())
-        }
-    }
-}
-
 .when_sf <- function(dds, sizeFactors) {
     if (is.null(sizeFactors)) return("never")
     if (length(sizeFactors) == nrow(dds@colData)) return("early")
     return("late")
 }
 
-#' @importFrom DESeq2 sizeFactors
-.apply_sf_late <- function() {
+.msgs_early_sf <- function(dds, comparisons.list, when_sf, quiet) {
+
+    already_sf <- !is.null(sizeFactors(dds))
+
+    if (when_sf == "early" & already_sf & !quiet) {
+        warning("Overwriting previous sizeFactors", immediate. = TRUE)
+    }
+
+    if (when_sf == "late" & length(comparisons.list) > 1)  {
+        stop(message = .nicemsg("Length of sizeFactors not equal to
+                                number of samples in dds"))
+        return(geterrmessage())
+    }
+}
+
+
+#' Function dispatched by getDESeqResults
+#' @importFrom DESeq2 DESeq results
+.get_deseq_results <- function(dds, contrast.numer, contrast.denom,
+                               sizeFactors, alpha, args.DESeq, args.results,
+                               ncores, quiet) {
+
+    # Subset for pairwise comparison
+    dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
+    dds$condition <- factor(dds$condition) # remove unused levels
+
+    # try to apply sizeFactors that weren't the same size as original dds
+    dds <- .apply_sf_late(dds, sizeFactors, quiet)
+
+    # ==== Call DESeq2::DESeq()
+    # Get args; only use parent function 'quiet' arg if not in args.DESeq
+    args.DESeq <- .merge_args(rqd = expression(object = dds, parallel = FALSE),
+                              usr = args.DESeq,
+                              exclude = c("object", "parallel"))
+
+    if (!"quiet" %in% names(args.DESeq)) args.DESeq$quiet <- quiet
+    dds <- do.call(DESeq2::DESeq, args.DESeq)
+
+    # ==== Call DESeq2::results()
+    # Get args
+    rqd = expression(object = dds, alpha = alpha,
+                     contrast = c("condition", contrast.numer, contrast.denom))
+    args.results <- .merge_args(rqd = rqd, usr = args.results,
+                                exclude = c("object", "contrast",
+                                            "alpha", "parallel"))
+
+    if (!quiet) return( do.call(DESeq2::results, args.results) )
+    suppressWarnings(suppressMessages( do.call(DESeq2::results, args.results) ))
+}
+
+
+#' @importFrom DESeq2 sizeFactors sizeFactors<-
+.apply_sf_late <- function(dds, sizeFactors, quiet) {
     when_sf <- .when_sf(dds, sizeFactors)
     already_sf <- !is.null(sizeFactors(dds))
 
@@ -450,60 +473,28 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     if (when_sf == "early") {
         if (already_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        sizeFactors(dds) <<- sizeFactors
+        sizeFactors(dds) <- sizeFactors
     }
+
+    return(dds)
 }
 
-# Function dispatched by getDESeqResults
-.get_deseq_results <- function(dds, contrast.numer, contrast.denom,
-                               sizeFactors, alpha, args.DESeq, args.results,
-                               ncores, quiet) {
 
-    # Subset for pairwise comparison
-    dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
-    dds$condition <- factor(dds$condition) # remove unused levels
+.merge_args <- function(rqd, usr, exclude = NULL) {
+    # function to combine required args with optional user args
+    # exclude is an optional character vector of user args to remove
+    if (is.null(usr))  return(as.list(rqd))
 
-    # try to apply sizeFactors that weren't the same size as original dds
-    environment(.apply_sf_late) <- environment()
-    .apply_sf_late()
-
-    #---------------# Call DESeq() #---------------#
-    # Get args; only use parent function 'quiet' arg if not in args.DESeq
-    args.DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
-                              user_args = args.DESeq,
-                              exclude = c("object", "parallel"))
-
-    if (!"quiet" %in% names(args.DESeq)) args.DESeq$quiet <- quiet
-    dds <- do.call(DESeq2::DESeq, args.DESeq)
-
-    #--------------# Call results() #--------------#
-    # Get args
-    contrast.arg <- c("condition", contrast.numer, contrast.denom)
-    args.results <- .merge_args(
-        expression(object = dds, contrast = contrast.arg, alpha = alpha),
-        args.results,
-        exclude = c("object", "contrast", "alpha", "parallel")
-    )
-
-    if (!quiet) return( do.call(DESeq2::results, args.results) )
-    suppressWarnings(suppressMessages( do.call(DESeq2::results, args.results) ))
-}
-
-.merge_args <- function(rqd_args, user_args, exclude = NULL) {
-    # rqd_args/user_args are expressions or lists of expressions
-    # exclude is an optional character vector of user_args to remove
-    if (is.null(user_args))  return(as.list(rqd_args))
-
-    if (!class(user_args) %in% c("list", "expression") |
-        is.null(names(user_args))) {
+    if (!class(usr) %in% c("list", "expression") |
+        is.null(names(usr))) {
         stop(message = .nicemsg("If given, args.DESeq and args.results must be
                                 named lists or R expressions containing argument
                                 names and values. See documentation"))
         return(geterrmessage())
     }
-    user_args <- as.expression(user_args)
-    user_args <- user_args[!names(user_args) %in% exclude]
-    return(as.list(c(rqd_args, user_args)))
+    usr <- as.expression(usr)
+    usr <- usr[!names(usr) %in% exclude]
+    return(as.list(c(rqd, usr)))
 }
 
 ### ========================================================================= #
@@ -557,7 +548,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 #         if (permutations) {
 #             # all pairwise comparisons, order matters
 #             #   (i.e. get 1-vs-2 and 2-vs-1)
-#             all_pairs <- expand.grid( rep(list(seq_along(condition_names)), 2) )
+#             all_pairs <- expand.grid(rep(list(seq_along(condition_names)), 2))
 #             all_pairs <- subset(all_pairs, Var1 != Var2)
 #             all_pairs <- all_pairs[, 2:1]
 #         } else {
