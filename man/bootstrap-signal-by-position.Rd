@@ -4,7 +4,7 @@
 \alias{bootstrap-signal-by-position}
 \alias{metaSubsample}
 \alias{metaSubsampleMatrix}
-\title{Bootsrapping Mean Signal by Position for Metaplotting}
+\title{Bootstrapping Mean Signal by Position for Metaplotting}
 \usage{
 metaSubsample(
   dataset.gr,

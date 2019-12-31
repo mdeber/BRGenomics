@@ -4,7 +4,7 @@
 ###
 
 
-#' Bootsrapping Mean Signal by Position for Metaplotting
+#' Bootstrapping Mean Signal by Position for Metaplotting
 #'
 #' These functions perform bootstrap subsampling of mean readcounts at different
 #' positions within regions of interest (\code{metaSubsample}), or, in the more
