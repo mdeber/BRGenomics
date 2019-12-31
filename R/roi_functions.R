@@ -179,7 +179,7 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
-#' @importFrom GenomicRanges width resize
+#' @importFrom GenomicRanges promoters resize
 #' @importFrom IRanges subsetByOverlaps
 #'
 #' @examples
@@ -207,7 +207,6 @@ genebodies <- function(genelist, start = 300, end = -300,
 getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
                                     bin.centers = FALSE, field = "score",
                                     keep.score = FALSE) {
-
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
@@ -217,56 +216,69 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
         return(regions.gr)
     }
 
-    multi_width <- FALSE
-    if (length(unique(width(regions.gr))) > 1) {
-        multi_width <- TRUE
-        # currently faster to simply expand all regions for initial counting
-        widths <- width(regions.gr) # store widths
-        suppressWarnings(
-            regions.gr <- resize(regions.gr, max(width(regions.gr)))
-        )
+    # Get list with 2 vectors: max bin for each gene, and score in max bin
+    if (length(unique(width(regions.gr))) == 1) {
+        maxsites <- .get_maxsite(dataset.gr, regions.gr, binsize, field)
+    } else { # widths vary
+        maxsites <- .get_maxsite_mw(dataset.gr, regions.gr, binsize, field)
     }
+
+    # Make new GRanges object with only max site for each gene
+    regions.max.gr <- regions.gr
+    if (binsize == 1) {
+        bin.centers <- maxsites$pos
+        size <- 1
+    } else {
+        if (bin.centers) {
+            bin.centers <- ceiling(binsize / 2) + (binsize * (maxsites$pos - 1))
+            size <- 1
+        } else {
+            bin.centers <- binsize * maxsites$pos # end of bin
+            size <- binsize
+        }
+    }
+    regions.max.gr <- promoters(regions.gr, 0, bin.centers)
+    regions.max.gr <- resize(regions.max.gr, size, fix = "end")
+
+    if (keep.score)  regions.max.gr$MaxSiteScore <- maxsites$score
+    return(regions.max.gr)
+}
+
+
+.get_maxsite <- function(dataset.gr, regions.gr, binsize, field) {
 
     mat <- getCountsByPositions(dataset.gr = dataset.gr,
                                 regions.gr = regions.gr,
                                 binsize = binsize,
                                 field = field)
 
-    # Get vector with max bin for each gene, and another for the scores therein
-    if (multi_width) {
-        bins_i <- floor(widths / binsize) # number of bins within each region
-        # remove last bins (if widths/binsize gives remainder)
-        countslist <- lapply(seq_len(nrow(mat)),
-                             function(i) mat[ i, seq_len(bins_i[i]) ])
-        max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
-        max_scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
-    } else {
-        max_pos <- apply(mat, 1, which.max)
-        max_scores <- apply(mat, 1, max)
-    }
+    max_pos <- apply(mat, 1, which.max)
+    max_scores <- apply(mat, 1, max)
 
-    # Make new GRanges object with only max site for each gene
-    regions.max.gr <- regions.gr
+    list(pos = max_pos, score = max_scores)
+}
 
-    if (binsize == 1) {
-        bin.centers <- max_pos
-        size <- 1
-    } else {
-        if (bin.centers) {
-            bin.centers <- floor(binsize / 2) + ( binsize * (max_pos - 1) )
-            size <- 1
-        } else {
-            bin.centers <- binsize * max_pos # end of bin
-            size <- binsize
-        }
-    }
 
-    regions.max.gr <- GenomicRanges::promoters(regions.gr, 0, bin.centers)
-    regions.max.gr <- GenomicRanges::resize(regions.max.gr, size, fix = "end")
+#' @importFrom GenomicRanges width resize
+.get_maxsite_mw <- function(dataset.gr, regions.gr, binsize, field) {
 
-    if (keep.score)  regions.max.gr$MaxSiteScore <- max_scores
+    # faster to simply expand all regions for initial counting
+    widths <- width(regions.gr) # store widths
+    suppressWarnings( regions.gr <- resize(regions.gr, max(width(regions.gr))) )
 
-    return(regions.max.gr)
+    mat <- getCountsByPositions(dataset.gr = dataset.gr,
+                                regions.gr = regions.gr,
+                                binsize = binsize,
+                                field = field)
+    # get number of bins for each region; & trim if remainder to widths/binsize
+    bins_i <- floor(widths / binsize)
+    countslist <- lapply(seq_len(nrow(mat)),
+                         function(i) mat[ i, seq_len(bins_i[i]) ])
+
+    max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
+    max_scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
+
+    list(pos = max_pos, score = max_scores)
 }
 
 
