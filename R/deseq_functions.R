@@ -70,9 +70,7 @@
 #'   GSEA or Go analysis).
 #'
 #' @export
-#' @importFrom stats aggregate
-#' @importFrom parallel detectCores mclapply
-#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom parallel detectCores
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[DESeq2:DESeqDataSet]{DESeq2::DESeqDataSet}},
@@ -108,20 +106,45 @@
 #'                        quiet = TRUE,
 #'                        ncores = 2)
 #' dds
-getDESeqDataSet <- function(dataset.list,
-                            regions.gr,
+getDESeqDataSet <- function(dataset.list, regions.gr,
                             sample_names = names(dataset.list),
-                            gene_names = NULL,
-                            sizeFactors = NULL,
-                            field = "score",
-                            ncores = detectCores(),
+                            gene_names = NULL, sizeFactors = NULL,
+                            field = "score", ncores = detectCores(),
                             quiet = FALSE) {
-    # function needs to be split up
-    # check if any assumption about dataset.list names
 
-    if (is.null(sample_names)) {
-        stop(message = .nicemsg("sample_names are required, but none were
-                                found"))
+    .check_names(dataset.list, sample_names) # check for valid sample names
+
+    # check gene_names, and check for non-contiguous genes (>1 range per gene)
+    discont.genes <- .is_discont(regions.gr, gene_names) # logical
+
+    # Get counts matrix for all samples in regions.gr
+    environment(.get_countsmat) <- environment()
+    counts.mat <- .get_countsmat()
+
+    # Make column data (colData) for SummarizedExperiment
+    coldat <- data.frame(condition = sub("_rep.", "", sample_names),
+                         replicate = sub(".*rep", "rep", sample_names),
+                         row.names = sample_names)
+
+    # Make SummarizedExperiment object
+    environment(.get_se) <- environment()
+    se <- .get_se()
+
+    if (quiet) {
+        suppressMessages(dds <- DESeq2::DESeqDataSet(se, design = ~condition))
+    } else {
+        dds <- DESeq2::DESeqDataSet(se, design = ~condition)
+    }
+
+    if (!is.null(sizeFactors)) DESeq2::sizeFactors(dds) <- sizeFactors
+    return(dds)
+}
+
+
+.check_names <- function(dataset.list, sample_names) {
+    if (length(sample_names) != length(dataset.list)) {
+        stop(message = .nicemsg("sample_names are required, and a name is
+                                required for each element of dataset.list"))
         return(geterrmessage())
     }
 
@@ -130,28 +153,28 @@ getDESeqDataSet <- function(dataset.list,
                                 replicates as such: 'rep1', 'rep2', etc."))
         return(geterrmessage())
     }
+}
 
-    # check gene_names, and check for non-contiguous genes (>1 range per gene)
-    discont.genes <- FALSE
-    if (!is.null(gene_names)) {
-        if (length(gene_names) != length(regions.gr)) {
-            stop(message = .nicemsg("gene_names given are not the same length
-                                    as regions.gr; gene_names must correspond
-                                    1:1 with the ranges in regions.gr"))
-            return(geterrmessage())
-        }
 
-        if (length(unique(gene_names)) != length(gene_names))
-            discont.genes <- TRUE
+.is_discont <- function(regions.gr, gene_names) {
+    if (is.null(gene_names))  return(FALSE)
+    if (length(gene_names) != length(regions.gr)) {
+        stop(message = .nicemsg("gene_names given are not the same length
+                                as regions.gr; gene_names must correspond
+                                1:1 with the ranges in regions.gr"))
+        return(geterrmessage())
     }
+    if (length(unique(gene_names)) != length(gene_names)) return(TRUE)
+    return(FALSE)
+}
 
-    # Get counts matrix for all samples in regions.gr
-    counts.regions <- mclapply(dataset.list,
-                               getCountsByRegions,
-                               regions.gr = regions.gr,
-                               field = field,
+
+#' @importFrom stats aggregate
+#' @importFrom parallel mclapply
+.get_countsmat <- function() {
+    counts.regions <- mclapply(dataset.list, getCountsByRegions,
+                               regions.gr = regions.gr, field = field,
                                mc.cores = ncores)
-
     if (discont.genes) {
         counts.regions <- lapply(counts.regions, function(x) {
             aggregate(x, by = list(gene_names), FUN = sum)[,2] })
@@ -159,19 +182,19 @@ getDESeqDataSet <- function(dataset.list,
         # (aggregate outputs in sorted order)
         rownames(counts.mat) <- sort(unique(gene_names))
         colnames(counts.mat) <- sample_names
+
     } else {
         counts.mat <- as.data.frame(counts.regions)
         rownames(counts.mat) <- gene_names
         colnames(counts.mat) <- sample_names
     }
 
-    # Make column data (colData) for SummarizedExperiment
-    #   Factors are for each condition, only grouping by replicates
-    # replicate will be "rep1", "rep2", etc.
-    coldat <- data.frame(condition = sub("_rep.", "", sample_names),
-                         replicate = sub(".*rep", "rep", sample_names),
-                         row.names = sample_names)
+    return(counts.mat)
+}
 
+#' @importFrom parallel mclapply
+#' @importFrom SummarizedExperiment SummarizedExperiment
+.get_se <- function() {
     if (discont.genes) {
         # for setting rowRanges, will use the largest range for each gene
         idx <- mclapply(rownames(counts.mat), function(i) {
@@ -187,22 +210,8 @@ getDESeqDataSet <- function(dataset.list,
     }
 
     counts.mat <- as.matrix(counts.mat)
-    counts.se <- SummarizedExperiment(assays = counts.mat,
-                                      rowRanges = regions.gr,
-                                      colData = coldat)
-
-    if (quiet) {
-        suppressMessages(
-            counts.dds <- DESeq2::DESeqDataSet(counts.se, design = ~condition)
-        )
-    } else {
-        counts.dds <- DESeq2::DESeqDataSet(counts.se, design = ~condition)
-    }
-
-
-    if (!is.null(sizeFactors)) DESeq2::sizeFactors(counts.dds) <- sizeFactors
-
-    return(counts.dds)
+    SummarizedExperiment(assays = counts.mat, rowRanges = regions.gr,
+                         colData = coldat)
 }
 
 
