@@ -12,7 +12,6 @@ Encoding: UTF-8
 LazyData: FALSE
 RoxygenNote: 7.0.2
 Depends:
-    R (>= 3.0),
     GenomicRanges,
     GenomeInfoDb
 Imports:
@@ -36,6 +35,8 @@ Suggests:
 biocViews:
     Software,
     DataImport,
+    Sequencing,
+    Coverage,
     RNASeq,
     ATACSeq,
     ChIPSeq,
