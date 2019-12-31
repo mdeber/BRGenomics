@@ -408,6 +408,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     return(FALSE)
 }
 
+#' @importFrom DESeq2 sizeFactors
 .apply_sf_early <- function() {
     when_sf <- .when_sf(dds, sizeFactors)
     already_sf <- !is.null(sizeFactors(dds))
@@ -415,7 +416,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     if (when_sf == "early") {
         if (already_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        DESeq2::sizeFactors(dds) <<- sizeFactors
+        sizeFactors(dds) <<- sizeFactors
         sizeFactors <<- NULL # avoid re-application
     }
 
@@ -434,6 +435,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     return("late")
 }
 
+#' @importFrom DESeq2 sizeFactors
 .apply_sf_late <- function() {
     when_sf <- .when_sf(dds, sizeFactors)
     already_sf <- !is.null(sizeFactors(dds))
@@ -448,7 +450,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     if (when_sf == "early") {
         if (already_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
-        DESeq2::sizeFactors(dds) <<- sizeFactors
+        sizeFactors(dds) <<- sizeFactors
     }
 }
 
