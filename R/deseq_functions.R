@@ -346,7 +346,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     # if length(sizeFactors) matches dds, apply them ("apply early")
     # else, hold on to them and apply later (after subsetting)
     environment(.apply_sf_early) <- environment()
-    .apply_sf_early()
+    .apply_sf_early() # if SFs applied, they become NULL in this environment
 
     if (is.null(comparisons.list)) {
         res <- .get_deseq_results(
@@ -456,7 +456,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 .get_deseq_results <- function(dds, contrast.numer, contrast.denom,
                                sizeFactors, alpha, args.DESeq, args.results,
                                ncores, quiet) {
-    # should make another function for late application of sizeFactors
 
     # Subset for pairwise comparison
     dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
@@ -471,9 +470,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     args.DESeq <- .merge_args(expression(object = dds, parallel = FALSE),
                               user_args = args.DESeq,
                               exclude = c("object", "parallel"))
-    if (!"quiet" %in% names(args.DESeq))
-        args.DESeq <- .merge_args(args.DESeq, list(quiet = quiet))
 
+    if (!"quiet" %in% names(args.DESeq)) args.DESeq$quiet <- quiet
     dds <- do.call(DESeq2::DESeq, args.DESeq)
 
     #--------------# Call results() #--------------#
@@ -481,16 +479,12 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     contrast.arg <- c("condition", contrast.numer, contrast.denom)
     args.results <- .merge_args(
         expression(object = dds, contrast = contrast.arg, alpha = alpha),
-        args.results, exclude = c("object", "contrast", "alpha", "parallel")
+        args.results,
+        exclude = c("object", "contrast", "alpha", "parallel")
     )
-    if (quiet) {
-        suppressWarnings(suppressMessages(
-            res <- do.call(DESeq2::results, args.results)
-        ))
-    } else {
-        res <- do.call(DESeq2::results, args.results)
-    }
-    return(res)
+
+    if (!quiet) return( do.call(DESeq2::results, args.results) )
+    suppressWarnings(suppressMessages( do.call(DESeq2::results, args.results) ))
 }
 
 .merge_args <- function(rqd_args, user_args, exclude = NULL) {
