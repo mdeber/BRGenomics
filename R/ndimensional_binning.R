@@ -1,6 +1,6 @@
-### =========================================================================
+### ========================================================================= #
 ### N-dimensional binning by nbins
-### -------------------------------------------------------------------------
+### ------------------------------------------------------------------------- #
 ###
 
 
@@ -58,23 +58,17 @@
 #' nrow(count_bins)
 #' count_bins[1:10, ]
 binNdimensions <- function(..., nbins = 10) {
-    # should split this function up more
 
-    data_in <- list(...)
-    in_names <- .get_unnamed_names() # names of args/objects in ...
-
-    # check input data and convert to dataframe, and get dimension names
-    # .get_data function will assign 'data' and 'dim_names' in this env.
-    data <- NULL; dim_names <- NULL # initialize
-    environment(.get_data) <- environment()
-    .get_data()
+    # check input data; convert to dataframe; give good dim. names
+    in.names <- .get_unnamed_names() # names of args/objects in '...'
+    data <- .get_data(list(...), in.names)
 
     # check input bins
     n_dim <- ncol(data)
     if (length(nbins) > 1 & length(nbins) != n_dim) {
-        stop(.nicemsg("User input %d dimensions of data, but length(nbins)
-                      = %d. nbins must match number of dimensions, or be a
-                      single number.", n_dim, length(nbins)))
+        stop(.nicemsg("User input %d dimensions of data, but length(nbins) = %d.
+                      nbins must match number of dimensions, or be a single
+                      number.", n_dim, length(nbins)))
         return(geterrmessage())
     }
 
@@ -86,45 +80,40 @@ binNdimensions <- function(..., nbins = 10) {
 
     # get bin indices for each datapoint along each dimension
     bin_idx <- mapply(findInterval, data, bin_seqs, SIMPLIFY = FALSE)
-    names(bin_idx) <- paste("bin", dim_names)
+    names(bin_idx) <- paste("bin", names(data))
 
     as.data.frame(bin_idx)
 }
 
 
-.get_data <- function() {
-    input_classes <- vapply(data_in, class, FUN.VALUE = character(1))
-    if (all(input_classes %in% c("list", "numeric"))) {
+.get_data <- function(in.data, in.names) {
+    classes.in <- vapply(in.data, class, FUN.VALUE = character(1))
+    if (all(classes.in %in% c("list", "numeric"))) {
+        data <- as.data.frame( lapply(in.data, unlist) )
+        names(data) <- in.names
+        return(data)
 
-        data <<- as.data.frame( lapply(data_in, unlist) )
-        dim_names <<- in_names
-
-    } else if (any(input_classes == "data.frame")) {
-
-        if (length(data_in) > 1) {
-            stop(.nicemsg("If a dataframe is given as input, no additional
-                          data objects can be given."))
+    } else if (any(classes.in == "data.frame")) {
+        if (length(in.data) > 1) {
+            stop(.nicemsg("If a dataframe is given as input, no additional data
+                          objects can be given."))
             return(geterrmessage())
         }
-        data <<- data_in[[1]]
-        dim_names <<- names(data)
+        return(in.data[[1]])
+
+    } else if (length(in.data) == 1) {
+        warning(.nicemsg("Coercing input of class %s into adataframe...",
+                         classes.in[[1]]), immediate. = TRUE)
+        return(as.data.frame(in.data[[1]]))
 
     } else {
-
-        if (length(data_in) == 1) {
-            data <<- as.data.frame(data_in[[1]])
-            warning(.nicemsg("Coerced input of class %s into a
-                             dataframe.", input_classes[[1]]))
-            dim_names <<- names(data)
-
-        } else {
-            data <<- as.data.frame(lapply(data_in, as.vector))
-            warning(.nicemsg("Coerced a list of input of class(es)
-                             %s into a dataframe.",
-                             Reduce(function(...) paste(..., sep = ","),
-                                    input_classes)))
-            dim_names <<- in_names
-        }
+        data <- as.data.frame(lapply(in.data, as.vector))
+        warning(.nicemsg("Coerced a list of input of class(es) %s into a
+                         dataframe.",
+                         Reduce(function(...) paste(..., sep = ","),
+                                classes.in)))
+        names(data) <- in.names
+        return(data)
     }
 }
 

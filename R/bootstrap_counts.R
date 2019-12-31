@@ -191,7 +191,6 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                                 n.iter = 1000, prop.sample = 0.1,
                                 lower = 0.125, upper = 0.875, NF = 1,
                                 remove.empty = FALSE, ncores = detectCores()) {
-
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
     if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
@@ -203,18 +202,16 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     if (binsize > 1) # transpose as apply will cbind rather than rbind
         counts.mat <- t( apply(counts.mat, 1, .binVector, binsize = binsize) )
 
-    # Randomly subsample rows of the counts.mat
-    # -> List of length = n.iter, containing vectors of length = nsample
+    # 1. Randomly subsample rows of the counts.mat
+    #    -> List of length = n.iter, containing vectors of length = nsample
+    # 2. For each iteration, get average signal in each bin
+    #    -> List of length = n.iter containing vectors of length = nbins
+    # 3. Collapse list into matrix
+    #    -> Matrix of dim = (nbins, n.iter)
     idx.list <- replicate(n.iter, sample(ngenes, size = nsample),
                           simplify = FALSE)
-
-    # For each iteration, get average signal in each bin
-    # -> List of length = n.iter containing vectors of length = nbins
     binavg.list <- mclapply(idx.list, function(idx) colMeans(counts.mat[idx, ]),
                             mc.cores = ncores)
-
-    # Collapse list into matrix
-    # -> Matrix of dim = (nbins, n.iter)
     binavg.mat <- matrix(unlist(binavg.list), ncol = n.iter)
 
     # calculate final outputs
