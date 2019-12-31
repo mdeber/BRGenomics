@@ -233,11 +233,8 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     }
 
     # Also return x-values, sample names for plotting; x-vals centered in bins
-    if (binsize == 1) {
-        x <- first.output.xval + seq(0, nbins - 1)
-    } else {
-        x <- .binxval(nbins, binsize, first.output.xval)
-    }
+    if (binsize == 1) x <- first.output.xval + seq(0, nbins - 1)
+    if (binsize > 1) x <- .binxval(nbins, binsize, first.output.xval)
     return(data.frame(x, mean, lower, upper, sample.name))
 }
 
