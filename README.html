@@ -613,6 +613,7 @@ body {
 <p>Install development version from <a href="https://github.com/mdeber/BRGenomics">GitHub</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># install.packages(&quot;devtools&quot;)</span></a>
 <a class="sourceLine" id="cb1-2" data-line-number="2">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;mdeber/BRGenomics&quot;</span>)</a></code></pre></div>
+<p>If you’re using Windows, <a href="https://cran.rstudio.com/bin/windows/Rtools/">Rtools for Windows</a> is required.</p>
 <h2 id="features">Features</h2>
 <p>A full introductory vignette is in the works, but some quick highlights include:</p>
 <ul>
@@ -640,12 +641,13 @@ body {
 </ul>
 <h2 id="known-issues-and-limitations">Known issues and limitations</h2>
 <ul>
+<li>Currently no support for multicore processing on Windows</li>
 <li>Currently no support for multiple fields in <code>getStrandedCoverage</code></li>
 <li>Certain gene names can cause <code>getDESeqDataSet</code> to return an error
 <ul>
-<li>Systematic naming schemes work (e.g. ensembl IDs) while some lists of conventional gene names, i.e. “symbols”, will cause failure.</li>
+<li>Systematic naming schemes work (e.g. ensembl IDs) while some lists of conventional gene names, i.e. “symbols”, will cause failure</li>
 </ul></li>
-<li>In some contexts, using multicore causes <code>getDESeqResults</code> to return errors. If this occurs in your environment, set <code>ncores = 1</code>.</li>
+<li>In some contexts, using multicore causes errors in <code>getDESeqResults</code> If this occurs in your environment, set <code>ncores = 1</code></li>
 </ul>
 <hr />
 <ol>

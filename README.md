@@ -21,6 +21,9 @@ Install development version from
 devtools::install_github("mdeber/BRGenomics")
 ```
 
+If you’re using Windows, [Rtools for
+Windows](https://cran.rstudio.com/bin/windows/Rtools/) is required.
+
 ## Features
 
 A full introductory vignette is in the works, but some quick highlights
@@ -64,13 +67,14 @@ example PRO-seq data<sup>\[1\]</sup>.
 
 ## Known issues and limitations
 
+  - Currently no support for multicore processing on Windows
   - Currently no support for multiple fields in `getStrandedCoverage`
   - Certain gene names can cause `getDESeqDataSet` to return an error
       - Systematic naming schemes work (e.g. ensembl IDs) while some
         lists of conventional gene names, i.e. “symbols”, will cause
-        failure.
-  - In some contexts, using multicore causes `getDESeqResults` to return
-    errors. If this occurs in your environment, set `ncores = 1`.
+        failure
+  - In some contexts, using multicore causes errors in `getDESeqResults`
+    If this occurs in your environment, set `ncores = 1`
 
 -----
 
