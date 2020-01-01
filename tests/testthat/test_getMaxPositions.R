@@ -79,7 +79,7 @@ test_that("Max signals found in larger bins, bin.centers = TRUE", {
     out2 <- getMaxPositionsBySignal(regions.gr = test_regions,
                                     dataset.gr = PROseq,
                                     binsize = 11, bin.centers = TRUE)
-    expect_equivalent(start(out)[1:4], c(1291, 42801, 45912, 60913))
+    expect_equivalent(start(out2)[1:4], c(1291, 42801, 45912, 60913))
 })
 
 
