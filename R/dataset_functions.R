@@ -5,8 +5,8 @@
 
 #' Make base-pair resolution GRanges object
 #'
-#' Splits up all ranges in \code{gr} to be each 1 basepair wide. For any range
-#' that is split up, all metadata information belonging to that range is
+#' Splits up all ranges in \code{dataset.gr} to be each 1 basepair wide. For any
+#' range that is split up, all metadata information belonging to that range is
 #' inherited by its daughter ranges, and therefore the transformation is
 #' non-destructive.
 #'
