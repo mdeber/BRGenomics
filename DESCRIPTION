@@ -12,7 +12,6 @@ Encoding: UTF-8
 LazyData: FALSE
 RoxygenNote: 7.0.2
 Depends:
-    R (>= 4.0),
     GenomicRanges,
     GenomeInfoDb
 Imports:
