@@ -13,7 +13,7 @@
 TxDb.Dmelanogaster.UCSC.dm6.ensGene version 3.4.6
 }
 \usage{
-txs_dm6_chr4
+data(txs_dm6_chr4)
 }
 \description{
 Transcripts obtained from annotation package

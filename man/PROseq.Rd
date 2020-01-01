@@ -13,7 +13,7 @@
 GEO Accession GSM1032758, run SRR611828.
 }
 \usage{
-PROseq
+data(PROseq)
 }
 \description{
 PRO-seq data of Drosophila S2 cells, chromosome 4.
