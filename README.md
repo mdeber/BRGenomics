@@ -26,7 +26,7 @@ devtools::install_github("mdeber/BRGenomics")
 A full introductory vignette is in the works, but some quick highlights
 include:
 
-  - Data import
+  - Simple data import for bigWig, bedGraph, and bam files
   - Read counting by genes and positions in genes (e.g. for heatmaps)
   - Bootstrapping mean signals at positions within genes (e.g. for
     metaplotting)
@@ -51,7 +51,6 @@ example PRO-seq data<sup>\[1\]</sup>.
 
 ## Coming Soon
 
-  - Support for importing bam files directly
   - Calculation of spike-in normalization factors using several
     different methods
   - Functions to assess sufficiency of sequencing depth using meaningful
