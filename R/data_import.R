@@ -88,8 +88,8 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #'   by each range.
 #'
 #' @details For \code{import_bigWig}, the output GRanges is formatted by
-#'   \code{\link[BRGenomics:makeGRangesBR]{makeGRangesBR}}, such that all ranges
-#'   are disjoint and have width = 1, and the \code{score} is single-base
+#'   \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}, such that all
+#'   ranges are disjoint and have width = 1, and the \code{score} is single-base
 #'   coverage, i.e. the number of reads for each position.
 #'
 #'   \code{import_bedGraph} is useful for when both 5'- and 3'-end information
