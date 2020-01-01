@@ -68,14 +68,14 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
-#' @param regions.gr A GRanges object containing all the regions of interest.
+#' @param regions.gr A GRanges object containing regions of interest.
 #' @param binsize Size of bins (in bp) to use for counting within each range of
 #'   \code{regions.gr}. Note that counts will \emph{not} be length-normalized.
-#' @param FUN If \code{binsize > 1}, the function used to aggregate the
-#'   signal within each bin. By default, the signal is summed, but any function
+#' @param FUN If \code{binsize > 1}, the function used to aggregate the signal
+#'   within each bin. By default, the signal is summed, but any function
 #'   operating on a numeric vector can be used.
 #' @param simplify.multi.widths A string indicating the output format if the
-#'   ranges in \code{regions.gr} have variable widths. Default = \code{"list"}.
+#'   ranges in \code{regions.gr} have variable widths. Default is \code{"list"}.
 #'   See details below.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, the output is a list whose elements contain the
@@ -92,10 +92,10 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   vectors, with each vector corresponding to an individual input region. If
 #'   \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output is a
 #'   matrix containing a row for each range in \code{regions.gr}, but the number
-#'   of columns is determined by the \emph{largest} range in \code{regions.gr}.
-#'   For each region of interest, columns that correspond to positions outside
-#'   of the outside of the input range are either set to \code{0} or \code{NA},
-#'   depending on the argument.
+#'   of columns is determined by the largest range in \code{regions.gr}. For
+#'   each region of interest, columns that correspond to positions outside of
+#'   the input range are set, depending on the argument, to \code{0} or
+#'   \code{NA}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}

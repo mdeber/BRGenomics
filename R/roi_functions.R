@@ -297,26 +297,19 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
 #' @param quantiles A value pair giving the lower quantile and upper quantile of
-#'   regions to keep. Regions with signal quantiles below than the lower
-#'   quantile are removed, while regions with signal quantiles above the upper
-#'   quantile are removed. Quantiles must be in range \code{(0, 1)}. An empty
-#'   GRanges object is returned if \code{lower quantile = 1} or \code{upper
-#'   quantile = 0}.
-#' @param field The metadata field of \code{dataset.gr} to be counted.
+#'   regions to keep. Regions with signal quantiles below the lower quantile are
+#'   removed, and likewise for regions with signal quantiles above the upper
+#'   quantile. Quantiles must be in range \code{(0, 1)}. An empty GRanges object
+#'   is returned if the lower quantile is set to \code{1} or if the upper
+#'   quantile is set to \code{0}.
+#' @param field The metadata field of \code{dataset.gr} to be counted, typically
+#' "score".
 #' @param order.by.rank If \code{TRUE}, the output regions are sorted based on
-#'   the amount of signal contained (in decreasing order). If \code{FALSE} (the
+#'   the amount of overlapping signal (in decreasing order). If \code{FALSE} (the
 #'   default), genes are sorted by their positions.
 #' @param density A logical indicating whether signal counts should be
-#'   normalized to the width of ranges in \code{regions.gr}. By default, the
-#'   function only considers the total signal in each range.
-#'
-#' @details Typical uses may include removing the 5% of genes with the lowest
-#'   signal (\code{lower_quantile = 0.05}) and the 5% with the highest signal
-#'   (\code{upper_quantile = 0.95}), or returning the middle 50% of genes by
-#'   signal (\code{lower_quantile = 0.25}, \code{upper_quantile = 0.75}). If
-#'   \code{lower_quantile = 0} and \code{upper_quantile = 1}, all regions are
-#'   returned, but the returned regions will be sorted by position, or by score
-#'   if \code{order.by.rank = TRUE}.
+#'   normalized to the width (chromosomal length) of ranges in \code{regions.gr}.
+#'   By default, no length normalization is performed.
 #'
 #' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
 #'   - lower_quantile)}.
@@ -351,6 +344,13 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
 #' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
 #'                       quantiles = c(0.9, 1),
 #'                       order.by.rank = TRUE)
+#'
+#' #--------------------------------------------------#
+#' # remove the most extreme 10% of regions
+#' #--------------------------------------------------#
+#'
+#' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
+#'                       quantiles = c(0.05, 0.95))
 subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   field = "score", order.by.rank = FALSE,
                                   density = FALSE) {

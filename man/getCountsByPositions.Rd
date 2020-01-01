@@ -18,17 +18,17 @@ getCountsByPositions(
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
 (typically in the "score" field).}
 
-\item{regions.gr}{A GRanges object containing all the regions of interest.}
+\item{regions.gr}{A GRanges object containing regions of interest.}
 
 \item{binsize}{Size of bins (in bp) to use for counting within each range of
 \code{regions.gr}. Note that counts will \emph{not} be length-normalized.}
 
-\item{FUN}{If \code{binsize > 1}, the function used to aggregate the
-signal within each bin. By default, the signal is summed, but any function
+\item{FUN}{If \code{binsize > 1}, the function used to aggregate the signal
+within each bin. By default, the signal is summed, but any function
 operating on a numeric vector can be used.}
 
 \item{simplify.multi.widths}{A string indicating the output format if the
-ranges in \code{regions.gr} have variable widths. Default = \code{"list"}.
+ranges in \code{regions.gr} have variable widths. Default is \code{"list"}.
 See details below.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
@@ -55,10 +55,10 @@ overlapping each bin.
   vectors, with each vector corresponding to an individual input region. If
   \code{simplify.multi.widths = "pad 0"} or \code{"pad NA"}, the output is a
   matrix containing a row for each range in \code{regions.gr}, but the number
-  of columns is determined by the \emph{largest} range in \code{regions.gr}.
-  For each region of interest, columns that correspond to positions outside
-  of the outside of the input range are either set to \code{0} or \code{NA},
-  depending on the argument.
+  of columns is determined by the largest range in \code{regions.gr}. For
+  each region of interest, columns that correspond to positions outside of
+  the input range are set, depending on the argument, to \code{0} or
+  \code{NA}.
 }
 
 \examples{

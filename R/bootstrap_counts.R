@@ -26,8 +26,9 @@
 #'   if \code{regions.gr} begins at 50 bases upstream of the TSS, set
 #'   \code{first.output.xval = -50}. This number only affects the x-values that
 #'   are returned, which are provided as a convenience.
-#' @param sample.name Defaults to the name of the input dataset. This is included in the output as a
-#'   convenience, as it allows row-binding outputs from different samples.
+#' @param sample.name Defaults to the name of the input dataset. This is
+#'   included in the output as a convenience, as it allows row-binding outputs
+#'   from different samples.
 #' @param n.iter Number of random subsampling iterations to perform. Default is
 #'   \code{1000}.
 #' @param prop.sample The proportion of the ranges in \code{regions.gr} (e.g.
@@ -35,8 +36,8 @@
 #'   sample in each iteration. The default is \code{0.1} (10 percent).
 #' @param lower,upper The lower and upper quantiles of subsampled signal means
 #'   to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
-#'   85.5th percentiles) return a 75 percent confidence interval about the bootstrapped
-#'   mean.
+#'   85.5th percentiles) return a 75 percent confidence interval about the
+#'   bootstrapped mean.
 #' @param NF Optional normalization factor by which to multiply the counts.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
 #' @param remove.empty A logical indicating whether regions

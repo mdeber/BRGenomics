@@ -48,25 +48,25 @@ metaplot. All ranges must have the same width.}
 important for counting signal over large or sparse regions.}
 
 \item{first.output.xval}{The relative start position of the first bin, e.g.
-if regions.gr begins at 50 bases upstream of the TSS, set
+if \code{regions.gr} begins at 50 bases upstream of the TSS, set
 \code{first.output.xval = -50}. This number only affects the x-values that
 are returned, which are provided as a convenience.}
 
-\item{sample.name}{Defaults to the name of the input dataset, either
-\code{dataset.gr} or \code{counts.mat}. This is included in the output as a
-convenience, as it allows row-binding outputs from different samples.}
+\item{sample.name}{Defaults to the name of the input dataset. This is
+included in the output as a convenience, as it allows row-binding outputs
+from different samples.}
 
 \item{n.iter}{Number of random subsampling iterations to perform. Default is
 \code{1000}.}
 
 \item{prop.sample}{The proportion of the ranges in \code{regions.gr} (e.g.
 the proportion of genes) or the proportion of rows in \code{counts.mat} to
-subsample in each iteration. The default is \code{0.1} (10 percent).}
+sample in each iteration. The default is \code{0.1} (10 percent).}
 
 \item{lower, upper}{The lower and upper quantiles of subsampled signal means
 to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
-85.5th percentiles) return a 75% confidence interval about the bootstrapped
-mean.}
+85.5th percentiles) return a 75 percent confidence interval about the
+bootstrapped mean.}
 
 \item{NF}{Optional normalization factor by which to multiply the counts.}
 
@@ -107,7 +107,8 @@ pr <- promoters(txs_dm6_chr4, 0, 100)
 #--------------------------------------------------#
 
 set.seed(11)
-df <- metaSubsample(PROseq, pr, binsize = 5, lower = 0.35, upper = 0.65,
+df <- metaSubsample(PROseq, pr, binsize = 5,
+                    lower = 0.35, upper = 0.65,
                     ncores = 2)
 df[1:10, ]
 
@@ -120,7 +121,7 @@ plot(mean ~ x, df, type = "l", main = "PROseq Signal",
 polygon(c(df$x, rev(df$x)), c(df$lower, rev(df$upper)),
         col = adjustcolor("black", 0.1), border = FALSE)
 
-#==================================================#
+
 #==================================================#
 # Using a matrix as input
 #==================================================#
@@ -134,8 +135,9 @@ dim(countsmat)
 #--------------------------------------------------#
 
 set.seed(11)
-df <- metaSubsampleMatrix(countsmat, binsize = 10, sample.name = "PROseq",
-                          ncores = 2)
+ df <- metaSubsampleMatrix(countsmat, binsize = 10,
+                           sample.name = "PROseq",
+                           ncores = 2)
 df[1:10, ]
 
 #--------------------------------------------------#
@@ -143,8 +145,9 @@ df[1:10, ]
 #--------------------------------------------------#
 
 set.seed(11)
-df <- metaSubsampleMatrix(countsmat, binsize = 10, first.output.xval = 0,
-                          NF = 0.75, sample.name = "PROseq", ncores = 2)
+df <- metaSubsampleMatrix(countsmat, binsize = 10,
+                          first.output.xval = 0, NF = 0.75,
+                          sample.name = "PROseq", ncores = 2)
 df[1:10, ]
 }
 \seealso{

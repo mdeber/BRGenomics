@@ -14,8 +14,8 @@ A GRanges object for which \code{length(output) ==
   sum(width(dataset.gr))}, and for which \code{all(width(output) == 1)}.
 }
 \description{
-Splits up all ranges in \code{gr} to be each 1 basepair wide. For any range
-that is split up, all metadata information belonging to that range is
+Splits up all ranges in \code{dataset.gr} to be each 1 basepair wide. For any
+range that is split up, all metadata information belonging to that range is
 inherited by its daughter ranges, and therefore the transformation is
 non-destructive.
 }
