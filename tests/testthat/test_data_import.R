@@ -107,5 +107,34 @@ test_that("Paired PROseq formatted correctly", {
 
 
 
+# Bam file import ---------------------------------------------------------
 
+ps_bam <- system.file("extdata", "PROseq_dm6_chr4.bam", package = "BRGenomics")
+
+test_that("Bam file is found", {
+    expect_is(ps_bam, "character")
+    expect_true(nchar(ps_bam) > 1)
+})
+
+
+
+test_that("Bam file imports", {
+    expect_is(import_bam(ps_bam), "GRanges")
+})
+
+test_that("Options applied", {
+    ps_reads <- import_bam(ps_bam, revcomp = TRUE)
+    expect_equal(unique(width(import_bam(ps_bam, trim.to = "5p"))), 1)
+    expect_equal(unique(width(import_bam(ps_bam, trim.to = "3p"))), 1)
+    expect_equal(unique(width(import_bam(ps_bam, trim.to = "center"))), 1)
+    expect_true(isDisjoint(import_bam(ps_bam, trim.to = "5p")))
+    expect_equal(sum(as.character(strand(ps_reads)) == "+"),
+                 sum(as.character(strand(import_bam(ps_bam))) == "-"))
+    ps_nostrand <- import_bam(ps_bam, ignore.strand = TRUE)
+    expect_true(length(ps_nostrand) < length(ps_reads))
+    expect_equal(unique(as.character(strand(ps_nostrand))), "*")
+    expect_equal(sum(score(ps_nostrand)), sum(score(ps_reads)))
+    expect_equal(sum(score(ps_reads)),
+                 sum(score(import_bam(ps_bam, trim.to = "3p"))))
+})
 

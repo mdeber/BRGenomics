@@ -197,6 +197,99 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 }
 
 
+#' Import bam files
+#'
+#' @param file Path of a bam file.
+#' @param mapq Filter reads by a minimum MapQ score. This is the correct way to
+#'   filter multi-aligners.
+#' @param revcomp Logical indicating if aligned reads should be
+#'   reverse-complemented.
+#' @param trim.to Option for selecting specific bases from the reads, applied
+#'   after the \code{revcomp} option. By default, the entire read is maintained.
+#'   Other options are to take only the 5' base, only the 3' base, or the only
+#'   the center base of the read.
+#' @param ignore.strand Logical indicating if the strand information should be
+#'   discarded. If \code{TRUE}, strand information is discarded \emph{after}
+#'   \code{revcomp} and \code{trim.to} options are applied.
+#' @param field Metadata field name to use for readcounts, usually "score". If
+#'   set to \code{NULL}, identical reads (or identical positions if
+#'   \code{trim.to} options applied) are not combined, and the length of the
+#'   output GRanges will be equal to the number of input reads.
+#'
+#' @return A GRanges object.
+#' @export
+#' @importFrom Rsamtools BamFile ScanBamParam
+#' @importFrom GenomicAlignments readGAlignments
+#' @importFrom GenomicRanges GRanges strand resize
+#'
+#' @examples
+#' # get local address for included bam file
+#' ps.bam <- system.file("extdata", "PROseq_dm6_chr4.bam",
+#'                       package = "BRGenomics")
+#'
+#' #--------------------------------------------------#
+#' # Import entire reads
+#' #--------------------------------------------------#
+#'
+#' # Note that PRO-seq reads are sequenced as reverse complement
+#' import_bam(ps.bam, revcomp = TRUE)
+#'
+#' #--------------------------------------------------#
+#' # Import entire reads, 1 range per read
+#' #--------------------------------------------------#
+#'
+#' import_bam(ps.bam, revcomp = TRUE, field = NULL)
+#'
+#' #--------------------------------------------------#
+#' # Import PRO-seq reads at basepair-resolution
+#' #--------------------------------------------------#
+#'
+#' # the typical manner to import PRO-seq data:
+#' import_bam(ps.bam, revcomp = TRUE, trim.to = "3p")
+#'
+#' #--------------------------------------------------#
+#' # Import 5' ends of PRO-seq reads
+#' #--------------------------------------------------#
+#'
+#' # will include bona fide TSSes as well as hydrolysis products
+#' import_bam(ps.bam, revcomp = TRUE, trim.to = "5p")
+import_bam <- function(file, mapq = 20, revcomp = FALSE,
+                       trim.to = c("whole", "5p", "3p", "center"),
+                       ignore.strand = FALSE, field = "score") {
+    trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
+
+    # Load bam file
+    bf <- BamFile(file)
+    param <- ScanBamParam(mapqFilter = mapq)
+    gal = readGAlignments(bf, use.names = F, param = param)
+    gr <- GRanges(gal) # make GRanges
+
+    # Apply Options
+    if (revcomp) strand(gr) <- ifelse(as.character(strand(gr)) == "+", "-", "+")
+    if (trim.to != "whole") {
+        opt <- paste0("opt.", trim.to)
+        opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
+        gr <- resize(gr, width = 1, fix = opt.arg[[opt]])
+    }
+    if (ignore.strand) strand(gr) <- "*"
+
+    gr <- sort(gr)
+    if (!is.null(field))  gr <- .collapse_reads(gr, field)
+    return(gr)
+}
+
+#' @importFrom GenomicRanges countOverlaps mcols
+.collapse_reads <- function(gr, field) {
+    gr.out <- unique(gr)
+    mcols(gr.out)[field] <- countOverlaps(gr.out, gr, type = "equal")
+    return(gr.out)
+}
+
+
+
+# ---------------------- #
+
+
 ### convenience function for getting TxDb objects
 #
 # .getTxDb <- function(genome) {

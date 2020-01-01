@@ -1,27 +1,28 @@
 #' Drosophila S2 cell PRO-seq, chr4
 #'
-#' GEO Accession: GSM1032758
-#' Run: SRR611828
+#' GEO Accession: GSM1032758 Run: SRR611828
 #'
-#' Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis (2013).
-#' Precise Maps of RNA Polymerase Reveal How Promoters Direct Initiation and
-#' Pausing. Science, 339(6122), 950–953. https://doi.org/10.1126/science.1229386
+#' Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis (2013). Precise
+#' Maps of RNA Polymerase Reveal How Promoters Direct Initiation and Pausing.
+#' Science, 339(6122), 950–953. https://doi.org/10.1126/science.1229386
 #'
 #' Base-pair resolution PRO-seq was originally sequenced on a GAIIx by the
 #' authors. Unprocessed reads were downloaded from GEO, adapters were trimmed
 #' using Cutadapt, and trimmed reads were aligned using bowtie2 in
-#' high-sensitivity end-to-end alignment mode. Bam files were processed in R using
-#' Rsamtools and GenomeAlignments, and reads were processed using GenomicRanges.
-#' For all processing, reads were first reverse complemented by inverting the strand of the
-#' GRanges object.
+#' high-sensitivity end-to-end alignment mode.
 #'
-#' bedGraph files with paired 5'- and 3'-end information were
-#' created in which each range represents a unique pairing of 5' and 3' ends
-#' in the sequencing, and the score metadata column represents the number of times
-#' that pairing was observed. bigWig files containing only coverage of the 3' ends were created by
-#' truncating reads to their 3' ends, and IRanges was used to calculate coverage.
-#' For both the paired bedGraph files and 3' end bigWig files, rtracklayer was used
-#' to export only the reads mapping to chromosome 4.
+#' To generate bigWig and bedGraph files, Bam files were processed in R using
+#' Rsamtools and GenomeAlignments, and reads were processed using GenomicRanges.
+#' For all processing, reads were first reverse complemented by inverting the
+#' strand of the GRanges object.
+#'
+#' bedGraph files with paired 5'- and 3'-end information were created in which
+#' each range represents a unique pairing of 5' and 3' ends in the sequencing,
+#' and the score metadata column represents the number of times that pairing was
+#' observed. bigWig files containing only coverage of the 3' ends were created
+#' by truncating reads to their 3' ends, and IRanges was used to calculate
+#' coverage. For both the paired bedGraph files and 3' end bigWig files,
+#' rtracklayer was used to export only the reads mapping to chromosome 4.
 
 # infile <- BamFile(paste0(opt$input_dir, bam_file))
 # param <- ScanBamParam(mapqFilter = opt$quality)
