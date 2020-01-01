@@ -15,11 +15,15 @@ one in which readcounts for individual ranges are contained in metadata
 metadata field contains readcounts, and each range represents a single
 read, set to NULL.}
 }
+\value{
+A GRanges object with signal in the "score" metadata column. Note
+  that the output is \emph{not} automatically converted into a
+  \code{\link[BRGenomics:makeGRangesBRG]{"basepair-resolution"}} GRanges
+  object.
+}
 \description{
-Computes strand-specific coverage signal, and returns a GRanges object with
-signal in the "score" metadata column. Function also works for
-non-strand-specific data. Note that output is not automatically converted
-into a "basepair-resolution" GRanges object.
+Computes strand-specific coverage signal, and returns a GRanges object.
+Function also works for non-strand-specific data.
 }
 \examples{
 #--------------------------------------------------#

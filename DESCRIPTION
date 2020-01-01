@@ -22,7 +22,8 @@ Imports:
     Rsamtools,
     GenomicAlignments,
     DESeq2,
-    SummarizedExperiment
+    SummarizedExperiment,
+    utils
 Suggests:
     BiocStyle,
     knitr,

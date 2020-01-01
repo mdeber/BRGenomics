@@ -261,7 +261,7 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE,
     # Load bam file
     bf <- BamFile(file)
     param <- ScanBamParam(mapqFilter = mapq)
-    gal = readGAlignments(bf, use.names = F, param = param)
+    gal = readGAlignments(bf, use.names = FALSE, param = param)
     gr <- GRanges(gal) # make GRanges
 
     # Apply Options
