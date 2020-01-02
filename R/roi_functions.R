@@ -162,9 +162,9 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' @param bin.centers Logical indicating if the centers of bins are returned, as
 #'   opposed to the entire bin. By default, entire bins are returned.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
-#' @param keep.score Logical indicating if the signal value at the max site
+#' @param keep.signal Logical indicating if the signal value at the max site
 #'   should be reported. If set to \code{TRUE}, the values are kept as a new
-#'   metadata column in \code{regions.gr}.
+#'   \code{MaxSiteSignal} metadata column in the output GRanges.
 #'
 #' @return Output is a GRanges object with regions.gr metadata, but each range
 #'   only contains the site within each \code{regions.gr} range that had the
@@ -173,12 +173,13 @@ genebodies <- function(genelist, start = 300, end = -300,
 #'   The site is set to the center of the bin, and if the binsize is even, the
 #'   site is rounded to be closer to the beginning of the range.
 #'
-#'   If \code{keep.score = TRUE}, the output will also contain metadata for the
-#'   signal at the max site. The output is \emph{not} necessarily same length as
-#'   \code{regions.gr}, as regions without signal are not returned. If \emph{no
-#'   regions} have signal (e.g. as could happen if running this function on
-#'   single regions), the function will return an empty GRanges object with
-#'   intact metadata columns.
+#'   The output may not be the same length as \code{regions.gr}, as regions
+#'   without signal are not returned. If no regions have signal (e.g. as could
+#'   happen if running this function on single regions), the function will
+#'   return an empty GRanges object with intact metadata columns.
+#'
+#'   If \code{keep.signal = TRUE}, the output will also contain metadata for the
+#'   signal at the max site, named \code{MaxSiteSignal}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -201,22 +202,22 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' # max sites
 #' #--------------------------------------------------#
 #'
-#' getMaxPositionsBySignal(pr[1:3], PROseq, keep.score = TRUE)
+#' getMaxPositionsBySignal(pr[1:3], PROseq, keep.signal = TRUE)
 #'
 #' #--------------------------------------------------#
 #' # max sites in 5 bp bins
 #' #--------------------------------------------------#
 #'
-#' getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.score = TRUE)
+#' getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.signal = TRUE)
 getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
                                     bin.centers = FALSE, field = "score",
-                                    keep.score = FALSE) {
+                                    keep.signal = FALSE) {
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
     # if no regions in regions.gr have signal, return an empty GRanges object
     if (length(regions.gr) == 0) {
-        if (keep.score)  regions.gr$MaxSiteScore <- integer(0)
+        if (keep.signal)  regions.gr$MaxSiteSignal <- integer(0)
         return(regions.gr)
     }
 
@@ -244,7 +245,7 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
     regions.max.gr <- promoters(regions.gr, 0, bin.centers)
     regions.max.gr <- resize(regions.max.gr, size, fix = "end")
 
-    if (keep.score)  regions.max.gr$MaxSiteScore <- maxsites$score
+    if (keep.signal)  regions.max.gr$MaxSiteSignal <- maxsites$score
     return(regions.max.gr)
 }
 
@@ -303,13 +304,17 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
 #'   is returned if the lower quantile is set to \code{1} or if the upper
 #'   quantile is set to \code{0}.
 #' @param field The metadata field of \code{dataset.gr} to be counted, typically
-#' "score".
+#'   "score".
 #' @param order.by.rank If \code{TRUE}, the output regions are sorted based on
-#'   the amount of overlapping signal (in decreasing order). If \code{FALSE} (the
-#'   default), genes are sorted by their positions.
+#'   the amount of overlapping signal (in decreasing order). If \code{FALSE}
+#'   (the default), genes are sorted by their positions.
 #' @param density A logical indicating whether signal counts should be
-#'   normalized to the width (chromosomal length) of ranges in \code{regions.gr}.
-#'   By default, no length normalization is performed.
+#'   normalized to the width (chromosomal length) of ranges in
+#'   \code{regions.gr}. By default, no length normalization is performed.
+#' @param keep.signal Logical indicating if signal counts should be kept. If set
+#'   to \code{TRUE}, the signal for each range (length-normalized if
+#'   \code{density = TRUE}) are kept as a new \code{Signal} metadata column in
+#'   the output GRanges object.
 #'
 #' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
 #'   - lower_quantile)}.
@@ -346,14 +351,15 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
 #'                       order.by.rank = TRUE)
 #'
 #' #--------------------------------------------------#
-#' # remove the most extreme 10% of regions
+#' # remove the most extreme 10% of regions, and keep scores
 #' #--------------------------------------------------#
 #'
 #' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
-#'                       quantiles = c(0.05, 0.95))
+#'                       quantiles = c(0.05, 0.95),
+#'                       keep.signal = TRUE)
 subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   field = "score", order.by.rank = FALSE,
-                                  density = FALSE) {
+                                  density = FALSE, keep.signal = FALSE) {
 
     if (quantiles[1] == 1 | quantiles[2] == 0)  return(regions.gr[0])
 
@@ -361,7 +367,8 @@ subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                         regions.gr = regions.gr,
                                         field = field)
 
-    if (density == TRUE)  signal_counts <- signal_counts / width(regions.gr)
+    if (density)  signal_counts <- signal_counts / width(regions.gr)
+    if (keep.signal)  regions.gr$Signal <- signal_counts
 
     idx_rank <- order(signal_counts) # increasing
     bounds <- quantile(seq_along(regions.gr), quantiles)

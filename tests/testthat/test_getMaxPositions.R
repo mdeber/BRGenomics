@@ -13,11 +13,11 @@ test_that("Empty input regions returns empty GRanges", {
     expect_equivalent(names(mcols(out)), names(mcols(txs_dm6_chr4)))
 })
 
-test_that("keep.score with empty input regions is properly formatted", {
-    # should add metadata for MaxSiteScore
+test_that("keep.signal with empty input regions is properly formatted", {
+    # should add metadata for MaxSiteSignal
     out <- getMaxPositionsBySignal(regions.gr = txs_dm6_chr4[0],
                                    dataset.gr = PROseq,
-                                   keep.score = TRUE)
+                                   keep.signal = TRUE)
     expect_equal(ncol(mcols(out)), ncol(mcols(txs_dm6_chr4)) + 1)
 })
 
@@ -45,7 +45,7 @@ test_that("Max sites found for regions with signal", {
 test_that("Correct signal metadata added for regions with signal", {
     out <- getMaxPositionsBySignal(regions.gr = test_regions_promoter,
                                    dataset.gr = PROseq,
-                                   keep.score = TRUE)
+                                   keep.signal = TRUE)
     # two repeated tests
     expect_equivalent(start(out)[1:4], c(42799, 44801, 69402, 69402))
     expect_equal(ncol(mcols(out)), ncol(mcols(txs_dm6_chr4)) + 1)

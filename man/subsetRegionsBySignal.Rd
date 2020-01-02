@@ -10,7 +10,8 @@ subsetRegionsBySignal(
   quantiles = c(0.5, 1),
   field = "score",
   order.by.rank = FALSE,
-  density = FALSE
+  density = FALSE,
+  keep.signal = FALSE
 )
 }
 \arguments{
@@ -30,12 +31,17 @@ quantile is set to \code{0}.}
 "score".}
 
 \item{order.by.rank}{If \code{TRUE}, the output regions are sorted based on
-the amount of overlapping signal (in decreasing order). If \code{FALSE} (the
-default), genes are sorted by their positions.}
+the amount of overlapping signal (in decreasing order). If \code{FALSE}
+(the default), genes are sorted by their positions.}
 
 \item{density}{A logical indicating whether signal counts should be
-normalized to the width (chromosomal length) of ranges in \code{regions.gr}.
-By default, no length normalization is performed.}
+normalized to the width (chromosomal length) of ranges in
+\code{regions.gr}. By default, no length normalization is performed.}
+
+\item{keep.signal}{Logical indicating if signal counts should be kept. If set
+to \code{TRUE}, the signal for each range (length-normalized if
+\code{density = TRUE}) are kept as a new \code{Signal} metadata column in
+the output GRanges object.}
 }
 \value{
 A GRanges object of length \code{length(regions.gr) * (upper_quantile
@@ -73,11 +79,12 @@ subsetRegionsBySignal(txs_dm6_chr4, PROseq,
                       order.by.rank = TRUE)
 
 #--------------------------------------------------#
-# remove the most extreme 10\% of regions
+# remove the most extreme 10\% of regions, and keep scores
 #--------------------------------------------------#
 
 subsetRegionsBySignal(txs_dm6_chr4, PROseq,
-                      quantiles = c(0.05, 0.95))
+                      quantiles = c(0.05, 0.95),
+                      keep.signal = TRUE)
 }
 \seealso{
 \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}

@@ -10,7 +10,7 @@ getMaxPositionsBySignal(
   binsize = 1,
   bin.centers = FALSE,
   field = "score",
-  keep.score = FALSE
+  keep.signal = FALSE
 )
 }
 \arguments{
@@ -26,9 +26,9 @@ opposed to the entire bin. By default, entire bins are returned.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
 
-\item{keep.score}{Logical indicating if the signal value at the max site
+\item{keep.signal}{Logical indicating if the signal value at the max site
 should be reported. If set to \code{TRUE}, the values are kept as a new
-metadata column in \code{regions.gr}.}
+\code{MaxSiteSignal} metadata column in the output GRanges.}
 }
 \value{
 Output is a GRanges object with regions.gr metadata, but each range
@@ -38,12 +38,13 @@ Output is a GRanges object with regions.gr metadata, but each range
   The site is set to the center of the bin, and if the binsize is even, the
   site is rounded to be closer to the beginning of the range.
 
-  If \code{keep.score = TRUE}, the output will also contain metadata for the
-  signal at the max site. The output is \emph{not} necessarily same length as
-  \code{regions.gr}, as regions without signal are not returned. If \emph{no
-  regions} have signal (e.g. as could happen if running this function on
-  single regions), the function will return an empty GRanges object with
-  intact metadata columns.
+  The output may not be the same length as \code{regions.gr}, as regions
+  without signal are not returned. If no regions have signal (e.g. as could
+  happen if running this function on single regions), the function will
+  return an empty GRanges object with intact metadata columns.
+
+  If \code{keep.signal = TRUE}, the output will also contain metadata for the
+  signal at the max site, named \code{MaxSiteSignal}.
 }
 \description{
 For each signal-containing region of interest, find the single site with the
@@ -65,13 +66,13 @@ pr[1:3]
 # max sites
 #--------------------------------------------------#
 
-getMaxPositionsBySignal(pr[1:3], PROseq, keep.score = TRUE)
+getMaxPositionsBySignal(pr[1:3], PROseq, keep.signal = TRUE)
 
 #--------------------------------------------------#
 # max sites in 5 bp bins
 #--------------------------------------------------#
 
-getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.score = TRUE)
+getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.signal = TRUE)
 }
 \seealso{
 \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
