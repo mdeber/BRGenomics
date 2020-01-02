@@ -231,10 +231,12 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 #'   numerator in the DESeq2 comparison, typically the perturbative condition.
 #' @param contrast.denom A string naming the \code{condition} to use as the
 #'   denominator in the DESeq2 comparison, typically the control condition.
-#' @param comparisons.list As an optional alternative to supplying a single
+#' @param comparisons As an optional alternative to supplying a single
 #'   \code{contrast.numer} and \code{contrast.denom}, users can supply a list of
 #'   character vectors containing numerator-denominator pairs, e.g.
-#'   \code{list(c("B", "A"), c("C", "A"), c("C", "B"))}.
+#'   \code{list(c("B", "A"), c("C", "A"), c("C", "B"))}. \code{comparisons} can
+#'   also be a dataframe in which each row is a comparison, the first column
+#'   contains the numerators, and  the second column contains the denominators.
 #' @param sizeFactors A vector containing DESeq2 \code{sizeFactors} to apply to
 #'   each sample. Each sample's readcounts are \emph{divided} by its respective
 #'   DESeq2 \code{sizeFactor}. A warning will be generated if the
@@ -256,15 +258,15 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 #'   arguments are given, all defaults will be used.
 #' @param ncores The number of cores to use for parallel processing. Multicore
 #'   processing is only used if more than one comparison is being made (i.e.
-#'   argument \code{comparisons.list} is used), and the number of cores utilized
-#'   will not be greater than the number of comparisons being performed.
+#'   argument \code{comparisons} is used), and the number of cores utilized will
+#'   not be greater than the number of comparisons being performed.
 #' @param quiet If \code{TRUE}, all output messages from calls to \code{DESeq}
 #'   and \code{results} will be suppressed, although passing option \code{quiet}
 #'   in \code{args.DESeq} will supersede this option for the call to
 #'   \code{DESeq}.
 #'
 #' @return For a single comparison, the output is the \code{DESeqResults} result
-#'   table. If a \code{comparisons.list} is used to make multiple comparisons,
+#'   table. If a \code{comparisons} is used to make multiple comparisons,
 #'   the output is a named list of \code{DESeqResults} objects, with elements
 #'   named following the pattern \code{"X_vs_Y"}, where \code{X} is the name of
 #'   the numerator condition, and \code{Y} is the name of the denominator
@@ -320,79 +322,93 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 #' res
 #'
 #' reslist <- getDESeqResults(dds,
-#'                            comparisons.list = list(c("B", "A"), c("C", "A")),
+#'                            comparisons = list(c("B", "A"), c("C", "A")),
 #'                            ncores = 1)
 #' names(reslist)
 #'
 #' reslist$B_vs_A
+#'
+#' # or using a dataframe
+#' reslist <- getDESeqResults(dds, comparisons = data.frame(num = c("B", "C"),
+#'                                                          den = c("A", "A")),
+#'                            ncores = 1)
+#' reslist$B_vs_A
 getDESeqResults <- function(dds, contrast.numer, contrast.denom,
-                            comparisons.list = NULL, sizeFactors = NULL,
+                            comparisons = NULL, sizeFactors = NULL,
                             alpha = 0.1, args.DESeq = NULL, args.results = NULL,
                             ncores = detectCores(), quiet = FALSE) {
 
     # check inputs
-    .check_args(match.call(), comparisons.list)
+    comparisons <- .check_args(match.call(), comparisons, quiet)
 
     ## if length(sizeFactors) matches dds, apply them ("apply early");
     ## else, hold on to them and try to apply after subsetting dds
     when_sf <- .when_sf(dds, sizeFactors) # early, late, or never
-    .msgs_early_sf(dds, comparisons.list, when_sf, quiet)
+    .msgs_early_sf(dds, comparisons, when_sf, quiet)
     if (when_sf == "early") {
         sizeFactors(dds) <- sizeFactors
         sizeFactors <- NULL # prevent re-application
     }
 
-    if (is.null(comparisons.list)) {
+    if (is.null(comparisons)) {
         res <- .get_deseq_results(
             dds, contrast.numer, contrast.denom, sizeFactors = sizeFactors,
             alpha = alpha, args.DESeq = args.DESeq, args.results = args.results,
-            ncores = ncores, quiet = quiet
+            quiet = quiet
         )
         return(res)
 
     } else {
         args.DESeq <- args.DESeq[names(args.DESeq) != "quiet"]
-        comparisons <- mclapply(comparisons.list, function(x) {
+        results.out <- mclapply(comparisons, function(x) {
             .get_deseq_results(
                 dds, x[1], x[2], sizeFactors = sizeFactors, alpha = alpha,
                 args.DESeq = args.DESeq, args.results = args.results,
-                ncores = 1, quiet = TRUE
+                quiet = TRUE
             )}, mc.cores = ncores)
 
-        names(comparisons) <- vapply(comparisons.list,
+        names(results.out) <- vapply(comparisons,
                                      function(x) paste0(x[1], "_vs_", x[2]),
                                      FUN.VALUE = character(1))
-        return(comparisons)
+        return(results.out)
     }
 }
 
 
-.check_args <- function(args, comparisons.list) {
+.check_args <- function(args, comparisons, quiet) {
     args <- as.list(args)[-1]
     num <- "contrast.numer" %in% names(args)
     denom <- "contrast.denom" %in% names(args)
-    clist <- !is.null(comparisons.list)
+    clist <- !is.null(comparisons)
+
+    if (clist) comparisons <- .check_clist(comparisons)
 
     if (!xor(clist, num & denom)) {
         stop(message = .nicemsg("Either provide both contrast.numer and
-                                contrast.denom, or provide comparisons.list,
+                                contrast.denom, or provide comparisons,
                                 but not both"))
         return(geterrmessage())
     }
-
-    # Check list
-    if (clist) {
-        class_ok <- .class_check(comparisons.list)
-        lengths_ok <- all(lengths(comparisons.list) == 2)
-        if (!(class_ok & lengths_ok)) {
-            stop(message = .nicemsg("comparisons.list provided as input, but
-                                    it's not a list of length = 2 character
-                                    vectors"))
-            return(geterrmessage())
-        }
-    }
+    return(comparisons)
 }
 
+.check_clist <- function(comparisons) {
+    if (is.data.frame(comparisons)) {
+        comparisons <- as.data.frame(t(comparisons),
+                                     stringsAsFactors = FALSE)
+        comparisons <- as.list(comparisons)
+    }
+    class_ok <- .class_check(comparisons)
+    lengths_ok <- all(lengths(comparisons) == 2)
+
+    if (!(class_ok & lengths_ok)) {
+        stop(message = .nicemsg("comparisons provided as input, but it's not a
+                                list of length = 2 character vectors, or a
+                                dataframe of characters with 2 columns"))
+        return(geterrmessage())
+    }
+    return(comparisons)
+}
 
 .class_check <- function(comparisons) {
     if (!is.list(comparisons)) return(FALSE)
@@ -401,13 +417,14 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     return(FALSE)
 }
 
+
 .when_sf <- function(dds, sizeFactors) {
     if (is.null(sizeFactors)) return("never")
     if (length(sizeFactors) == nrow(dds@colData)) return("early")
     return("late")
 }
 
-.msgs_early_sf <- function(dds, comparisons.list, when_sf, quiet) {
+.msgs_early_sf <- function(dds, comparisons, when_sf, quiet) {
 
     already_sf <- !is.null(sizeFactors(dds))
 
@@ -415,7 +432,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         warning("Overwriting previous sizeFactors", immediate. = TRUE)
     }
 
-    if (when_sf == "late" & length(comparisons.list) > 1)  {
+    if (when_sf == "late" & length(comparisons) > 1)  {
         stop(message = .nicemsg("Length of sizeFactors not equal to
                                 number of samples in dds"))
         return(geterrmessage())
@@ -426,7 +443,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 #' @importFrom DESeq2 DESeq results
 .get_deseq_results <- function(dds, contrast.numer, contrast.denom,
                                sizeFactors, alpha, args.DESeq, args.results,
-                               ncores, quiet) {
+                               quiet) {
 
     # Subset for pairwise comparison
     dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]

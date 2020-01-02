@@ -99,7 +99,6 @@ test_that("message if quiet = FALSE", {
 
 # Getting DESeq2 Results (using reduced dispersion matrices) --------------
 
-
 context("Get DESeq2 results with pairwise dispersion estimates")
 
 names(dds) <- txs$tx_name
@@ -115,7 +114,7 @@ test_that("can get single result from simple dds", {
 })
 
 res2 <- getDESeqResults(dds,
-                        comparisons.list = list(c("B", "A"), c("C", "A")),
+                        comparisons = list(c("B", "A"), c("C", "A")),
                         ncores = 1, quiet = TRUE)
 
 test_that("get proper results from list of comparisons", {
@@ -127,7 +126,7 @@ test_that("get proper results from list of comparisons", {
 
 test_that("can use multicore to get results from list of comparisons", {
     cl <- list(c("B", "A"), c("C", "A"))
-    expect_equivalent(res2, getDESeqResults(dds, comparisons.list = cl,
+    expect_equivalent(res2, getDESeqResults(dds, comparisons = cl,
                                             ncores = 2))
 })
 
@@ -141,23 +140,23 @@ test_that("error when invalid arguments", {
     expect_error(getDESeqResults(dds,
                                  contrast.numer = "B",
                                  contrast.denom = "A",
-                                 comparisons.list = list(c("B", "A"))))
-    expect_error(getDESeqResults(dds, comparisons.list = list("B", "A")))
-    expect_error(getDESeqResults(dds, comparisons.list = c("B", "A")))
+                                 comparisons = list(c("B", "A"))))
+    expect_error(getDESeqResults(dds, comparisons = list("B", "A")))
+    expect_error(getDESeqResults(dds, comparisons = c("B", "A")))
     expect_error(getDESeqResults(dds, contrast.numer = "B"))
-    expect_error(getDESeqResults(dds, comparisons.list = list(c(2, 1),
+    expect_error(getDESeqResults(dds, comparisons = list(c(2, 1),
                                                               c(3, 1))))
     expect_error(getDESeqResults(dds,
-                                 comparisons.list = list(c("B", "C", "A"),
+                                 comparisons = list(c("B", "C", "A"),
                                                          c("C", "B", "A"))))
 })
 
 test_that("can apply size factors to whole dds, and comparison-only", {
     res2sf <- getDESeqResults(dds,
-                              comparisons.list = list(c("B", "A"), c("C", "A")),
+                              comparisons = list(c("B", "A"), c("C", "A")),
                               sizeFactors = rep(1, 6), quiet = TRUE, ncores = 2)
     expect_false(all(res2[[1]]$log2FoldChange == res2sf[[1]]$log2FoldChange))
-    res2sf2 <- getDESeqResults(dds, comparisons.list = list(c("B", "A")),
+    res2sf2 <- getDESeqResults(dds, comparisons = list(c("B", "A")),
                                sizeFactors = rep(1, 4), quiet = TRUE,
                                ncores = 2)
     expect_equivalent(res2sf[[1]]$log2FoldChange, res2sf2[[1]]$log2FoldChange)
@@ -165,7 +164,7 @@ test_that("can apply size factors to whole dds, and comparison-only", {
 
 test_that("error if size factors the wrong length", {
     expect_error(getDESeqResults(dds, "B", "A", sizeFactors = rep(1, 5)))
-    expect_error(getDESeqResults(dds, comparisons.list = list(c("B", "A"),
+    expect_error(getDESeqResults(dds, comparisons = list(c("B", "A"),
                                                               c("C", "A")),
                                  sizeFactors = rep(1, 5)))
 })
@@ -179,7 +178,7 @@ test_that("warning if overwriting size factors", {
                    quiet = TRUE, ncores = 2)
     expect_warning(getDESeqResults(dds_sf, "B", "A", sizeFactors = rep(1, 4)),
                    quiet = TRUE, ncores = 2)
-    expect_warning(getDESeqResults(dds_sf, comparisons.list = list(c("B", "A")),
+    expect_warning(getDESeqResults(dds_sf, comparisons = list(c("B", "A")),
                                    sizeFactors = rep(1, 6), ncores = 2))
 })
 

@@ -8,7 +8,7 @@ getDESeqResults(
   dds,
   contrast.numer,
   contrast.denom,
-  comparisons.list = NULL,
+  comparisons = NULL,
   sizeFactors = NULL,
   alpha = 0.1,
   args.DESeq = NULL,
@@ -31,10 +31,12 @@ numerator in the DESeq2 comparison, typically the perturbative condition.}
 \item{contrast.denom}{A string naming the \code{condition} to use as the
 denominator in the DESeq2 comparison, typically the control condition.}
 
-\item{comparisons.list}{As an optional alternative to supplying a single
+\item{comparisons}{As an optional alternative to supplying a single
 \code{contrast.numer} and \code{contrast.denom}, users can supply a list of
 character vectors containing numerator-denominator pairs, e.g.
-\code{list(c("B", "A"), c("C", "A"), c("C", "B"))}.}
+\code{list(c("B", "A"), c("C", "A"), c("C", "B"))}. \code{comparisons} can
+also be a dataframe in which each row is a comparison, the first column
+contains the numerators, and  the second column contains the denominators.}
 
 \item{sizeFactors}{A vector containing DESeq2 \code{sizeFactors} to apply to
 each sample. Each sample's readcounts are \emph{divided} by its respective
@@ -61,8 +63,8 @@ arguments are given, all defaults will be used.}
 
 \item{ncores}{The number of cores to use for parallel processing. Multicore
 processing is only used if more than one comparison is being made (i.e.
-argument \code{comparisons.list} is used), and the number of cores utilized
-will not be greater than the number of comparisons being performed.}
+argument \code{comparisons} is used), and the number of cores utilized will
+not be greater than the number of comparisons being performed.}
 
 \item{quiet}{If \code{TRUE}, all output messages from calls to \code{DESeq}
 and \code{results} will be suppressed, although passing option \code{quiet}
@@ -71,7 +73,7 @@ in \code{args.DESeq} will supersede this option for the call to
 }
 \value{
 For a single comparison, the output is the \code{DESeqResults} result
-  table. If a \code{comparisons.list} is used to make multiple comparisons,
+  table. If a \code{comparisons} is used to make multiple comparisons,
   the output is a named list of \code{DESeqResults} objects, with elements
   named following the pattern \code{"X_vs_Y"}, where \code{X} is the name of
   the numerator condition, and \code{Y} is the name of the denominator
@@ -129,10 +131,16 @@ res <- getDESeqResults(dds, "B", "A")
 res
 
 reslist <- getDESeqResults(dds,
-                           comparisons.list = list(c("B", "A"), c("C", "A")),
+                           comparisons = list(c("B", "A"), c("C", "A")),
                            ncores = 1)
 names(reslist)
 
+reslist$B_vs_A
+
+# or using a dataframe
+reslist <- getDESeqResults(dds, comparisons = data.frame(num = c("B", "C"),
+                                                         den = c("A", "A")),
+                           ncores = 1)
 reslist$B_vs_A
 }
 \seealso{
