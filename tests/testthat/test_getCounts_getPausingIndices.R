@@ -136,8 +136,9 @@ test_that("length.normalize works (check when FALSE)", {
     expect_equivalent(round(pidx_norm)[1:4], c(0, 0, 1, 0))
 })
 
+pidx_re <- getPausingIndices(PROseq, txs_pr, txs_gb, remove.empty = TRUE)
+
 test_that("remove.empty works", {
-    pidx_re <- getPausingIndices(PROseq, txs_pr, txs_gb, remove.empty = TRUE)
     expect_true(length(pidx_re) < length(pidx))
     expect_equal(length(pidx_re),
                  length( which(getCountsByRegions(PROseq, txs_pr) != 0) ))
@@ -151,6 +152,13 @@ test_that("can get pause indices over multiple fields", {
     expect_is(pidx_multi, "data.frame")
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi[, 1], pidx)
+
+    pidx_multi_re <- getPausingIndices(ps_rename, txs_pr, txs_gb,
+                                       field = c("signal", "posnum"),
+                                       remove.empty = TRUE, ncores = 2)
+    expect_is(pidx_multi, "data.frame")
+    expect_equivalent(names(pidx_multi), c("signal", "posnum"))
+    expect_equivalent(pidx_multi_re[, 1], pidx_re)
 })
 
 
