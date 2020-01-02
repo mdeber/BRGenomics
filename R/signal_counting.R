@@ -192,8 +192,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     # expand all regions to be the same width, then get counts
     widths <- width(regions.gr) # save widths
     suppressWarnings( regions.gr <- resize(regions.gr, max(widths)) )
-    mat <- .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field)
 
+    mat <- .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field)
     nbins <- floor(widths / binsize) # number of bins to keep for each region
 
     if (simplify.multi.widths == "list") {
@@ -203,6 +203,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         return(clist)
 
     } else {
+        # get array indices for out-of-range bins
         arridx_pad <- vapply(nbins,
                              function(nbins.i) seq_len(ncol(mat)) > nbins.i,
                              FUN.VALUE = logical(ncol(mat)))
