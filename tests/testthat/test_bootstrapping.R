@@ -84,6 +84,11 @@ test_that("bootstrapping successful over several fields", {
     expect_equivalent(names(dflist), c("signal", "posnum"))
     expect_is(dflist[[1]], "data.frame")
     expect_equivalent(dflist[[1]], df)
+
+    expect_warning(metaSubsample(ps_rename, txs_pr,
+                                 field = c("signal", "posnum"),
+                                 sample.name = "countsmat",
+                                 remove.empty = TRUE, ncores = 1))
 })
 
 

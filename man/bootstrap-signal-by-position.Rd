@@ -16,8 +16,8 @@ metaSubsample(
   prop.sample = 0.1,
   lower = 0.125,
   upper = 0.875,
-  NF = 1,
   field = "score",
+  NF = NULL,
   remove.empty = FALSE,
   ncores = detectCores()
 )
@@ -68,13 +68,15 @@ to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
 85.5th percentiles) return a 75 percent confidence interval about the
 bootstrapped mean.}
 
-\item{NF}{Optional normalization factor by which to multiply the counts.}
-
 \item{field}{The metadata field of \code{dataset.gr} to be counted.}
+
+\item{NF}{An optional normalization factor by which to multiply the counts.
+If given, \code{length(NF)} must be equal to \code{length(field)}.}
 
 \item{remove.empty}{A logical indicating whether regions
 (\code{metaSubsample}) or rows (\code{metaSubsampleMatrix}) without signal
-should be removed from the analysis.}
+should be removed from the analysis. Not recommended if using multiple
+fields, as the gene lists will no longer be equivalent.}
 
 \item{ncores}{Number of cores to use for computations.}
 

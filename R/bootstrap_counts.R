@@ -38,11 +38,13 @@
 #'   to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
 #'   85.5th percentiles) return a 75 percent confidence interval about the
 #'   bootstrapped mean.
-#' @param NF Optional normalization factor by which to multiply the counts.
 #' @param field The metadata field of \code{dataset.gr} to be counted.
+#' @param NF An optional normalization factor by which to multiply the counts.
+#'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param remove.empty A logical indicating whether regions
 #'   (\code{metaSubsample}) or rows (\code{metaSubsampleMatrix}) without signal
-#'   should be removed from the analysis.
+#'   should be removed from the analysis. Not recommended if using multiple
+#'   fields, as the gene lists will no longer be equivalent.
 #' @param ncores Number of cores to use for computations.
 #'
 #' @return Dataframe containing x-values, means, lower quantiles, upper
@@ -122,28 +124,23 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                           sample.name = deparse(substitute(dataset.gr)),
                           n.iter = 1000, prop.sample = 0.1,
                           lower = 0.125, upper = 0.875,
-                          NF = 1, field = "score", remove.empty = FALSE,
+                          field = "score", NF = NULL, remove.empty = FALSE,
                           ncores = detectCores()) {
-
     if (length(unique(width(regions.gr))) > 1) {
         stop(message = "Not all ranges in regions.gr are the same width")
         return(geterrmessage())
     }
+    if (is.null(NF)) NF <- rep(1, length(field))
 
     if (length(field) > 1) {
-        # use seed for same genelist sampling for each field
-        if ( !exists(".Random.seed") | is.null(.Random.seed) ) set.seed(NULL)
-        seed <- .Random.seed # save the current seed state
-
-        # get and alter arguments
-        fun_args <- as.list(match.call())[-1]
-        args.force <- c("dataset.gr", "regions.gr", "remove.empty", "field")
-
-        dflist <- lapply(field, function(i) {
-            .Random.seed <- seed
-            fun_args[args.force] <- list(dataset.gr, regions.gr, FALSE, i)
+        if (remove.empty) warning("remove.empty set with multiple fields")
+        fun_args <- as.list(match.call())[-1] # copy-paste arguments
+        fun_args[c("dataset.gr", "regions.gr")] <- list(dataset.gr, regions.gr)
+        call_fun <- function(field.i, NF.i) {
+            fun_args[c("field", "NF")] <- list(field.i, NF.i)
             do.call(metaSubsample, fun_args)
-        })
+        }
+        dflist <- mapply(call_fun, field, NF, SIMPLIFY = FALSE)
         names(dflist) <- field
         return(dflist)
     }
@@ -152,8 +149,8 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     # -> Matrix of dim = (ngenes, nbins)
     signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
-                                        binsize = binsize, field = field)
-
+                                        binsize = binsize,
+                                        field = field)
     metamat <- metaSubsampleMatrix(
         counts.mat = signal.bins, binsize = 1,
         first.output.xval = first.output.xval, sample.name = sample.name,
@@ -165,7 +162,6 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     if (binsize != 1) metamat <- .fixbins(metamat, binsize, first.output.xval)
     return(metamat)
 }
-
 
 .fixbins <- function(metamat, binsize, first.output.xval) {
     nbins <- nrow(metamat)
