@@ -119,8 +119,8 @@ NULL
 #' @export
 #' @importFrom parallel mclapply detectCores
 #' @importFrom GenomicRanges width
-metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
-                          first.output.xval = 1,
+metaSubsample <- function(dataset.gr, regions.gr,
+                          binsize = 1, first.output.xval = 1,
                           sample.name = deparse(substitute(dataset.gr)),
                           n.iter = 1000, prop.sample = 0.1,
                           lower = 0.125, upper = 0.875,
@@ -135,6 +135,7 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     if (length(field) > 1) {
         if (remove.empty) warning("remove.empty set with multiple fields")
         fun_args <- as.list(match.call())[-1] # copy-paste arguments
+        # the following line is required when run by testthat:
         fun_args[c("dataset.gr", "regions.gr")] <- list(dataset.gr, regions.gr)
         call_fun <- function(field.i, NF.i) {
             fun_args[c("field", "NF")] <- list(field.i, NF.i)
@@ -149,8 +150,7 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     # -> Matrix of dim = (ngenes, nbins)
     signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
-                                        binsize = binsize,
-                                        field = field)
+                                        binsize = binsize, field = field)
     metamat <- metaSubsampleMatrix(
         counts.mat = signal.bins, binsize = 1,
         first.output.xval = first.output.xval, sample.name = sample.name,
@@ -229,8 +229,8 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     }
 
     # Also return x-values, sample names for plotting; x-vals centered in bins
-    if (binsize == 1) x <- first.output.xval + seq(0, nbins - 1)
-    if (binsize > 1) x <- .binxval(nbins, binsize, first.output.xval)
+    if (binsize == 1)  x <- first.output.xval + seq(0, nbins - 1)
+    if (binsize > 1)  x <- .binxval(nbins, binsize, first.output.xval)
     return(data.frame(x, mean, lower, upper, sample.name))
 }
 

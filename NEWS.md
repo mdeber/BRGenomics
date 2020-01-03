@@ -1,3 +1,9 @@
+## BRGenomics 0.4.5
+
+* Added and modified numerous arguments
+* Increased support for normalization factors across signal counting functions
+* Modified behavior of bootstrapping over multiple fields by removing explicit access to .Random.seed
+
 ## BRGenomics 0.4.1
 
 * Various documentation updates
