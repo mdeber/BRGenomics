@@ -11,6 +11,7 @@ getCountsByPositions(
   FUN = sum,
   simplify.multi.widths = c("list", "pad 0", "pad NA"),
   field = "score",
+  NF = NULL,
   ncores = detectCores()
 )
 }
@@ -34,6 +35,9 @@ See details below.}
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, the output is a list whose elements contain the
 output for generated each field.}
+
+\item{NF}{An optional normalization factor by which to multiply the counts.
+If given, \code{length(NF)} must be equal to \code{length(field)}.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }

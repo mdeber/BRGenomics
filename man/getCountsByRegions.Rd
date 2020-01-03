@@ -8,6 +8,7 @@ getCountsByRegions(
   dataset.gr,
   regions.gr,
   field = "score",
+  NF = NULL,
   ncores = detectCores()
 )
 }
@@ -20,6 +21,9 @@ getCountsByRegions(
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, a dataframe is returned containing the counts for
 each region in each field.}
+
+\item{NF}{An optional normalization factor by which to multiply the counts.
+If given, \code{length(NF)} must be equal to \code{length(field)}.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }

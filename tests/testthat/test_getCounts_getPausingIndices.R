@@ -45,6 +45,9 @@ test_that("simple counts matrix correctly calculated", {
     expect_is(countsmat, "matrix")
     expect_equivalent(dim(countsmat), c(length(txs_dm6_chr4), 100))
     expect_equivalent(rowSums(countsmat), getCountsByRegions(PROseq, txs_pr))
+    # with normalization factor
+    expect_equivalent(getCountsByPositions(PROseq, txs_pr, NF = 0.5),
+                      countsmat * 0.5)
 })
 
 test_that("simple counts matrix works over multiple metadata fields", {
@@ -56,6 +59,11 @@ test_that("simple counts matrix works over multiple metadata fields", {
     expect_is(fieldcounts[[1]], "matrix")
     expect_is(fieldcounts[[2]], "matrix")
     expect_equivalent(fieldcounts[[1]], countsmat)
+    # with normalization factor
+    expect_equivalent(fieldcounts[[2]] * 0.5,
+                      getCountsByPositions(ps_rename, txs_pr,
+                                           field = c("signal", "posnum"),
+                                           NF = c(1, 0.5), ncores = 2)[[2]])
 })
 
 
@@ -69,6 +77,10 @@ test_that("can get list from multi-width counts matrix", {
     idx <- which(width(txs_dm6_chr4) >= 100)
     expect_equivalent(countsmat[idx, ],
                       t(sapply(countslist[idx], "[", 1:100)))
+
+    # with normalization factor
+    expect_equivalent(countslist[[1]] * 0.5,
+                      getCountsByPositions(PROseq, txs_dm6_chr4, NF = 0.5)[[1]])
 })
 
 test_that("can get 0-padded counts matrix for multi-width regions", {

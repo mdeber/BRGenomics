@@ -11,6 +11,8 @@
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, a dataframe is returned containing the counts for
 #'   each region in each field.
+#' @param NF An optional normalization factor by which to multiply the counts.
+#'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return An atomic vector the same length as \code{regions.gr} containing
@@ -38,7 +40,7 @@
 #'
 #' txs_dm6_chr4[1:6]
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
-                               ncores = detectCores()) {
+                               NF = NULL, ncores = detectCores()) {
     if (length(field) == 1) {
         hits <- findOverlaps(regions.gr, dataset.gr)
         counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
@@ -46,6 +48,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         names(counts) <- c("gene.idx", "signal")
         counts.all <- rep(0, length(regions.gr)) # include regions without hits
         counts.all[counts$gene.idx] <- counts$signal
+        if (!is.null(NF))  counts.all <- counts.all * NF
         return(counts.all)
 
     } else {
@@ -53,6 +56,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         call_each <- function(x) getCountsByRegions(dataset.gr, regions.gr, x)
         counts <- mclapply(field, call_each, mc.cores = ncores)
         names(counts) <- field
+        if (!is.null(NF)) counts <- mapply("*", counts, NF, SIMPLIFY = FALSE)
         return(as.data.frame(counts))
     }
 }
@@ -80,6 +84,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, the output is a list whose elements contain the
 #'   output for generated each field.
+#' @param NF An optional normalization factor by which to multiply the counts.
+#'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return If the widths of all ranges in \code{regions.gr} are equal, a matrix
@@ -100,7 +106,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom parallel detectCores mclapply
+#' @importFrom parallel detectCores mcmapply
 #' @importFrom GenomicRanges width
 #'
 #' @examples
@@ -142,41 +148,44 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  simplify.multi.widths = c("list",
                                                            "pad 0",
                                                            "pad NA"),
-                                 field = "score", ncores = detectCores()) {
+                                 field = "score", NF = NULL,
+                                 ncores = detectCores()) {
 
     # function makes practical use of single-width dataset.gr, but the output
     # is always valid regardless of the input data type
     if (any(width(dataset.gr) != 1)) dataset.gr <- makeGRangesBRG(dataset.gr)
+    if (is.null(NF))  NF <- rep(1, length(field))
 
     hits <- findOverlaps(regions.gr, dataset.gr) # get hits early (once)
 
     if (length(field) > 1) {
-
-        reslist <- mclapply(field, function(field.i) {
-            .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize,
-                     FUN = FUN, simplify.multi.widths, field = field.i)
-        }, mc.cores = ncores)
-
+        .call_multifield <- function(field.i, NF.i) {
+            .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize, FUN = FUN,
+                     simplify.multi.widths = simplify.multi.widths,
+                     field = field.i, NF = NF.i)
+        }
+        reslist <- mcmapply(.call_multifield, field, NF,
+                            mc.cores = ncores, SIMPLIFY = FALSE)
         names(reslist) <- field
         return(reslist)
 
     } else {
         .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize,
-                 FUN = FUN, simplify.multi.widths, field = field)
+                 FUN = FUN, simplify.multi.widths, field = field, NF = NF)
     }
 }
 
 
 .get_cbp <- function(hits, dataset.gr, regions.gr, binsize,
-                     FUN, simplify.multi.widths, field) {
+                     FUN, simplify.multi.widths, field, NF) {
 
     multi_width <- length(unique(width(regions.gr))) > 1
 
     if (multi_width) {
         .get_cbp_mw(hits, dataset.gr, regions.gr, binsize, FUN,
-                    simplify.multi.widths, field)
+                    simplify.multi.widths, field, NF)
     } else {
-        .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field)
+        .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field, NF)
     }
 
 }
@@ -184,7 +193,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 #' @importFrom GenomicRanges width resize
 .get_cbp_mw <- function(hits, dataset.gr, regions.gr, binsize, FUN,
-                        simplify.multi.widths, field) {
+                        simplify.multi.widths, field, NF) {
 
     simplify.multi.widths <- match.arg(simplify.multi.widths,
                                        c("list", "pad 0", "pad NA"))
@@ -193,14 +202,14 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     widths <- width(regions.gr) # save widths
     suppressWarnings( regions.gr <- resize(regions.gr, max(widths)) )
 
-    mat <- .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field)
+    mat <- .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN,
+                           field, NF)
     nbins <- floor(widths / binsize) # number of bins to keep for each region
 
     if (simplify.multi.widths == "list") {
         # list of vectors whose lengths determined by width of range i
-        clist <- mapply(function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)],
-                        seq_len(nrow(mat)), nbins)
-        return(clist)
+        get_cols <- function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)]
+        mapply(get_cols, seq_len(nrow(mat)), nbins, SIMPLIFY = FALSE)
 
     } else {
         # get array indices for out-of-range bins
@@ -209,18 +218,15 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                              FUN.VALUE = logical(ncol(mat)))
         arridx_pad <- t(arridx_pad) # sapply/vapply cbinds the rows
         arridx_pad <- which(arridx_pad, arr.ind = TRUE)
-        if (simplify.multi.widths == "pad 0") {
-            mat[arridx_pad] <- 0
-        } else {
-            mat[arridx_pad] <- NA
-        }
+        mat[arridx_pad] <- ifelse(simplify.multi.widths == "pad 0", 0, NA)
         return(mat)
     }
 }
 
 
 #' @importFrom GenomicRanges start mcols
-.get_signal_mat <- function(hits, dataset.gr, regions.gr, binsize, FUN, field) {
+.get_signal_mat <- function(hits, dataset.gr, regions.gr, binsize, FUN,
+                            field, NF) {
 
     # initialize signal matrix of dim = (region, position within region)
     mat <- matrix(0, length(regions.gr), unique(width(regions.gr)))
@@ -238,7 +244,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                                     FUN = FUN))
         mat <- t(mat) # apply will cbind rather than rbind
     }
-    return(mat)
+    return(mat * NF)
 }
 
 
