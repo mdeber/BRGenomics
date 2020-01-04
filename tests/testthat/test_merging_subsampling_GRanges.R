@@ -62,16 +62,14 @@ PROseq$quartile <- findInterval(seq_along(PROseq),
                                 ps_breaks,
                                 rightmost.closed = TRUE)
 
-test_that("Merging single dataset produces warning", {
-    expect_warning(mergeGRangesData(PROseq))
-})
-
 test_that("Merging is non-destructive", {
-    expect_identical(PROseq, suppressWarnings(mergeGRangesData(PROseq)))
-    expect_identical(PROseq, mergeGRangesData(subset(PROseq, quartile == 1),
-                                              subset(PROseq, quartile == 2),
-                                              subset(PROseq, quartile == 3),
-                                              subset(PROseq, quartile == 4)))
+    expect_identical(subset(PROseq, select = score),
+                     suppressWarnings(mergeGRangesData(PROseq)))
+    expect_identical(subset(PROseq, select = score),
+                     mergeGRangesData(subset(PROseq, quartile == 1),
+                                      subset(PROseq, quartile == 2),
+                                      subset(PROseq, quartile == 3),
+                                      subset(PROseq, quartile == 4)))
 })
 
 ps_10ranges <- PROseq[seq(1, 100, 10)] # ensure disjoint when resized below
@@ -100,5 +98,23 @@ test_that("Merging concatenates non-overlapping ranges", {
     #                      c(ps_10ranges, shift(ps_10ranges, 1)) ))
 })
 
+gr1 <- PROseq[10:13]
+gr2 <- PROseq[12:15]
+gr_multi <- mergeGRangesData(gr1, gr2, multiplex = TRUE)
 
+test_that("Multiplexed merging works with input GRanges", {
+    expect_equivalent(names(mcols(gr_multi)), c("gr1", "gr2"))
+    expect_equivalent(sapply(mcols(gr_multi), sum),
+                      c(sum(gr1$score), sum(gr2$score)))
+    expect_equivalent(subset(gr_multi, gr1 > 0, select = gr1)$gr1,
+                      gr1$score)
+})
+
+test_that("Multiplexed merging works with listed input", {
+    expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1, gr2 = gr2),
+                                                 multiplex = TRUE))
+    expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1),
+                                                 list(gr2 = gr2),
+                                                 multiplex = TRUE))
+})
 

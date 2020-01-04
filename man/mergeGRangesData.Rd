@@ -4,28 +4,64 @@
 \alias{mergeGRangesData}
 \title{Merge basepair-resolution GRanges objects}
 \usage{
-mergeGRangesData(..., field = "score", ncores = detectCores())
+mergeGRangesData(
+  ...,
+  field = "score",
+  multiplex = FALSE,
+  ncores = detectCores()
+)
 }
 \arguments{
 \item{...}{Any number of GRanges objects in which signal (e.g. readcounts)
 are contained within metadata. GRanges not single-width will be coerced
-using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}.}
+using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}. Lists of
+GRanges can also be passed, but they must be named lists if
+\code{multiplex = TRUE}. Multiple lists can be passed, but if any inputs
+are lists, then all inputs must be lists.}
 
-\item{field}{One or more metadata fields to be combined, typically the
-"score" field. Fields typically contain coverage information.}
+\item{field}{One or more \emph{input} metadata fields to be combined,
+typically the "score" field. Fields typically contain coverage information.
+If only a single field is given (i.e. all input GRanges use the same
+field), that same field will be used for the output. Otherwise, the
+\code{score} metadata field will be used by default. The output metadata
+fields are different if \code{multiplex} is enabled.}
 
-\item{ncores}{More than one core can be used to coerce non-single-width
-GRanges objects using \code{makeGRangesBRG}.}
+\item{multiplex}{When set to \code{FALSE} (the default), input GRanges are
+merged irreversibly into a single new GRange, effectively combining the
+reads from different experiments. When \code{multiplex = TRUE}, the input
+GRanges data are reversibly combined into a multiplexed GRanges object,
+such that each input GRanges object has its own metadata field in the
+output.}
+
+\item{ncores}{Number of cores to use for computations.}
 }
 \value{
 A disjoint, basepair-resolution (single-width) GRanges object
-  comprised of all ranges found in the input GRanges objects, and whose total
-  readcount is the sum of all input GRanges.
+  comprised of all ranges found in the input GRanges objects.
+
+  If \code{multiplex = FALSE}, single fields from each input are combined
+  into a single field in the output, the total signal of which is the sum of
+  all input GRanges.
+
+  If \code{multiplex = TRUE}, each field of the output corresponds to an
+  input GRanges object.
 }
 \description{
 Merges 2 or more basepair-resolution (single-width) GRanges objects by
-combining all of their ranges and associated signal (e.g. readcounts).
+combining all of their ranges and associated signal (e.g. readcounts). If
+\code{multiplex = TRUE}, the input datasets are reversibly combined into a
+multiplexed GRanges containing a field for each input dataset.
 }
+\section{Subsetting a multiplexed GRanges object}{
+ If \code{multiplex = TRUE},
+  the datasets are only combined into a single object, but the data
+  themselves are not combined. To subset \code{field_i}, corresponding to
+  input \code{dataset_i}:
+
+  \code{multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE)}
+  \code{subset(multi.gr, gr1 != 0, select = gr1)} # select gr1
+}
+
 \examples{
 data("PROseq") # load included PROseq data
 
@@ -54,6 +90,19 @@ gr2 <- PROseq[12:15]
 PROseq[10:15]
 
 mergeGRangesData(gr1, gr2)
+
+#--------------------------------------------------#
+# multiplex separate PRO-seq experiments
+#--------------------------------------------------#
+
+multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE)
+multi.gr
+
+#--------------------------------------------------#
+# subset a multiplexed GRanges object
+#--------------------------------------------------#
+
+subset(multi.gr, gr1 != 0, select = gr1)
 }
 \seealso{
 \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
