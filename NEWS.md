@@ -1,3 +1,8 @@
+## BRGenomics 0.4.7
+
+* Rewrote `mergeGRangesData` to support the creation of multiplexed GRanges objects
+* Made `getCountsByRegions` and `getCountsByPositions` to return integers if input signal is integer
+
 ## BRGenomics 0.4.5
 
 * Added and modified numerous arguments
