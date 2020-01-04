@@ -46,7 +46,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
                             by = list(hits@from), FUN = sum)
         names(counts) <- c("gene.idx", "signal")
-        counts.all <- rep(0, length(regions.gr)) # include regions without hits
+        counts.all <- rep(0L, length(regions.gr)) # include regions without hits
         counts.all[counts$gene.idx] <- counts$signal
         if (!is.null(NF))  counts.all <- counts.all * NF
         return(counts.all)
@@ -229,7 +229,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                             field, NF) {
 
     # initialize signal matrix of dim = (region, position within region)
-    mat <- matrix(0, length(regions.gr), unique(width(regions.gr)))
+    mat <- matrix(0L, length(regions.gr), unique(width(regions.gr)))
 
     # find (x, y) = (region, position)
     x <- hits@from
