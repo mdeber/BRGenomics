@@ -76,11 +76,11 @@ binNdimensions <- function(..., nbins = 10) {
     seqRange <- function(x, y) seq(min(Filter(is.finite, x)),
                                    max(Filter(is.finite, x)),
                                    length = y)
-    bin_seqs <- mapply(seqRange, data, nbins, SIMPLIFY = FALSE)
+    bin_seqs <- Map(seqRange, data, nbins)
 
     # get bin indices for each datapoint along each dimension
-    bin_idx <- mapply(findInterval, data, bin_seqs, SIMPLIFY = FALSE)
-    names(bin_idx) <- paste("bin", names(data))
+    bin_idx <- Map(findInterval, data, bin_seqs)
+    names(bin_idx) <- paste0("bin.", names(data))
 
     as.data.frame(bin_idx)
 }

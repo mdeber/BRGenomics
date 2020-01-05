@@ -13,7 +13,8 @@ LazyData: FALSE
 RoxygenNote: 7.0.2
 Depends:
     GenomicRanges,
-    GenomeInfoDb
+    GenomeInfoDb,
+    S4Vectors
 Imports:
     rtracklayer,
     parallel,
@@ -29,12 +30,6 @@ Suggests:
     BiocStyle,
     knitr,
     rmarkdown,
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
-    TxDb.Hsapiens.UCSC.hg19.knownGene,
-    TxDb.Mmusculus.UCSC.mm10.knownGene,
-    TxDb.Mmusculus.UCSC.mm9.knownGene,
-    TxDb.Dmelanogaster.UCSC.dm6.ensGene,
-    TxDb.Dmelanogaster.UCSC.dm3.ensGene,
     testthat
 biocViews:
     Software,

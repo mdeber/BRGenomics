@@ -23,7 +23,6 @@
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
-#' @importFrom stats aggregate
 #' @importFrom GenomicRanges findOverlaps mcols
 #' @importFrom parallel detectCores mclapply
 #'
@@ -62,7 +61,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         call_each <- function(x) getCountsByRegions(dataset.gr, regions.gr, x)
         counts <- mclapply(field, call_each, mc.cores = ncores)
         names(counts) <- field
-        if (!is.null(NF)) counts <- mapply("*", counts, NF, SIMPLIFY = FALSE)
+        if (!is.null(NF)) counts <- Map("*", counts, NF)
         return(as.data.frame(counts))
     }
 }
@@ -124,7 +123,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom parallel detectCores mcmapply
+#' @importFrom parallel detectCores mcMap
 #' @importFrom GenomicRanges width
 #'
 #' @examples
@@ -184,8 +183,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                      simplify.multi.widths = simplify.multi.widths,
                      field = field.i, NF = NF.i)
         }
-        reslist <- mcmapply(.call_multifield, field, NF,
-                            mc.cores = ncores, SIMPLIFY = FALSE)
+        reslist <- mcMap(.call_multifield, field, NF, mc.cores = ncores)
         names(reslist) <- field
         return(reslist)
 
@@ -229,7 +227,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     if (simplify.multi.widths == "list") {
         # list of vectors whose lengths determined by width of range i
         get_cols <- function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)]
-        mapply(get_cols, seq_len(nrow(mat)), nbins, SIMPLIFY = FALSE)
+        Map(get_cols, seq_len(nrow(mat)), nbins)
 
     } else {
         # get array indices for out-of-range bins

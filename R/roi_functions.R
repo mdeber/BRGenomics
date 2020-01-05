@@ -321,7 +321,7 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom stats window quantile
+#' @importFrom stats quantile
 #' @importFrom GenomicRanges width
 #'
 #' @examples
