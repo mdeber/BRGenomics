@@ -393,8 +393,8 @@ subsampleGRanges <- function(dataset.gr,
 #' # re-merge
 #' length(PROseq)
 #' length(ps_1)
-#' length(mergeGRangesData(ps_1, ps_2))
-#' length(mergeGRangesData(ps_1, ps_2, ps_3))
+#' length(mergeGRangesData(ps_1, ps_2, ncores = 2))
+#' length(mergeGRangesData(ps_1, ps_2, ps_3, ncores = 2))
 #'
 #' #--------------------------------------------------#
 #' # combine PRO-seq with overlapping positions
@@ -405,13 +405,13 @@ subsampleGRanges <- function(dataset.gr,
 #'
 #' PROseq[10:15]
 #'
-#' mergeGRangesData(gr1, gr2)
+#' mergeGRangesData(gr1, gr2, ncores = 2)
 #'
 #' #--------------------------------------------------#
 #' # multiplex separate PRO-seq experiments
 #' #--------------------------------------------------#
 #'
-#' multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE)
+#' multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 2)
 #' multi.gr
 #'
 #' #--------------------------------------------------#
@@ -431,7 +431,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     }
 
     # check length of fields vs. data_in
-    field <- .field_check(data_in, field)
+    field <- .check_merge_fields(data_in, field)
 
     # check if input data are base-pair resolution coverage data
     data_in <- .width_check(data_in, ncores)
@@ -457,7 +457,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     return(gr)
 }
 
-.field_check <- function(data_in, field) {
+.check_merge_fields <- function(data_in, field) {
 
     if (length(field) > 1) {
         if (length(field) != length(data_in)) {
