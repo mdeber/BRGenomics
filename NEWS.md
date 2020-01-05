@@ -1,3 +1,9 @@
+## BRGenomics 0.5.0
+
+* Increased support for multiplexed GRanges objects across all functions
+* Increased performance for bootstrapping over multiple fields/multiplexed GRanges objects
+* Removed requirement to seed 'field' argument for gettings counts over multiplexed GRanges
+
 ## BRGenomics 0.4.7
 
 * Rewrote `mergeGRangesData` to support the creation of multiplexed GRanges objects
