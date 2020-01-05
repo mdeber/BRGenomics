@@ -7,7 +7,7 @@ data("txs_dm6_chr4")
 test_counts <- getCountsByRegions(PROseq, txs_dm6_chr4)
 
 test_that("signal counts correct returns correct vector", {
-    expect_is(test_counts, "numeric")
+    expect_is(test_counts, "integer")
     expect_equal(length(test_counts), length(txs_dm6_chr4))
     expect_equivalent(test_counts[1:4], c(1, 58, 13, 125))
 })
@@ -16,9 +16,8 @@ ps_rename <- PROseq
 names(mcols(ps_rename)) <- "signal"
 
 test_that("signal counts works with alternative metadata fields", {
-    expect_error(getCountsByRegions(ps_rename, txs_dm6_chr4))
-    expect_equivalent(test_counts, getCountsByRegions(ps_rename,
-                                                      txs_dm6_chr4,
+    expect_message(getCountsByRegions(ps_rename, txs_dm6_chr4))
+    expect_equivalent(test_counts, getCountsByRegions(ps_rename, txs_dm6_chr4,
                                                       field = "signal"))
 })
 
@@ -31,8 +30,6 @@ test_that("signal counts work over multiple metadata fields", {
     expect_is(counts_multiple, "data.frame")
     expect_equivalent(counts_multiple$signal, test_counts)
 })
-
-
 
 # getCountsByPositions ----------------------------------------------------
 
@@ -52,7 +49,7 @@ test_that("simple counts matrix correctly calculated", {
 
 test_that("simple counts matrix works over multiple metadata fields", {
     fieldcounts <- getCountsByPositions(ps_rename, txs_pr,
-                                       field = c("signal", "posnum"),
+                                        field = c("signal", "posnum"),
                                        ncores = 2)
     expect_is(fieldcounts, "list")
     expect_equivalent(names(fieldcounts), c("signal", "posnum"))
@@ -65,7 +62,6 @@ test_that("simple counts matrix works over multiple metadata fields", {
                                            field = c("signal", "posnum"),
                                            NF = c(1, 0.5), ncores = 2)[[2]])
 })
-
 
 countslist <- getCountsByPositions(PROseq, txs_dm6_chr4)
 
@@ -104,7 +100,6 @@ test_that("error on incorrect simplify argument", {
                                       simplify.multi.widths = "notright"))
 })
 
-
 test_that("can perform arbitrary binning operations on count matrix", {
     binsums <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sum)
     expect_is(binsums, "matrix")
@@ -123,7 +118,6 @@ test_that("can perform arbitrary binning operations on count matrix", {
     expect_false(all(rowSums(binmedians) == 0))
     expect_false(all((binmedians == 0) == (binmeans == 0)))
 })
-
 
 # Calculating pause indices -----------------------------------------------
 
@@ -156,7 +150,6 @@ test_that("remove.empty works", {
                  length( which(getCountsByRegions(PROseq, txs_pr) != 0) ))
 })
 
-
 test_that("can get pause indices over multiple fields", {
     pidx_multi <- getPausingIndices(ps_rename, txs_pr, txs_gb,
                                     field = c("signal", "posnum"),
@@ -172,6 +165,3 @@ test_that("can get pause indices over multiple fields", {
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi_re[, 1], pidx_re)
 })
-
-
-

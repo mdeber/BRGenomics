@@ -20,7 +20,9 @@ getCountsByRegions(
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, a dataframe is returned containing the counts for
-each region in each field.}
+each region in each field. If \code{field} not found in
+\code{names(mcols(dataset.gr))}, will default to using all fields found in
+\code{dataset.gr}.}
 
 \item{NF}{An optional normalization factor by which to multiply the counts.
 If given, \code{length(NF)} must be equal to \code{length(field)}.}
@@ -28,8 +30,8 @@ If given, \code{length(NF)} must be equal to \code{length(field)}.}
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
 \value{
-An atomic vector the same length as \code{regions.gr} containing
-the sum of the signal overlapping each range of \code{regions.gr}.
+An atomic vector the same length as \code{regions.gr} containing the
+  sum of the signal overlapping each range of \code{regions.gr}.
 }
 \description{
 Get the sum of the signal in \code{dataset.gr} that overlaps each range in

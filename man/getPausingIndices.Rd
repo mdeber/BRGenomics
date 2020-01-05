@@ -26,7 +26,9 @@ interest.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, a dataframe is returned containing the pausing
-indices for each region in each field.}
+indices for each region in each field. If \code{field} not found in
+\code{names(mcols(dataset.gr))}, will default to using all fields found in
+\code{dataset.gr}.}
 
 \item{length.normalize}{A logical indicating if signal counts within regions
 of interest should be length normalized. The default is \code{TRUE}, which
