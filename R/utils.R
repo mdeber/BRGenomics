@@ -1,24 +1,4 @@
 # ========================================================================= #
-# Package documentation
-# ------------------------------------------------------------------------- #
-
-#' BRGenomics
-#'
-#' @description BRGenomics provides useful functions for analyzing genomics data
-#'   at base-pair resolution, and for doing so in a way that maximizes
-#'   compatibility with the wide array of packages available through
-#'   Bioconductor.
-#'
-#'   For interactive documentation with code examples, see the online
-#'   documentation: \url{https://mdeber.github.io/}
-#'
-#' @import GenomicRanges S4Vectors
-#' @aliases BRGenomics
-#' @name BRGenomics-package
-NULL
-
-
-# ========================================================================= #
 # Interal helper functions
 # ------------------------------------------------------------------------- #
 
