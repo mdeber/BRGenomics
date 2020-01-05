@@ -29,12 +29,12 @@ sum_3pcov <- sum(score(paired_3p_cov))
 sum_3pcov_by_width <- sum( score(paired_3p_cov) * width(paired_3p_cov) )
 
 test_that("Stranded coverage correctly calculated", {
-    expect_equal(length(paired_3p_ends), 52464)
-    expect_equal(length(paired_3p_cov), 42916)
+    expect_equal(length(paired_3p_ends), 53179)
+    expect_equal(length(paired_3p_cov), 43385)
 
-    expect_equal(sum(score(paired_3p_ends)), 73011)
-    expect_equal(sum_3pcov, 68562)
-    expect_equal(sum_3pcov_by_width, 73011)
+    expect_equal(sum(score(paired_3p_ends)), 73887)
+    expect_equal(sum_3pcov, 69349)
+    expect_equal(sum_3pcov_by_width, sum(score(paired_3p_ends)))
 })
 
 test_that("stranded coverage correct without any weighting", {

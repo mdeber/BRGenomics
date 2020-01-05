@@ -14,7 +14,7 @@ test_that("Subsampling gives correct signal count", {
 })
 
 test_that("Subsamplied reproduced using set.seed", {
-    expect_equal(length(ps_tenth), 6398)
+    expect_equal(length(ps_tenth), 6330)
 })
 
 test_that("can subsample with field = NULL", {
@@ -34,7 +34,7 @@ test_that("can subsample when simple normalization factor was applied", {
 
     set.seed(11)
     norm_tenth <- suppressWarnings(subsampleGRanges(norm_ps, prop = 0.1))
-    expect_equal(length(norm_tenth), 5738)
+    expect_equal(length(norm_tenth), 5688)
 })
 
 test_that("error when incorrect input arguments", {
@@ -69,7 +69,8 @@ test_that("Merging is non-destructive", {
                      mergeGRangesData(subset(PROseq, quartile == 1),
                                       subset(PROseq, quartile == 2),
                                       subset(PROseq, quartile == 3),
-                                      subset(PROseq, quartile == 4)))
+                                      subset(PROseq, quartile == 4),
+                                      ncores = 2))
 })
 
 ps_10ranges <- PROseq[seq(1, 100, 10)] # ensure disjoint when resized below
@@ -79,7 +80,7 @@ test_that("Merging non-single-width GRanges produces warning", {
 })
 
 test_that("Merging sums signals in overlaps", {
-    merge_10ranges <- mergeGRangesData(PROseq, ps_10ranges)
+    merge_10ranges <- mergeGRangesData(PROseq, ps_10ranges, ncores = 2)
     expect_equal(length(PROseq), length(merge_10ranges))
 
     overlap_scores_combined <- score(merge_10ranges)[seq(1, 100, 10)]
@@ -91,7 +92,8 @@ test_that("Merging sums signals in overlaps", {
 })
 
 test_that("Merging concatenates non-overlapping ranges", {
-    merge_nonoverlap <- mergeGRangesData(ps_10ranges, shift(ps_10ranges, 1))
+    merge_nonoverlap <- mergeGRangesData(ps_10ranges, shift(ps_10ranges, 1),
+                                         ncores = 2)
     expect_equal(length(merge_nonoverlap), 2*length(ps_10ranges))
     # %in% operator fails depending on environment?
     # expect_true(all( merge_nonoverlap %in%
@@ -100,7 +102,7 @@ test_that("Merging concatenates non-overlapping ranges", {
 
 gr1 <- PROseq[10:13]
 gr2 <- PROseq[12:15]
-gr_multi <- mergeGRangesData(gr1, gr2, multiplex = TRUE)
+gr_multi <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 2)
 
 test_that("Multiplexed merging works with input GRanges", {
     expect_equivalent(names(mcols(gr_multi)), c("gr1", "gr2"))
@@ -112,9 +114,9 @@ test_that("Multiplexed merging works with input GRanges", {
 
 test_that("Multiplexed merging works with listed input", {
     expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1, gr2 = gr2),
-                                                 multiplex = TRUE))
+                                                 multiplex = TRUE, ncores = 2))
     expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1),
                                                  list(gr2 = gr2),
-                                                 multiplex = TRUE))
+                                                 multiplex = TRUE, ncores = 2))
 })
 

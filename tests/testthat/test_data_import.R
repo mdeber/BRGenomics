@@ -6,7 +6,6 @@ ps_p_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
 ps_m_file <- system.file("extdata", "PROseq_dm6_chr4_minus.bw",
                          package = "BRGenomics")
 
-
 # Check internal datasets -------------------------------------------------
 
 test_that("Internal RData present", {
@@ -24,7 +23,6 @@ test_that("PROseq files are found", {
     expect_true(nchar(ps_p_file) > 1)
     expect_true(nchar(ps_m_file) > 1)
 })
-
 
 # Check tidyChromosome function -------------------------------------------
 
@@ -67,8 +65,8 @@ test_that("PROseq files import", {
 test_that("Imported PROseq formatted correctly", {
     expect_equal(c(genome(ps), use.names = FALSE), "dm6")
     expect_true(all(width(ps) == 1))
-    expect_equal(length(ps), 47533)
-    expect_equal(sum(score(ps)), 74157)
+    expect_equal(length(ps), 47380)
+    expect_equal(sum(score(ps)), 73887)
     expect_is(ps$score, "integer")
     expect_equal(as.character(unique(seqnames(ps))), "chr4")
     expect_true(all(as.character(strand(ps)) %in% c("+", "-")))
@@ -95,11 +93,10 @@ test_that("Paired PROseq files import", {
     expect_is(ps_paired, "GRanges")
 })
 
-
 test_that("Paired PROseq formatted correctly", {
     expect_equal(c(genome(ps_paired), use.names = FALSE), "dm6")
-    expect_equal(length(ps_paired), 52464)
-    expect_equal(sum(score(ps_paired)), 73011)
+    expect_equal(length(ps_paired), 53179)
+    expect_equal(sum(score(ps_paired)), 73887)
     expect_is(ps_paired$score, "integer")
     expect_equal(as.character(unique(seqnames(ps_paired))), "chr4")
     expect_true(all(as.character(strand(ps_paired)) %in% c("+", "-")))
@@ -115,8 +112,6 @@ test_that("Bam file is found", {
     expect_is(ps_bam, "character")
     expect_true(nchar(ps_bam) > 1)
 })
-
-
 
 test_that("Bam file imports", {
     expect_is(import_bam(ps_bam), "GRanges")
