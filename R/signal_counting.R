@@ -10,13 +10,15 @@
 #' @param regions.gr A GRanges object containing regions of interest.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, a dataframe is returned containing the counts for
-#'   each region in each field.
+#'   each region in each field. If \code{field} not found in
+#'   \code{names(mcols(dataset.gr))}, will default to using all fields found in
+#'   \code{dataset.gr}.
 #' @param NF An optional normalization factor by which to multiply the counts.
 #'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
-#' @return An atomic vector the same length as \code{regions.gr} containing
-#' the sum of the signal overlapping each range of \code{regions.gr}.
+#' @return An atomic vector the same length as \code{regions.gr} containing the
+#'   sum of the signal overlapping each range of \code{regions.gr}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -41,6 +43,10 @@
 #' txs_dm6_chr4[1:6]
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
                                NF = NULL, ncores = detectCores()) {
+
+    # convenience: if field not in dataset.gr, use all fields that are
+    field <- .check_fields(dataset.gr, field)
+
     if (length(field) == 1) {
         hits <- findOverlaps(regions.gr, dataset.gr)
         counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
@@ -61,6 +67,16 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     }
 }
 
+
+#' @importFrom GenomicRanges mcols
+.check_fields <- function(dataset.gr, field) {
+    if (!all(field %in% names(mcols(dataset.gr)))) {
+        message(.nicemsg("field not found in dataset.gr; will default to using
+                         all fields in dataset.gr"))
+        field <- names(mcols(dataset.gr))
+    }
+    return(field)
+}
 
 
 #' Get signal counts at each position within regions of interest
@@ -83,7 +99,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   See details below.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, the output is a list whose elements contain the
-#'   output for generated each field.
+#'   output for generated each field. If \code{field} not found in
+#'   \code{names(mcols(dataset.gr))}, will default to using all fields found in
+#'   \code{dataset.gr}.
 #' @param NF An optional normalization factor by which to multiply the counts.
 #'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
@@ -150,6 +168,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                                            "pad NA"),
                                  field = "score", NF = NULL,
                                  ncores = detectCores()) {
+    # convenience: if field not in dataset.gr, use all fields that are
+    field <- .check_fields(dataset.gr, field)
 
     # function makes practical use of single-width dataset.gr, but the output
     # is always valid regardless of the input data type
@@ -266,7 +286,9 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #'   interest.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, a dataframe is returned containing the pausing
-#'   indices for each region in each field.
+#'   indices for each region in each field. If \code{field} not found in
+#'   \code{names(mcols(dataset.gr))}, will default to using all fields found in
+#'   \code{dataset.gr}.
 #' @param length.normalize A logical indicating if signal counts within regions
 #'   of interest should be length normalized. The default is \code{TRUE}, which
 #'   is recommended, especially if input regions don't all have the same width.
@@ -332,6 +354,9 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                                 ranges in genebodies.gr"))
         return(geterrmessage())
     }
+
+    # convenience: if field not in dataset.gr, use all fields that are
+    field <- .check_fields(dataset.gr, field)
 
     counts_pr <- getCountsByRegions(dataset.gr = dataset.gr,
                                     regions.gr = promoters.gr,

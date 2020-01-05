@@ -15,6 +15,8 @@
 #'
 #' @param dataset.list A list of GRanges datasets that can be individually
 #'   passed to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}.
+#'   Alternatively, a \code{\link[BRGenomics:mergeGRangesData]{
+#'   multiplexed GRanges}} object can also be used (see details below).
 #' @param regions.gr A GRanges object containing regions of interest.
 #' @param sample_names Names for each dataset in \code{dataset.list} are
 #'   required, and by default the names of the list elements are used. The names
@@ -32,9 +34,10 @@
 #'   Applying the \code{sizeFactors} later is useful if multiple sets of factors
 #'   will be explored, although \code{sizeFactors} can be overwritten at any
 #'   time.
-#' @param field Argument passed to \code{getCountsByRegions}.
+#' @param field Argument passed to \code{getCountsByRegions}. Optional if
+#'   \code{dataset.list} is a multiplexed GRanges object (see details below).
 #' @param ncores Number of cores to use for read counting across all samples.
-#'   Default is the total number of cores available.
+#'   By default, all available cores are used.
 #' @param quiet If \code{TRUE}, all output messages from call to
 #'   \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}} will be suppressed.
 #'
@@ -54,6 +57,14 @@
 #'   for that gene, but be aware that it will only keep the largest range for
 #'   each gene in the resulting \code{DESeqDataSet} object's \code{rowRanges}.
 #'
+#' @section Using multiplexed GRanges as input: If a single multiplexed GRanges
+#'   object is used in lieu of a list of GRanges, the default arguments for
+#'   \code{field} and \code{sample_names} can be left, and \code{sample_names}
+#'   will match the names of the fields in \code{dataset.list}. If provided,
+#'   \code{field} will be used to access/subset the multiplexed GRanges object,
+#'   and thus all elements of \code{field} must be found in
+#'   \code{names(mcols(dataset.list))}.
+#'
 #' @section A note on DESeq2 sizeFactors: DESeq2 \code{sizeFactors} are
 #'   sample-specific normalization factors that are applied by division, i.e.
 #'   \eqn{counts_{norm,i}=counts_i / sizeFactor_i}{normcounts_i = counts_i /
@@ -66,6 +77,7 @@
 #'
 #' @export
 #' @importFrom parallel detectCores
+#' @importFrom GenomicRanges mcols mcols<-
 #' @importFrom DESeq2 DESeqDataSet sizeFactors<-
 #'
 #' @author Mike DeBerardine
@@ -107,7 +119,16 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
                             gene_names = NULL, sizeFactors = NULL,
                             field = "score", ncores = detectCores(),
                             quiet = FALSE) {
-    # check for valid sample_names; check gene_names match regions.gr
+
+    # check if multiplexed GRanges given
+    if (.check_multiplex(dataset.list, quiet)) {
+        dataset.list <- .use_multiplex(dataset.list, sample_names, field)
+        if (!"sample_names" %in% names(match.call())) # 'missing' fun no good
+            sample_names <- names(dataset.list)
+        if (length(field) > 1) field <- "score" # modified in .use_multiplex
+    }
+
+    # check for valid sample_names
     .check_snames(dataset.list, sample_names)
 
     # if given, check gene_names match regions.gr, and if they match multiple
@@ -120,7 +141,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
     # Make column data (colData) for SummarizedExperiment
     coldat <- .get_coldat(sample_names)
 
-    # Get counts matrix for all samples in each range of regions.gr
+    # Get counts dataframe for all samples in each range of regions.gr
     counts.df <- as.data.frame(mclapply(dataset.list, getCountsByRegions,
                                         regions.gr = regions.gr, field = field,
                                         mc.cores = ncores))
@@ -138,6 +159,40 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
     return(dds)
 }
 
+.check_multiplex <- function(dataset.list, quiet) {
+    if (methods::is(dataset.list, "GRanges")) {
+        if (!quiet) message(.nicemsg("Input is GRanges, not a list. Treating
+                                     input as multiplexed GRanges."))
+        return(TRUE)
+    }
+    return(FALSE)
+}
+
+#' @importFrom GenomicRanges mcols mcols<-
+.use_multiplex <- function(dataset.list, sample_names, field) {
+
+    # if user gave values for "field", try to use them
+    if (length(field) > 1) {
+        field_names <- field
+        field <- "score"
+    } else {
+        field_names <- names(mcols(dataset.list))
+    }
+
+    dataset.list <- lapply(field_names, function(x) {
+        gr <- subset(dataset.list, x != 0, select = x)
+        names(mcols(gr)) <- field
+        gr
+    })
+
+    # if user gave valid sample_names, use them
+    if (length(sample_names) == length(dataset.list)) {
+        names(dataset.list) <- sample_names
+    } else {
+        names(dataset.list) <- field_names
+    }
+    return(dataset.list)
+}
 
 .check_snames <- function(dataset.list, sample_names) {
     if (length(sample_names) != length(dataset.list)) {
@@ -155,9 +210,9 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 
 .check_gnames <- function(regions.gr, gene_names) {
     if (length(gene_names) != length(regions.gr)) {
-        stop(message = .nicemsg("gene_names given are not the same length
-                                as regions.gr; gene_names must correspond
-                                1:1 with the ranges in regions.gr"))
+        stop(message = .nicemsg("gene_names given are not the same length as
+                                regions.gr; gene_names must correspond 1:1 with
+                                the ranges in regions.gr"))
         return(geterrmessage())
     }
 }
@@ -394,8 +449,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
 .check_clist <- function(comparisons) {
     if (is.data.frame(comparisons)) {
-        comparisons <- as.data.frame(t(comparisons),
-                                     stringsAsFactors = FALSE)
+        comparisons <- as.data.frame(t(comparisons), stringsAsFactors = FALSE)
         comparisons <- as.list(comparisons)
     }
     class_ok <- .class_check(comparisons)
@@ -433,8 +487,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     }
 
     if (when_sf == "late" & length(comparisons) > 1)  {
-        stop(message = .nicemsg("Length of sizeFactors not equal to
-                                number of samples in dds"))
+        stop(message = .nicemsg("Length of sizeFactors not equal to number of
+                                samples in dds"))
         return(geterrmessage())
     }
 }
@@ -470,7 +524,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                                             "alpha", "parallel"))
 
     if (!quiet) return( do.call(DESeq2::results, args.results) )
-    suppressWarnings(suppressMessages( do.call(DESeq2::results, args.results) ))
+    suppressWarnings(suppressMessages(
+        do.call(DESeq2::results, args.results)
+    ))
 }
 
 

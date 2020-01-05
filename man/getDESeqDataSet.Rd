@@ -17,7 +17,9 @@ getDESeqDataSet(
 }
 \arguments{
 \item{dataset.list}{A list of GRanges datasets that can be individually
-passed to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}.}
+passed to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}.
+Alternatively, a \code{\link[BRGenomics:mergeGRangesData]{
+multiplexed GRanges}} object can also be used (see details below).}
 
 \item{regions.gr}{A GRanges object containing regions of interest.}
 
@@ -40,10 +42,11 @@ Applying the \code{sizeFactors} later is useful if multiple sets of factors
 will be explored, although \code{sizeFactors} can be overwritten at any
 time.}
 
-\item{field}{Argument passed to \code{getCountsByRegions}.}
+\item{field}{Argument passed to \code{getCountsByRegions}. Optional if
+\code{dataset.list} is a multiplexed GRanges object (see details below).}
 
 \item{ncores}{Number of cores to use for read counting across all samples.
-Default is the total number of cores available.}
+By default, all available cores are used.}
 
 \item{quiet}{If \code{TRUE}, all output messages from call to
 \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}} will be suppressed.}
@@ -70,6 +73,16 @@ regions.
   in \code{gene_names}, this function will generate counts across all ranges
   for that gene, but be aware that it will only keep the largest range for
   each gene in the resulting \code{DESeqDataSet} object's \code{rowRanges}.
+}
+
+\section{Using multiplexed GRanges as input}{
+ If a single multiplexed GRanges
+  object is used in lieu of a list of GRanges, the default arguments for
+  \code{field} and \code{sample_names} can be left, and \code{sample_names}
+  will match the names of the fields in \code{dataset.list}. If provided,
+  \code{field} will be used to access/subset the multiplexed GRanges object,
+  and thus all elements of \code{field} must be found in
+  \code{names(mcols(dataset.list))}.
 }
 
 \section{A note on DESeq2 sizeFactors}{
