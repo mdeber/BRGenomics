@@ -74,16 +74,14 @@ subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.25, 0.75))
 # get the top 10\% of transcripts by signal, and sort them by highest signal
 #--------------------------------------------------#
 
-subsetRegionsBySignal(txs_dm6_chr4, PROseq,
-                      quantiles = c(0.9, 1),
+subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.9, 1),
                       order.by.rank = TRUE)
 
 #--------------------------------------------------#
 # remove the most extreme 10\% of regions, and keep scores
 #--------------------------------------------------#
 
-subsetRegionsBySignal(txs_dm6_chr4, PROseq,
-                      quantiles = c(0.05, 0.95),
+subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.05, 0.95),
                       keep.signal = TRUE)
 }
 \seealso{

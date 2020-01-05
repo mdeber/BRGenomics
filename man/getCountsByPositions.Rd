@@ -101,7 +101,7 @@ countsmat[10:15, ]
 #--------------------------------------------------#
 
 countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
-round(countsmat[10:15, ], 2)
+round(countsmat[10:15, ], 1)
 }
 \seealso{
 \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}

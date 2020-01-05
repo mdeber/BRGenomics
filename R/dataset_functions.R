@@ -418,7 +418,9 @@ subsampleGRanges <- function(dataset.gr,
 #' # subset a multiplexed GRanges object
 #' #--------------------------------------------------#
 #'
-#' subset(multi.gr, gr1 != 0, select = gr1)
+#' subset(multi.gr, gr1 > 0)
+#'
+#' subset(multi.gr, gr1 > 0, select = gr1)
 mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
                              ncores = detectCores()) {
     data_in <- list(...)

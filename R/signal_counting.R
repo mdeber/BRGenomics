@@ -161,7 +161,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' #--------------------------------------------------#
 #'
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
-#' round(countsmat[10:15, ], 2)
+#' round(countsmat[10:15, ], 1)
 getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  simplify.multi.widths = c("list",
                                                            "pad 0",

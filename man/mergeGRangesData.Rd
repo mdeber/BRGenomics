@@ -102,7 +102,9 @@ multi.gr
 # subset a multiplexed GRanges object
 #--------------------------------------------------#
 
-subset(multi.gr, gr1 != 0, select = gr1)
+subset(multi.gr, gr1 > 0)
+
+subset(multi.gr, gr1 > 0, select = gr1)
 }
 \seealso{
 \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}

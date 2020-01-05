@@ -346,16 +346,14 @@ getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
 #' # get the top 10% of transcripts by signal, and sort them by highest signal
 #' #--------------------------------------------------#
 #'
-#' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
-#'                       quantiles = c(0.9, 1),
+#' subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.9, 1),
 #'                       order.by.rank = TRUE)
 #'
 #' #--------------------------------------------------#
 #' # remove the most extreme 10% of regions, and keep scores
 #' #--------------------------------------------------#
 #'
-#' subsetRegionsBySignal(txs_dm6_chr4, PROseq,
-#'                       quantiles = c(0.05, 0.95),
+#' subsetRegionsBySignal(txs_dm6_chr4, PROseq, quantiles = c(0.05, 0.95),
 #'                       keep.signal = TRUE)
 subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   field = "score", order.by.rank = FALSE,
