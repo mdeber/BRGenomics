@@ -109,9 +109,6 @@ test_that("error if gene_names not matched to regions.gr", {
                                  gene_names = txs$gene_id[-1]))
 })
 
-test_that("message if quiet = FALSE", {
-    expect_message(getDESeqDataSet(ps_list, txs, quiet = FALSE, ncores = 2))
-})
 
 # Getting DESeq2 Results (using reduced dispersion matrices) --------------
 

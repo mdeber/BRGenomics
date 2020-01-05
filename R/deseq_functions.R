@@ -3,9 +3,6 @@
 ### ------------------------------------------------------------------------- #
 ###
 
-# can speed up this up using the duplicated function that will pull
-# out the repeated gene names; so can avoid calling function on whole genelist
-
 
 #' Get DESeqDataSet objects for downstream analysis
 #'
@@ -60,7 +57,7 @@
 #' @section Using multiplexed GRanges as input: If a single multiplexed GRanges
 #'   object is used in lieu of a list of GRanges, the default arguments for
 #'   \code{field} and \code{sample_names} can be left, and \code{sample_names}
-#'   will match the names of the fields in \code{dataset.list}. If provided,
+#'   will match the names of the fields in the input GRanges. If provided,
 #'   \code{field} will be used to access/subset the multiplexed GRanges object,
 #'   and thus all elements of \code{field} must be found in
 #'   \code{names(mcols(dataset.list))}.
@@ -98,12 +95,9 @@
 #' ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
 #' ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
 #'
-#' ps_list <- list(A_rep1 = ps_a_rep1,
-#'                 A_rep2 = ps_a_rep2,
-#'                 B_rep1 = ps_b_rep1,
-#'                 B_rep2 = ps_b_rep2,
-#'                 C_rep1 = ps_c_rep1,
-#'                 C_rep2 = ps_c_rep2)
+#' ps_list <- list(A_rep1 = ps_a_rep1, A_rep2 = ps_a_rep2,
+#'                 B_rep1 = ps_b_rep1, B_rep2 = ps_b_rep2,
+#'                 C_rep1 = ps_c_rep1, C_rep2 = ps_c_rep2)
 #'
 #' # make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
 #' #    this means there is double-counting
@@ -119,7 +113,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
                             gene_names = NULL, sizeFactors = NULL,
                             field = "score", ncores = detectCores(),
                             quiet = FALSE) {
-
+    .check_if_regions_granges(regions.gr)
     # check if multiplexed GRanges given
     if (.check_multiplex(dataset.list, quiet)) {
         dataset.list <- .use_multiplex(dataset.list, sample_names, field)
@@ -157,6 +151,13 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 
     if (!is.null(sizeFactors)) sizeFactors(dds) <- sizeFactors
     return(dds)
+}
+
+.check_if_regions_granges <- function(regions.gr) {
+    if (!methods::is(regions.gr, "GRanges")) {
+        stop("regions.gr must be a GRanges object")
+        return(geterrmessage())
+    }
 }
 
 .check_multiplex <- function(dataset.list, quiet) {
@@ -224,7 +225,6 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 }
 
 #' @importFrom parallel mclapply
-#' @importFrom stats aggregate
 #' @importFrom GenomicRanges width
 #' @importFrom SummarizedExperiment SummarizedExperiment
 .get_se <- function(counts.df, regions.gr, gene_names, discont.genes, coldat) {
@@ -255,8 +255,8 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
         regions.gr <- regions.gr[map_current_to_input]
     }
 
-    SummarizedExperiment(assays = as.matrix(counts.df), rowRanges = regions.gr,
-                         colData = coldat)
+    SummarizedExperiment(assays = list(counts = as.matrix(counts.df)),
+                         rowRanges = regions.gr, colData = coldat)
 }
 
 
@@ -351,12 +351,9 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 #' ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
 #' ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
 #'
-#' ps_list <- list(A_rep1 = ps_a_rep1,
-#'                 A_rep2 = ps_a_rep2,
-#'                 B_rep1 = ps_b_rep1,
-#'                 B_rep2 = ps_b_rep2,
-#'                 C_rep1 = ps_c_rep1,
-#'                 C_rep2 = ps_c_rep2)
+#' ps_list <- list(A_rep1 = ps_a_rep1, A_rep2 = ps_a_rep2,
+#'                 B_rep1 = ps_b_rep1, B_rep2 = ps_b_rep2,
+#'                 C_rep1 = ps_c_rep1, C_rep2 = ps_c_rep2)
 #'
 #' # make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
 #' #    this means there is double-counting
@@ -376,8 +373,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 #'
 #' res
 #'
-#' reslist <- getDESeqResults(dds,
-#'                            comparisons = list(c("B", "A"), c("C", "A")),
+#' reslist <- getDESeqResults(dds, comparisons = list(c("B", "A"), c("C", "A")),
 #'                            ncores = 1)
 #' names(reslist)
 #'
@@ -391,7 +387,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                             comparisons = NULL, sizeFactors = NULL,
                             alpha = 0.1, args.DESeq = NULL, args.results = NULL,
-                            ncores = detectCores(), quiet = FALSE) {
+                            ncores = 1, quiet = FALSE) {
 
     # check inputs
     comparisons <- .check_args(match.call(), comparisons, quiet)
@@ -495,9 +491,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
 
 #' @importFrom DESeq2 DESeq results
-.get_deseq_results <- function(dds, contrast.numer, contrast.denom,
-                               sizeFactors, alpha, args.DESeq, args.results,
-                               quiet) {
+.get_deseq_results <- function(dds, contrast.numer, contrast.denom, sizeFactors,
+                               alpha, args.DESeq, args.results, quiet) {
 
     # Subset for pairwise comparison
     dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
@@ -522,6 +517,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     args.results <- .merge_args(rqd = rqd, usr = args.results,
                                 exclude = c("object", "contrast",
                                             "alpha", "parallel"))
+    # args.results$parallel <- TRUE
+    # args.results$BPPARAM <- MulticoreParam(workers = 8)
 
     if (!quiet) return( do.call(DESeq2::results, args.results) )
     suppressWarnings(suppressMessages(

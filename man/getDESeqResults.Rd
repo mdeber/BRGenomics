@@ -13,7 +13,7 @@ getDESeqResults(
   alpha = 0.1,
   args.DESeq = NULL,
   args.results = NULL,
-  ncores = detectCores(),
+  ncores = 1,
   quiet = FALSE
 )
 }
@@ -105,12 +105,9 @@ ps_a_rep2 <- PROseq[seq(4, length(PROseq), 6)]
 ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
 ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
 
-ps_list <- list(A_rep1 = ps_a_rep1,
-                A_rep2 = ps_a_rep2,
-                B_rep1 = ps_b_rep1,
-                B_rep2 = ps_b_rep2,
-                C_rep1 = ps_c_rep1,
-                C_rep2 = ps_c_rep2)
+ps_list <- list(A_rep1 = ps_a_rep1, A_rep2 = ps_a_rep2,
+                B_rep1 = ps_b_rep1, B_rep2 = ps_b_rep2,
+                C_rep1 = ps_c_rep1, C_rep2 = ps_c_rep2)
 
 # make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
 #    this means there is double-counting
@@ -130,8 +127,7 @@ res <- getDESeqResults(dds, "B", "A")
 
 res
 
-reslist <- getDESeqResults(dds,
-                           comparisons = list(c("B", "A"), c("C", "A")),
+reslist <- getDESeqResults(dds, comparisons = list(c("B", "A"), c("C", "A")),
                            ncores = 1)
 names(reslist)
 

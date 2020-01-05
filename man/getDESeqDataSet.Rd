@@ -79,7 +79,7 @@ regions.
  If a single multiplexed GRanges
   object is used in lieu of a list of GRanges, the default arguments for
   \code{field} and \code{sample_names} can be left, and \code{sample_names}
-  will match the names of the fields in \code{dataset.list}. If provided,
+  will match the names of the fields in the input GRanges. If provided,
   \code{field} will be used to access/subset the multiplexed GRanges object,
   and thus all elements of \code{field} must be found in
   \code{names(mcols(dataset.list))}.
@@ -111,12 +111,9 @@ ps_a_rep2 <- PROseq[seq(4, length(PROseq), 6)]
 ps_b_rep2 <- PROseq[seq(5, length(PROseq), 6)]
 ps_c_rep2 <- PROseq[seq(6, length(PROseq), 6)]
 
-ps_list <- list(A_rep1 = ps_a_rep1,
-                A_rep2 = ps_a_rep2,
-                B_rep1 = ps_b_rep1,
-                B_rep2 = ps_b_rep2,
-                C_rep1 = ps_c_rep1,
-                C_rep2 = ps_c_rep2)
+ps_list <- list(A_rep1 = ps_a_rep1, A_rep2 = ps_a_rep2,
+                B_rep1 = ps_b_rep1, B_rep2 = ps_b_rep2,
+                C_rep1 = ps_c_rep1, C_rep2 = ps_c_rep2)
 
 # make flawed dataset (ranges in txs_dm6_chr4 not disjoint)
 #    this means there is double-counting
