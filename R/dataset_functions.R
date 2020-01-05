@@ -378,7 +378,6 @@ subsampleGRanges <- function(dataset.gr,
 #' @export
 #' @importFrom parallel detectCores mclapply mcmapply
 #' @importFrom GenomicRanges mcols mcols<- sort
-#' @importFrom S4Vectors match
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -445,9 +444,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     gr <- unique(sort(gr))
 
     # Fastest to keep these steps separated (esp. for large datasets)
-    # in_fun is precisely which(gr %in% x)
-    in_fun <- function(x) which(S4Vectors::match(gr, x, nomatch = 0L) > 0L)
-    idx <- mclapply(data_in, in_fun, mc.cores = ncores)
+    idx <- mclapply(data_in, function(x) which(gr %in% x), mc.cores = ncores)
 
     counts <- mcmapply(function(dat, idx, field) {
         out <- rep(0L, length(gr))
