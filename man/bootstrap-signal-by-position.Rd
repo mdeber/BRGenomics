@@ -54,7 +54,9 @@ are returned, which are provided as a convenience.}
 
 \item{sample.name}{Defaults to the name of the input dataset. This is
 included in the output as a convenience, as it allows row-binding outputs
-from different samples.}
+from different samples. If \code{length(field) > 1} and the default
+\code{sample.name} is left, the sample names will be inferred from the
+field names.}
 
 \item{n.iter}{Number of random subsampling iterations to perform. Default is
 \code{1000}.}
@@ -68,7 +70,7 @@ to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
 85.5th percentiles) return a 75 percent confidence interval about the
 bootstrapped mean.}
 
-\item{field}{The metadata field of \code{dataset.gr} to be counted.}
+\item{field}{One or more metadata fields of \code{dataset.gr} to be counted.}
 
 \item{NF}{An optional normalization factor by which to multiply the counts.
 If given, \code{length(NF)} must be equal to \code{length(field)}.}
@@ -87,7 +89,8 @@ and columns for positions within those genes.}
 \value{
 Dataframe containing x-values, means, lower quantiles, upper
   quantiles, and the sample name (as a convenience for row-binding multiple
-  of these dataframes).
+  of these dataframes). If multiple fields are given, a single dataframe is
+  still returned, but will contain data for all fields.
 }
 \description{
 These functions perform bootstrap subsampling of mean readcounts at different

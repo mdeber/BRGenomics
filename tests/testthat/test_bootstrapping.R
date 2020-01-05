@@ -76,14 +76,15 @@ test_that("bootstrapping successful over several fields", {
     expect_equivalent(df, df_alt)
 
     set.seed(11)
-    dflist <- metaSubsample(ps_rename, txs_pr, field = c("signal", "posnum"),
-                            first.output.xval = -10, sample.name = "countsmat",
-                            ncores = 2)
-    expect_is(dflist, "list")
-    expect_equal(length(dflist), 2)
-    expect_equivalent(names(dflist), c("signal", "posnum"))
-    expect_is(dflist[[1]], "data.frame")
-    expect_equivalent(dflist[[1]], df)
+    df_m <- metaSubsample(ps_rename, txs_pr, field = c("signal", "posnum"),
+                          first.output.xval = -10,
+                          sample.name = c("countsmat", "posnum"),
+                          ncores = 2)
+    expect_is(df_m, "data.frame")
+    expect_equal(nrow(df_m), 2 * nrow(df))
+    expect_equivalent(as.character(unique(df_m$sample.name)),
+                      c("countsmat", "posnum"))
+    expect_equivalent(subset(df_m, sample.name == "countsmat"), df)
 
     expect_warning(metaSubsample(ps_rename, txs_pr,
                                  field = c("signal", "posnum"),

@@ -28,7 +28,9 @@
 #'   are returned, which are provided as a convenience.
 #' @param sample.name Defaults to the name of the input dataset. This is
 #'   included in the output as a convenience, as it allows row-binding outputs
-#'   from different samples.
+#'   from different samples. If \code{length(field) > 1} and the default
+#'   \code{sample.name} is left, the sample names will be inferred from the
+#'   field names.
 #' @param n.iter Number of random subsampling iterations to perform. Default is
 #'   \code{1000}.
 #' @param prop.sample The proportion of the ranges in \code{regions.gr} (e.g.
@@ -38,7 +40,7 @@
 #'   to return. The defaults, \code{0.125} and \code{0.875} (i.e. the 12.5th and
 #'   85.5th percentiles) return a 75 percent confidence interval about the
 #'   bootstrapped mean.
-#' @param field The metadata field of \code{dataset.gr} to be counted.
+#' @param field One or more metadata fields of \code{dataset.gr} to be counted.
 #' @param NF An optional normalization factor by which to multiply the counts.
 #'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param remove.empty A logical indicating whether regions
@@ -49,7 +51,8 @@
 #'
 #' @return Dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
-#'   of these dataframes).
+#'   of these dataframes). If multiple fields are given, a single dataframe is
+#'   still returned, but will contain data for all fields.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -118,7 +121,6 @@ NULL
 #' @rdname bootstrap-signal-by-position
 #' @export
 #' @importFrom parallel mclapply detectCores
-#' @importFrom GenomicRanges width
 metaSubsample <- function(dataset.gr, regions.gr,
                           binsize = 1, first.output.xval = 1,
                           sample.name = deparse(substitute(dataset.gr)),
@@ -126,50 +128,64 @@ metaSubsample <- function(dataset.gr, regions.gr,
                           lower = 0.125, upper = 0.875,
                           field = "score", NF = NULL, remove.empty = FALSE,
                           ncores = detectCores()) {
+    .check_regions(regions.gr) # check that all widths are the same
+
+    # Get signal in each bin of each gene
+    # -> Matrix of dim = (ngenes, nbins) // or a list if length(field) > 1
+    signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
+                                        regions.gr = regions.gr,
+                                        binsize = binsize, field = field,
+                                        ncores = ncores)
+
+    # Get arguments for call to metaSubsampleMatrix
+    fun_args <- as.list(match.call())[-1] # copy-paste arguments
+    args_to_pass <- names(formals(metaSubsampleMatrix))
+    fun_args <- fun_args[names(fun_args) %in% args_to_pass]
+    fun_args$binsize <- 1 # already did binning
+
+    if (is.matrix(signal.bins)) {
+        if (is.null(NF))  fun_args$NF <- 1
+        fun_args$counts.mat <- signal.bins
+        fun_args$sample.name <- sample.name
+        df <- do.call(metaSubsampleMatrix, fun_args)
+        # fix x-values to match bins, and binsize-normalize the returned values
+        if (binsize != 1)  df <- .fixbins(df, binsize, first.output.xval)
+        return(df)
+    } else {
+        if (remove.empty)  warning("remove.empty set with multiple fields")
+        if (is.null(NF))  NF <- rep(1, length(signal.bins))
+        if (length(sample.name) != length(signal.bins))
+            sample.name <- names(signal.bins)
+
+        args_i <- c("counts.mat", "sample.name", "NF")
+        call_fun <- function(mat.i, sample.name.i, NF.i) {
+            fun_args[args_i] <- list(mat.i, sample.name.i, NF.i)
+            do.call(metaSubsampleMatrix, fun_args)
+        }
+        dflist <- mapply(call_fun, signal.bins, sample.name, NF,
+                         SIMPLIFY = FALSE)
+        # fix x-values to match bins, and binsize-normalize the returned values
+        if (binsize != 1)
+            dflist <- lapply(dflist, .fixbins, binsize, first.output.xval)
+        return(Reduce(rbind, dflist))
+    }
+}
+
+#' @importFrom GenomicRanges width
+.check_regions <- function(regions.gr) {
     if (length(unique(width(regions.gr))) > 1) {
         stop(message = "Not all ranges in regions.gr are the same width")
         return(geterrmessage())
     }
-    if (is.null(NF)) NF <- rep(1, length(field))
-
-    if (length(field) > 1) {
-        if (remove.empty) warning("remove.empty set with multiple fields")
-        fun_args <- as.list(match.call())[-1] # copy-paste arguments
-        # the following line is required when run by testthat:
-        fun_args[c("dataset.gr", "regions.gr")] <- list(dataset.gr, regions.gr)
-        call_fun <- function(field.i, NF.i) {
-            fun_args[c("field", "NF")] <- list(field.i, NF.i)
-            do.call(metaSubsample, fun_args)
-        }
-        dflist <- mapply(call_fun, field, NF, SIMPLIFY = FALSE)
-        names(dflist) <- field
-        return(dflist)
-    }
-
-    # Get signal in each bin of each gene
-    # -> Matrix of dim = (ngenes, nbins)
-    signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
-                                        regions.gr = regions.gr,
-                                        binsize = binsize, field = field)
-    metamat <- metaSubsampleMatrix(
-        counts.mat = signal.bins, binsize = 1,
-        first.output.xval = first.output.xval, sample.name = sample.name,
-        n.iter = n.iter, prop.sample = prop.sample, lower = lower,
-        upper = upper, NF = NF, remove.empty = remove.empty, ncores = ncores
-    )
-
-    # fix x-values to match bins, and binsize-normalize the returned values
-    if (binsize != 1) metamat <- .fixbins(metamat, binsize, first.output.xval)
-    return(metamat)
 }
 
-.fixbins <- function(metamat, binsize, first.output.xval) {
-    nbins <- nrow(metamat)
-    metamat$x <- .binxval(nbins, binsize, first.output.xval)
+.fixbins <- function(df, binsize, first.output.xval) {
+    nbins <- nrow(df)
+    df$x <- .binxval(nbins, binsize, first.output.xval)
 
     y_vals <- c("mean", "lower", "upper")
-    metamat[, y_vals] <- metamat[, y_vals] / binsize
-    return(metamat)
+    df[, y_vals] <- df[, y_vals] / binsize
+    return(df)
 }
 
 
