@@ -88,7 +88,7 @@ binNdimensions <- function(..., nbins = 10) {
 
 .get_data <- function(in.data, in.names) {
     classes.in <- vapply(in.data, class, FUN.VALUE = character(1))
-    if (all(classes.in %in% c("list", "numeric"))) {
+    if (all(classes.in %in% c("list", "numeric", "integer"))) {
         data <- as.data.frame( lapply(in.data, unlist) )
         names(data) <- in.names
         return(data)
