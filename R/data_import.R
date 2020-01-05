@@ -200,7 +200,7 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #' Import bam files
 #'
 #' @param file Path of a bam file.
-#' @param mapq Filter reads by a minimum MapQ score. This is the correct way to
+#' @param mapq Filter reads by a minimum MAPQ score. This is the correct way to
 #'   filter multi-aligners.
 #' @param revcomp Logical indicating if aligned reads should be
 #'   reverse-complemented.

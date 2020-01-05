@@ -16,7 +16,7 @@ import_bam(
 \arguments{
 \item{file}{Path of a bam file.}
 
-\item{mapq}{Filter reads by a minimum MapQ score. This is the correct way to
+\item{mapq}{Filter reads by a minimum MAPQ score. This is the correct way to
 filter multi-aligners.}
 
 \item{revcomp}{Logical indicating if aligned reads should be
