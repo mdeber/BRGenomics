@@ -376,8 +376,9 @@ subsampleGRanges <- function(dataset.gr,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export
-#' @importFrom parallel detectCores mcmapply
+#' @importFrom parallel detectCores mclapply mcmapply
 #' @importFrom GenomicRanges mcols mcols<- sort
+#' @importFrom S4Vectors match
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -435,18 +436,24 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     # check length of fields vs. data_in
     field <- .check_merge_fields(data_in, field)
 
-    # check if input data are base-pair resolution coverage data
-    data_in <- .width_check(data_in, ncores)
+    # data must be *sorted*, base-pair resolution coverage data
+    data_in <- .check_sorted_BRG(data_in, ncores)
 
     # merge ranges
     gr <- do.call(c, c(data_in, use.names = FALSE))
     mcols(gr) <- NULL
     gr <- unique(sort(gr))
 
-    counts <- mcmapply(
-        function(data, field) getCountsByRegions(data, gr, field, ncores = 1),
-        data_in, field, mc.cores = ncores, SIMPLIFY = TRUE
-    )
+    # Fastest to keep these steps separated (esp. for large datasets)
+    # in_fun is precisely which(gr %in% x)
+    in_fun <- function(x) which(S4Vectors::match(gr, x, nomatch = 0L) > 0L)
+    idx <- mclapply(data_in, in_fun, mc.cores = ncores)
+
+    counts <- mcmapply(function(dat, idx, field) {
+        out <- rep(0L, length(gr))
+        out[idx] <- mcols(dat)[[field]]
+        out
+    }, data_in, idx, field, mc.cores = ncores, SIMPLIFY = TRUE)
 
     if (multiplex) {
         mcols(gr)[names(data_in)] <- counts
@@ -473,16 +480,21 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     return(field)
 }
 
-#' @importFrom GenomicRanges width
-.width_check <- function(data_in, ncores) {
+#' @importFrom GenomicRanges width sort
+.check_sorted_BRG <- function(data_in, ncores) {
 
     widths_ok <- vapply(data_in, function(x) all(width(x) == 1),
                         FUN.VALUE = logical(1))
 
-    if (any(widths_ok == FALSE)) {
+    if (all(widths_ok)) {
+        # ensure all data is sorted
+        data_in <- mclapply(data_in, sort, mc.cores = ncores)
+
+    } else {
         warning(.nicemsg("One or more inputs are not single-width GRanges
                          objects. Will coerce them using makeGRangesBRG()..."),
                 immediate. = TRUE)
+        # (makeGRangesBRG sorts its output)
         data_in <- mclapply(data_in, makeGRangesBRG, mc.cores = ncores)
     }
 

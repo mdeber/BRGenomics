@@ -1,3 +1,5 @@
+# Sampling GRanges --------------------------------------------------------
+
 context("Random subsampling GRanges data")
 library(BRGenomics)
 data("PROseq")
@@ -64,7 +66,7 @@ PROseq$quartile <- findInterval(seq_along(PROseq),
 
 test_that("Merging is non-destructive", {
     expect_identical(subset(PROseq, select = score),
-                     suppressWarnings(mergeGRangesData(PROseq)))
+                     suppressWarnings(mergeGRangesData(PROseq, ncores = 2)))
     expect_identical(subset(PROseq, select = score),
                      mergeGRangesData(subset(PROseq, quartile == 1),
                                       subset(PROseq, quartile == 2),
