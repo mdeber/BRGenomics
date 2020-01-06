@@ -4,7 +4,7 @@
 \alias{getStrandedCoverage}
 \title{Get strand-specific coverage}
 \usage{
-getStrandedCoverage(dataset.gr, field = "score")
+getStrandedCoverage(dataset.gr, field = "score", ncores = detectCores())
 }
 \arguments{
 \item{dataset.gr}{A GRanges object either containing ranges for each read, or
@@ -14,6 +14,10 @@ one in which readcounts for individual ranges are contained in metadata
 \item{field}{The name of the metadata field that contains readcounts. If no
 metadata field contains readcounts, and each range represents a single
 read, set to NULL.}
+
+\item{ncores}{Number of cores to use for calculating coverage. The max that
+will be used is 3, one for each possible strand (plus, minus, and
+unstranded).}
 }
 \value{
 A GRanges object with signal in the "score" metadata column. Note
@@ -37,7 +41,7 @@ data("PROseq_paired")
 
 PROseq_paired[1:6]
 
-getStrandedCoverage(PROseq_paired)[1:6]
+getStrandedCoverage(PROseq_paired, ncores = 2)[1:6]
 
 #--------------------------------------------------#
 # Getting coverage from single bases of single reads
@@ -55,7 +59,7 @@ mcols(ps_reads) <- NULL
 ps_reads[1:6]
 
 # re-create coverage
-getStrandedCoverage(ps_reads, field = NULL)[1:6]
+getStrandedCoverage(ps_reads, field = NULL, ncores = 2)[1:6]
 
 #--------------------------------------------------#
 # Reversing makeGRangesBRG
@@ -68,7 +72,7 @@ getStrandedCoverage(ps_reads, field = NULL)[1:6]
 range(width(PROseq))
 isDisjoint(PROseq)
 
-ps_cov <- getStrandedCoverage(PROseq)
+ps_cov <- getStrandedCoverage(PROseq, ncores = 2)
 
 range(width(ps_cov))
 sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
@@ -80,7 +84,7 @@ idx <- unique(from(hits)) # indices for PROseq with neighbor
 
 PROseq[idx]
 
-getStrandedCoverage(PROseq[idx])
+getStrandedCoverage(PROseq[idx], ncores = 2)
 }
 \seealso{
 \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}},

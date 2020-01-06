@@ -83,7 +83,7 @@
 #' #--------------------------------------------------#
 #' # -> for more examples, see getStrandedCoverage
 #'
-#' undo <- getStrandedCoverage(gr)
+#' undo <- getStrandedCoverage(gr, ncores = 2)
 #'
 #' range(width(undo))
 #' length(undo) == length(bw)
@@ -119,6 +119,9 @@ makeGRangesBRG <- function(dataset.gr) {
 #' @param field The name of the metadata field that contains readcounts. If no
 #'   metadata field contains readcounts, and each range represents a single
 #'   read, set to NULL.
+#' @param ncores Number of cores to use for calculating coverage. The max that
+#'   will be used is 3, one for each possible strand (plus, minus, and
+#'   unstranded).
 #'
 #' @return A GRanges object with signal in the "score" metadata column. Note
 #'   that the output is \emph{not} automatically converted into a
@@ -142,7 +145,7 @@ makeGRangesBRG <- function(dataset.gr) {
 #'
 #' PROseq_paired[1:6]
 #'
-#' getStrandedCoverage(PROseq_paired)[1:6]
+#' getStrandedCoverage(PROseq_paired, ncores = 2)[1:6]
 #'
 #' #--------------------------------------------------#
 #' # Getting coverage from single bases of single reads
@@ -160,7 +163,7 @@ makeGRangesBRG <- function(dataset.gr) {
 #' ps_reads[1:6]
 #'
 #' # re-create coverage
-#' getStrandedCoverage(ps_reads, field = NULL)[1:6]
+#' getStrandedCoverage(ps_reads, field = NULL, ncores = 2)[1:6]
 #'
 #' #--------------------------------------------------#
 #' # Reversing makeGRangesBRG
@@ -173,7 +176,7 @@ makeGRangesBRG <- function(dataset.gr) {
 #' range(width(PROseq))
 #' isDisjoint(PROseq)
 #'
-#' ps_cov <- getStrandedCoverage(PROseq)
+#' ps_cov <- getStrandedCoverage(PROseq, ncores = 2)
 #'
 #' range(width(ps_cov))
 #' sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
@@ -185,8 +188,9 @@ makeGRangesBRG <- function(dataset.gr) {
 #'
 #' PROseq[idx]
 #'
-#' getStrandedCoverage(PROseq[idx])
-getStrandedCoverage <- function(dataset.gr, field = "score") {
+#' getStrandedCoverage(PROseq[idx], ncores = 2)
+getStrandedCoverage <- function(dataset.gr, field = "score",
+                                ncores = detectCores()) {
 
     if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
         msg <- .nicemsg("The given value for 'field' is not found in
@@ -196,27 +200,24 @@ getStrandedCoverage <- function(dataset.gr, field = "score") {
         return(geterrmessage())
     }
 
-    p_cov <- .get_stranded_cov(dataset.gr, "+", field)
-    m_cov <- .get_stranded_cov(dataset.gr, "-", field)
-    n_cov <- .get_stranded_cov(dataset.gr, "*", field)
-
-    cov_gr <- c(p_cov, m_cov, n_cov)
-    return(sort(cov_gr))
+    cvg_ls <- mclapply(c("+", "-", "*"), .get_stranded_cvg, dataset.gr, field,
+                       mc.cores = min(ncores, 3))
+    cvg <- do.call(c, cvg_ls)
+    return(sort(cvg))
 }
 
-#' @importFrom GenomicRanges strand coverage mcols GRanges seqinfo strand<-
-#'   score
-.get_stranded_cov <- function(dataset.gr, strand_i, field) {
-    gr <- subset(dataset.gr, strand == strand_i)
+#' @import GenomicRanges
+.get_stranded_cvg <- function(strand.i, dataset.gr, field) {
+    gr <- subset(dataset.gr, strand == strand.i)
     if (is.null(field)) {
-        cv <- coverage(gr)
+        cvg <- coverage(gr)
     } else {
-        cv <- coverage(gr, weight = mcols(gr)[[field]])
+        cvg <- coverage(gr, weight = mcols(gr)[[field]])
     }
 
-    cv_gr <- GRanges(cv, seqinfo = seqinfo(dataset.gr))
-    strand(cv_gr) <- strand_i
-    subset(cv_gr, score != 0)
+    cvg_gr <- GRanges(cvg, seqinfo = seqinfo(dataset.gr))
+    strand(cvg_gr) <- strand.i
+    subset(cvg_gr, score != 0)
 }
 
 

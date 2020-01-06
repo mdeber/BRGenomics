@@ -89,7 +89,7 @@ sum(score(gr)) == sum(score(bw) * width(bw))
 #--------------------------------------------------#
 # -> for more examples, see getStrandedCoverage
 
-undo <- getStrandedCoverage(gr)
+undo <- getStrandedCoverage(gr, ncores = 2)
 
 range(width(undo))
 length(undo) == length(bw)
