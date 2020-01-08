@@ -4,3 +4,5 @@
 ^_pkgdown\.yml$
 ^\.\./mdeber\.github\.io$
 ^pkgdown$
+^doc$
+^Meta$

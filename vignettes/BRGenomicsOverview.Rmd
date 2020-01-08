@@ -1,0 +1,208 @@
+---
+title: "Basepair-Resolution Analysis with BRGenomics"
+subtitle: "_Straightforward and efficient tools for analyzing genomics data_ [EARLY DRAFT]"
+author:
+  name: Mike DeBerardine
+  email: mike.deberardine@gmail.com
+package: BRGenomics
+output:
+  BiocStyle::html_document
+abstract: |
+  BRGenomics is designed to help users avoid code repetition by providing efficient and tested functions to accomplish common, discrete tasks in the analysis of high-throughput sequencing data. The included functions are geared toward analyzing basepair-resolution sequencing data, the properties of which are exploited to increase performance and user-friendliness. We leverage standard Bioconductor methods and classes to maximize compatability with its rich ecoystem of bioinformatics tools, and we aim to make BRGenomics sufficient for most post-alignment data processing. Common data processing and analytical steps are turned into fast-running one-liners that can be simultaneously applied across numerous datasets. BRGenomics is fully-documented, and we aim it to be beginner-friendly.
+  
+vignette: |
+  %\VignetteIndexEntry{Overview of BRGenomics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Motivation
+
+This package is designed to:
+
+* Replace the use of command-line utilities for typical post-alignment processing, e.g. `bedtools` and `deeptools`
+* Be easy-to-use and easy-to-install, without requiring external dependencies, e.g. `hitslib` or the kent source utilities from the UCSC genome browser
+* Allow users to string together common analysis pipelines with simple, fast-running one-liners
+* Avoid code repetition by providing tested and validated code
+* Exploit the properties of basepair-resolution data to optimize performance and increase user-friendliness
+* Use process forking to make use of multicore processors 
+* Maximize compatability with Bioconductor's rich ecosystem of analysis software, in addition to leveraging the traditional strengths of R in statistics and data visualization
+* Fully replace the `bigWig` R package
+
+# Features
+
+* Process and import bam files quickly and easily; or import existing bedGraph or bigWig files
+* Count reads by regions of interest
+* Counts reads at positions within regions of interest, at single-base resolution or in larger bins, and generate count matrices for heatmapping
+* Calculate bootstrapped signal (e.g. readcount) profiles with confidence intervals (i.e. meta-profiles)
+* Modify gene regions (e.g. extract promoters or genebody regions) using a single simple and straightforward function
+* Conveniently, efficiently, and _correctly_ call `DESeq2` to calculate differential expression between numerous _pairs_ of samples^[By avoiding the default behavior of calculating genewise dispersion across all samples present, which is invalid if any experimental condition causes broad changes]
+  + Use non-contiguous genes in `DESeq2` analysis, e.g. to exclude of specific sites/peaks from the analysis (not usually supported by DESeq2)
+  + Efficiently generate results across a list of comparisons
+* Users interact with an intuitive and computationally efficient data structure (the "basepair resolution `GRanges`" object), which is already supported by a rich, user-friendly suite of tools that greatly simplify working with datasets and annotations
+
+### Coming Soon
+
+Data processing:
+
+* UMI deduplification
+* Separating and counting spike-in reads
+* Generating normalization factors, including several distinct and meaningful methods for calculating spike-in normalization factors
+* Summarizing and plotting replicate correlations
+* Function to use random read sampling to assess if sequencing depth sufficient to stabilize arbitrary calculations (so a user can supply anonymous function to calculate things like RMP-normalized gene expression, or DESeq2 differential expression, pausing indices, etc.)
+
+Signal counting and analysis:
+
+* Two-stranded meta-profile calculations
+* Support for region black-listing in generating signal matrices and in meta-profiling, and increased support in DESeq2 functions
+* Automated generation of a list of DESeq2 comparisons using all possible combinations; all possible permutations; or by defining a simple hierarchy of each-vs-one comparisons
+
+# Installation
+
+Install development version from [GitHub](https://github.com/mdeber/BRGenomics):
+
+``` r
+# install.packages("devtools")
+devtools::install_github("mdeber/BRGenomics")
+```
+If you're using Windows, [Rtools for Windows](https://cran.rstudio.com/bin/windows/Rtools/) is required.
+
+# Getting started
+
+The package ships with an example dataset of PRO-seq data from Drosophila melanogaster^[Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis (2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct Initiation and Pausing. _Science_  __339__(6122): 950–953. https://doi.org/10.1126/science.1229386]. PRO-seq is a basepair-resolution method that uses 3'-end sequencing of nascent RNA to map the locations of actively engaged RNA polymerases. To keep the dataset small, we've only included reads mapping to the fourth chromosome^[Chromosome 4 in Drosophila, often referred to as the "dot" chromosome, is very small and contains very few genes]. The data is included in several formats, all of which can be derived from the included bam file. 
+
+# Working With Bam Files
+
+The `import_bam` function provides a number of options for filtering and processing bam files. Because PRO-seq data is sequenced in the 3'-to-5' direction of the original RNA molecule, we'll use the `revcomp` option to reverse-complement all the input reads. We'll also set a minimum MAPQ score of 20:
+
+```{r, message=FALSE}
+library(BRGenomics)
+
+# path of included bam file
+bfile <- system.file("extdata", "PROseq_dm6_chr4.bam", 
+                     package = "BRGenomics")
+
+ps_reads <- import_bam(bfile, mapq = 20, revcomp = TRUE)
+ps_reads
+```
+
+Files are imported as `GRanges` objects from the `r Biocpkg("GenomicRanges")` package. GRanges objects are very easy to work with, and are supported by a plethora of useful functions and packages.
+
+---
+
+_To learn more about GRanges objects, including a general overview of their components, see the useful vignette [_An Introduction to the GenomicRanges Package_](https://bioconductor.org/packages/release/bioc/vignettes/GenomicRanges/inst/doc/GenomicRangesIntroduction.html). Alternatively, see the archived materials from the 2018 Bioconductor workshop [_Solving Common Bioinformatic Challenges Using GenomicRanges_](https://bioconductor.github.io/BiocWorkshops/solving-common-bioinformatic-challenges-using-genomicranges.html). Note that this package will implement and streamline a number of common operations, but users should still have a basic familiarity with GRanges objects._
+
+---
+
+By default, `import_bam` combines identical reads into the same range, and uses the `score` metadata column to represent how many times that read occurs. This means that the total number of reads in the dataset is equal to the total score:
+
+```{r, collapse = TRUE}
+sum(score(ps_reads))
+```
+
+Alternatively, you can import each read as its own range by setting `field = NULL`:
+
+```{r}
+reads_expanded <- import_bam(bfile, mapq = 20, revcomp = TRUE, 
+                             field = NULL)
+ps_reads[1:8]
+reads_expanded[1:8]
+```
+
+```{r}
+length(reads_expanded) == sum(score(ps_reads))
+```
+
+# Basepair-Resolution GRanges Objects
+
+The 3' end of a mapped PRO-seq read gives the position of an RNA polymerase at basepair-resolution. The `import_bam` function also includes options for selecting specific bases of each read, which are applied after reverse-complementing:
+
+```{r}
+ps <- import_bam(bfile, 
+                 mapq = 20, 
+                 revcomp = TRUE,
+                 trim.to = "3p")
+ps
+```
+
+You may have noticed that this GRanges object isn't the same length as when we imported the entire reads. That's because after trimming, identical positions were collapsed together, and the `score` column contains the readcounts at each position.
+
+The returned data is a GRanges object in which all ranges represent a single base, and in which a metadata field (usually `score`) contains readcounts. This data structure underpins much of this package, and we refer to it as a __basepair-resolution GRanges object__^[The `GPos` class is designed for a similar purpose, but we currently do not use it. There is a note on this in the documentation for `makeGRangesBRG`].
+
+---
+
+_bigWig files, as well as `coverage` objects in `GenomicRanges`, use a form of compression in which adjacent positions sharing the same signal are combined. For whole-read coverage methods, this run-length encoding enhances performance and efficiency. However, basepair resolution data is not nearly as smooth, and its rare that adjacent bases share the same signal. With basepair resolution data, combining adjacent positions increases complexity, while providing a negligible storage benefit._
+
+---
+
+Splitting up each base into its own range (its own index) results in a number of downstream computational benefits. Perhaps more importantly, however, is the added simplicity for the user: each index of a basepair-resolution GRanges object addresses a single genomic position and its associated signal. 
+
+```{r, collapse=TRUE}
+length(ps) # number of unique positions in dataset
+sum(score(ps)) # total number of reads
+sum(score(ps) == 1) # number of sites with only a single read
+```
+
+```{r}
+subset(ps, score > 10) # sites with more than 10 reads
+```
+
+We can write a simple test to determine if a GRanges object is "basepair-resolution":
+
+```{r, collapse=TRUE}
+all(width(ps) == 1)
+```
+
+# Example: Pipeline for Generating PRO-seq Browser Tracks
+
+The `import_bam` function provides several options for processing aligned reads, and in conjunction with functions from the `r Biocpkg("rtracklayer")` package, we can easily write a post-alignment pipeline for generating bigWig files for viewing in a genome browser.
+
+```{r, eval=FALSE}
+ps <- import_bam(bfile, 
+                 mapq = 20, 
+                 revcomp = TRUE,
+                 trim.to = "3p")
+
+ps_plus <- subset(ps, strand == "+")
+ps_minus <- subset(ps, strand == "-")
+score(ps_minus) <- -score(ps_minus) # make minus-strand scores negative
+
+rtracklayer::export.bw(ps_plus, "~/Data/PROseq_plus.bw")
+rtracklayer::export.bw(ps_minus, "~/Data/PROseq_minus.bw")
+```
+
+# Working With Annotations
+
+# Efficient Analysis of Multiple Datasets
+
+# Saving Binary R Files
+
+# DESeq
+
+# Combining Replicates
+
+# Heatmaps
+
+<!-- (Use image, and use ComplexHeatmap; and show reshape2::melt to use ggplot or lattice) -->
+
+# Metaplots
+
+<!-- (Use R plotting, and ggplot) -->
+
+# "Browser Shots"
+
+# Sequence Extraction
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+# sessionInfo()
+devtools::session_info()
+```
+
+
+<!-- SCRAP -->
+
+<!-- The `import_bam` function provides several options for processing aligned reads, and in conjunction with functions from the `r Biocpkg("rtracklayer")` package, we can easily write a post-alignment pipeline for generating bigWig files for viewing in a genome browser. -->
+
+<!-- As an exmaple, PRO-seq data is sequenced in the antisense orientation to the original RNA molecule, the 3' end of which provides the location of the active site of an engaged RNA polymerase. Therefore, PRO-seq reads need to be reverse-complemented, and the 3' ends need to be extracted. -->
