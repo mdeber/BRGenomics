@@ -387,7 +387,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
 getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                             comparisons = NULL, sizeFactors = NULL,
                             alpha = 0.1, args.DESeq = NULL, args.results = NULL,
-                            ncores = 1, quiet = FALSE) {
+                            ncores = detectCores(), quiet = FALSE) {
 
     # check inputs
     comparisons <- .check_args(match.call(), comparisons, quiet)
@@ -517,8 +517,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     args.results <- .merge_args(rqd = rqd, usr = args.results,
                                 exclude = c("object", "contrast",
                                             "alpha", "parallel"))
-    # args.results$parallel <- TRUE
-    # args.results$BPPARAM <- MulticoreParam(workers = 8)
 
     if (!quiet) return( do.call(DESeq2::results, args.results) )
     suppressWarnings(suppressMessages(
