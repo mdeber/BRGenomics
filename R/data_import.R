@@ -199,6 +199,8 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 
 #' Import bam files
 #'
+#' CURRENTLY ONLY FOR SINGLE-END SEQUENCING. Patch for paired-end support is coming soon.
+#'
 #' @param file Path of a bam file.
 #' @param mapq Filter reads by a minimum MAPQ score. This is the correct way to
 #'   filter multi-aligners.

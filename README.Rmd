@@ -39,7 +39,7 @@ data^[1]^.
 
 ## Known issues and limitations
 
-* __NOTE:__ The `import_bam` function is currently for single-end sequencing only. Path for paired-end reads is coming soon.
+* __NOTE:__ The `import_bam` function is currently for __single-end sequencing only__. Patch for paired-end reads is coming soon.
 * Currently no support for multicore processing on Windows
 * No support for importing bigWig files on Windows
 * Certain gene names can cause `getDESeqDataSet` to return an error
