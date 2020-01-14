@@ -40,7 +40,7 @@ output GRanges will be equal to the number of input reads.}
 A GRanges object.
 }
 \description{
-Import bam files
+CURRENTLY ONLY FOR SINGLE-END SEQUENCING. Patch for paired-end support is coming soon.
 }
 \examples{
 # get local address for included bam file

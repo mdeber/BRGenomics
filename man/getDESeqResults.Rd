@@ -13,7 +13,7 @@ getDESeqResults(
   alpha = 0.1,
   args.DESeq = NULL,
   args.results = NULL,
-  ncores = 1,
+  ncores = detectCores(),
   quiet = FALSE
 )
 }
