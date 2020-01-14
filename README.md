@@ -34,7 +34,10 @@ PRO-seq data<sup>\[1\]</sup>.
 
 ## Known issues and limitations
 
+  - **NOTE:** The `import_bam` function is currently for single-end
+    sequencing only. Path for paired-end reads is coming soon.
   - Currently no support for multicore processing on Windows
+  - No support for importing bigWig files on Windows
   - Certain gene names can cause `getDESeqDataSet` to return an error
       - Systematic naming schemes work (e.g. ensembl IDs) while some
         lists of conventional gene names, i.e. “symbols”, will cause
