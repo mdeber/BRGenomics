@@ -9,8 +9,11 @@ import_bam(
   mapq = 20,
   revcomp = FALSE,
   trim.to = c("whole", "5p", "3p", "center"),
+  shift = 0L,
   ignore.strand = FALSE,
-  field = "score"
+  field = "score",
+  paired_end = NULL,
+  yieldSize = 250000
 )
 }
 \arguments{
@@ -27,20 +30,41 @@ after the \code{revcomp} option. By default, the entire read is maintained.
 Other options are to take only the 5' base, only the 3' base, or the only
 the center base of the read.}
 
+\item{shift}{An integer giving the number of bases by which to shift the
+entire read upstream or downstream. Shifting is strand-specific, with
+negative numbers shifting the reads upstream, and positive numbers shiftem
+them downstream. This option is applied \emph{after} the \code{revcomp} and
+\code{trim.to} options are applied, but before \code{ignore.strand} is
+applied.}
+
 \item{ignore.strand}{Logical indicating if the strand information should be
 discarded. If \code{TRUE}, strand information is discarded \emph{after}
-\code{revcomp} and \code{trim.to} options are applied.}
+\code{revcomp}, \code{trim.to}, and \code{shift} options are applied.}
 
 \item{field}{Metadata field name to use for readcounts, usually "score". If
 set to \code{NULL}, identical reads (or identical positions if
 \code{trim.to} options applied) are not combined, and the length of the
 output GRanges will be equal to the number of input reads.}
+
+\item{paired_end}{Logical indicating if reads should be treated as paired end
+reads. When set to \code{NULL} (the default), a test is performed to
+determine if the bam file contains any paired-end reads.}
+
+\item{yieldSize}{The number of bam file records to process simultaneously,
+e.g. the "chunk size". Setting a higher chunk size will use more memory,
+which can increase speed if there is enough memory available. If chunking
+is not necessary, set to \code{NA}.}
 }
 \value{
 A GRanges object.
 }
 \description{
-CURRENTLY ONLY FOR SINGLE-END SEQUENCING. Patch for paired-end support is coming soon.
+Import single-end or paired-end bam files as GRanges objects, with various
+processing options.
+}
+\details{
+If function produces an error, make the \code{paired_end} parameter explicit,
+i.e. \code{TRUE} or \code{FALSE}.
 }
 \examples{
 # get local address for included bam file
@@ -52,25 +76,40 @@ ps.bam <- system.file("extdata", "PROseq_dm6_chr4.bam",
 #--------------------------------------------------#
 
 # Note that PRO-seq reads are sequenced as reverse complement
-import_bam(ps.bam, revcomp = TRUE)
+import_bam(ps.bam, revcomp = TRUE, paired_end = FALSE)
 
 #--------------------------------------------------#
 # Import entire reads, 1 range per read
 #--------------------------------------------------#
 
-import_bam(ps.bam, revcomp = TRUE, field = NULL)
+import_bam(ps.bam, revcomp = TRUE, field = NULL,
+           paired_end = FALSE)
 
 #--------------------------------------------------#
 # Import PRO-seq reads at basepair-resolution
 #--------------------------------------------------#
 
 # the typical manner to import PRO-seq data:
-import_bam(ps.bam, revcomp = TRUE, trim.to = "3p")
+import_bam(ps.bam, revcomp = TRUE, trim.to = "3p",
+           paired_end = FALSE)
+
+#--------------------------------------------------#
+# Import PRO-seq reads, removing the run-on base
+#--------------------------------------------------#
+
+# the best way to import PRO-seq data; removes the
+# most 3' base, which was added in the run-on
+import_bam(ps.bam, revcomp = TRUE, trim.to = "3p",
+           shift = -1, paired_end = FALSE)
 
 #--------------------------------------------------#
 # Import 5' ends of PRO-seq reads
 #--------------------------------------------------#
 
 # will include bona fide TSSes as well as hydrolysis products
-import_bam(ps.bam, revcomp = TRUE, trim.to = "5p")
+import_bam(ps.bam, revcomp = TRUE, trim.to = "5p",
+           paired_end = FALSE)
+}
+\author{
+Mike DeBerardine & Nate Tippens
 }

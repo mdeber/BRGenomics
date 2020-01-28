@@ -61,10 +61,11 @@ Signal counting and analysis:
 
 Install development version from [GitHub](https://github.com/mdeber/BRGenomics):
 
-``` r
+```{r, eval = FALSE}
 # install.packages("devtools")
 devtools::install_github("mdeber/BRGenomics")
 ```
+
 If you're using Windows, [Rtools for Windows](https://cran.rstudio.com/bin/windows/Rtools/) is required.
 
 # Getting started
@@ -82,7 +83,7 @@ library(BRGenomics)
 bfile <- system.file("extdata", "PROseq_dm6_chr4.bam", 
                      package = "BRGenomics")
 
-ps_reads <- import_bam(bfile, mapq = 20, revcomp = TRUE)
+ps_reads <- import_bam(bfile, mapq = 20, revcomp = TRUE, paired_end = FALSE)
 ps_reads
 ```
 
@@ -104,7 +105,7 @@ Alternatively, you can import each read as its own range by setting `field = NUL
 
 ```{r}
 reads_expanded <- import_bam(bfile, mapq = 20, revcomp = TRUE, 
-                             field = NULL)
+                             field = NULL, paired_end = FALSE)
 ps_reads[1:8]
 reads_expanded[1:8]
 ```
@@ -121,7 +122,8 @@ The 3' end of a mapped PRO-seq read gives the position of an RNA polymerase at b
 ps <- import_bam(bfile, 
                  mapq = 20, 
                  revcomp = TRUE,
-                 trim.to = "3p")
+                 trim.to = "3p",
+                 paired_end = FALSE)
 ps
 ```
 
@@ -161,7 +163,8 @@ The `import_bam` function provides several options for processing aligned reads,
 ps <- import_bam(bfile, 
                  mapq = 20, 
                  revcomp = TRUE,
-                 trim.to = "3p")
+                 trim.to = "3p",
+                 paired_end = FALSE)
 
 ps_plus <- subset(ps, strand == "+")
 ps_minus <- subset(ps, strand == "-")
@@ -196,7 +199,6 @@ rtracklayer::export.bw(ps_minus, "~/Data/PROseq_minus.bw")
 # Session info {.unnumbered}
 
 ```{r sessionInfo, echo=FALSE}
-# sessionInfo()
 devtools::session_info()
 ```
 

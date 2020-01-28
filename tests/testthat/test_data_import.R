@@ -114,22 +114,28 @@ test_that("Bam file is found", {
 })
 
 test_that("Bam file imports", {
-    expect_is(import_bam(ps_bam), "GRanges")
+    expect_is(import_bam(ps_bam, paired_end = FALSE), "GRanges")
 })
 
 test_that("Options applied", {
-    ps_reads <- import_bam(ps_bam, revcomp = TRUE)
-    expect_equal(unique(width(import_bam(ps_bam, trim.to = "5p"))), 1)
-    expect_equal(unique(width(import_bam(ps_bam, trim.to = "3p"))), 1)
-    expect_equal(unique(width(import_bam(ps_bam, trim.to = "center"))), 1)
-    expect_true(isDisjoint(import_bam(ps_bam, trim.to = "5p")))
+    ps_reads <- import_bam(ps_bam, revcomp = TRUE, paired_end = FALSE)
+    expect_equal(unique(width(import_bam(ps_bam, trim.to = "5p",
+                                         paired_end = FALSE))), 1)
+    expect_equal(unique(width(import_bam(ps_bam, trim.to = "3p",
+                                         paired_end = FALSE))), 1)
+    expect_equal(unique(width(import_bam(ps_bam, trim.to = "center",
+                                         paired_end = FALSE))), 1)
+    expect_true(isDisjoint(import_bam(ps_bam, trim.to = "5p",
+                                      paired_end = FALSE)))
     expect_equal(sum(as.character(strand(ps_reads)) == "+"),
-                 sum(as.character(strand(import_bam(ps_bam))) == "-"))
-    ps_nostrand <- import_bam(ps_bam, ignore.strand = TRUE)
+                 sum(as.character(strand(
+                     import_bam(ps_bam, paired_end = FALSE))) == "-"))
+    ps_nostrand <- import_bam(ps_bam, ignore.strand = TRUE, paired_end = FALSE)
     expect_true(length(ps_nostrand) < length(ps_reads))
     expect_equal(unique(as.character(strand(ps_nostrand))), "*")
     expect_equal(sum(score(ps_nostrand)), sum(score(ps_reads)))
     expect_equal(sum(score(ps_reads)),
-                 sum(score(import_bam(ps_bam, trim.to = "3p"))))
+                 sum(score(import_bam(ps_bam, trim.to = "3p",
+                                      paired_end = FALSE))))
 })
 

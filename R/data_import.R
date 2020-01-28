@@ -199,7 +199,8 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 
 #' Import bam files
 #'
-#' CURRENTLY ONLY FOR SINGLE-END SEQUENCING. Patch for paired-end support is coming soon.
+#' Import single-end or paired-end bam files as GRanges objects, with various
+#' processing options.
 #'
 #' @param file Path of a bam file.
 #' @param mapq Filter reads by a minimum MAPQ score. This is the correct way to
@@ -210,19 +211,37 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #'   after the \code{revcomp} option. By default, the entire read is maintained.
 #'   Other options are to take only the 5' base, only the 3' base, or the only
 #'   the center base of the read.
+#' @param shift An integer giving the number of bases by which to shift the
+#'   entire read upstream or downstream. Shifting is strand-specific, with
+#'   negative numbers shifting the reads upstream, and positive numbers shiftem
+#'   them downstream. This option is applied \emph{after} the \code{revcomp} and
+#'   \code{trim.to} options are applied, but before \code{ignore.strand} is
+#'   applied.
 #' @param ignore.strand Logical indicating if the strand information should be
 #'   discarded. If \code{TRUE}, strand information is discarded \emph{after}
-#'   \code{revcomp} and \code{trim.to} options are applied.
+#'   \code{revcomp}, \code{trim.to}, and \code{shift} options are applied.
 #' @param field Metadata field name to use for readcounts, usually "score". If
 #'   set to \code{NULL}, identical reads (or identical positions if
 #'   \code{trim.to} options applied) are not combined, and the length of the
 #'   output GRanges will be equal to the number of input reads.
+#' @param paired_end Logical indicating if reads should be treated as paired end
+#'   reads. When set to \code{NULL} (the default), a test is performed to
+#'   determine if the bam file contains any paired-end reads.
+#' @param yieldSize The number of bam file records to process simultaneously,
+#'   e.g. the "chunk size". Setting a higher chunk size will use more memory,
+#'   which can increase speed if there is enough memory available. If chunking
+#'   is not necessary, set to \code{NA}.
+#'
+#' @details If function produces an error, make the \code{paired_end} parameter explicit,
+#' i.e. \code{TRUE} or \code{FALSE}.
 #'
 #' @return A GRanges object.
+#' @author Mike DeBerardine & Nate Tippens
 #' @export
-#' @importFrom Rsamtools BamFile ScanBamParam
-#' @importFrom GenomicAlignments readGAlignments
-#' @importFrom GenomicRanges GRanges strand resize
+#' @importFrom Rsamtools BamFile testPairedEndBam ScanBamParam
+#' @importFrom GenomicAlignments readGAlignments readGAlignmentPairs
+#' @importFrom GenomicFiles reduceByYield
+#' @importFrom GenomicRanges GRanges strand resize shift
 #'
 #' @examples
 #' # get local address for included bam file
@@ -234,50 +253,81 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #' #--------------------------------------------------#
 #'
 #' # Note that PRO-seq reads are sequenced as reverse complement
-#' import_bam(ps.bam, revcomp = TRUE)
+#' import_bam(ps.bam, revcomp = TRUE, paired_end = FALSE)
 #'
 #' #--------------------------------------------------#
 #' # Import entire reads, 1 range per read
 #' #--------------------------------------------------#
 #'
-#' import_bam(ps.bam, revcomp = TRUE, field = NULL)
+#' import_bam(ps.bam, revcomp = TRUE, field = NULL,
+#'            paired_end = FALSE)
 #'
 #' #--------------------------------------------------#
 #' # Import PRO-seq reads at basepair-resolution
 #' #--------------------------------------------------#
 #'
 #' # the typical manner to import PRO-seq data:
-#' import_bam(ps.bam, revcomp = TRUE, trim.to = "3p")
+#' import_bam(ps.bam, revcomp = TRUE, trim.to = "3p",
+#'            paired_end = FALSE)
+#'
+#' #--------------------------------------------------#
+#' # Import PRO-seq reads, removing the run-on base
+#' #--------------------------------------------------#
+#'
+#' # the best way to import PRO-seq data; removes the
+#' # most 3' base, which was added in the run-on
+#' import_bam(ps.bam, revcomp = TRUE, trim.to = "3p",
+#'            shift = -1, paired_end = FALSE)
 #'
 #' #--------------------------------------------------#
 #' # Import 5' ends of PRO-seq reads
 #' #--------------------------------------------------#
 #'
 #' # will include bona fide TSSes as well as hydrolysis products
-#' import_bam(ps.bam, revcomp = TRUE, trim.to = "5p")
+#' import_bam(ps.bam, revcomp = TRUE, trim.to = "5p",
+#'            paired_end = FALSE)
 import_bam <- function(file, mapq = 20, revcomp = FALSE,
                        trim.to = c("whole", "5p", "3p", "center"),
-                       ignore.strand = FALSE, field = "score") {
+                       shift = 0L, ignore.strand = FALSE, field = "score",
+                       paired_end = NULL, yieldSize = 2.5e5) {
     trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
 
     # Load bam file
-    bf <- BamFile(file)
+    bf <- BamFile(file, yieldSize = yieldSize)
+    if (is.null(paired_end)) paired_end <- testPairedEndBam(bf)
     param <- ScanBamParam(mapqFilter = mapq)
-    gal = readGAlignments(bf, use.names = FALSE, param = param)
-    gr <- GRanges(gal) # make GRanges
+
+    yield_fun <- .get_yield_fun(paired_end, param)
+
+    gr <- GenomicFiles::reduceByYield(X = bf, YIELD = yield_fun, REDUCE = c)
 
     # Apply Options
-    if (revcomp) strand(gr) <- ifelse(as.character(strand(gr)) == "+", "-", "+")
+    if (revcomp | shift != 0)  is_plus <- as.character(strand(gr)) == "+"
+    if (revcomp)  strand(gr) <- ifelse(is_plus, "-", "+")
     if (trim.to != "whole") {
         opt <- paste0("opt.", trim.to)
         opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
         gr <- resize(gr, width = 1, fix = opt.arg[[opt]])
+    }
+    if (shift != 0) {
+        shifts <- ifelse(is_plus, shift, -shift)
+        gr <- shift(gr, shifts)
     }
     if (ignore.strand) strand(gr) <- "*"
 
     gr <- sort(gr)
     if (!is.null(field))  gr <- .collapse_reads(gr, field)
     return(gr)
+}
+
+.get_yield_fun <- function(paired, param) {
+    if (paired) {
+        function(x) GRanges(readGAlignmentPairs(x, use.names = FALSE,
+                                                param = param))
+    } else {
+        function(x) GRanges(readGAlignments(x, use.names = FALSE,
+                                            param = param))
+    }
 }
 
 #' @importFrom GenomicRanges countOverlaps mcols
