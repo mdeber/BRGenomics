@@ -552,8 +552,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     # exclude is an optional character vector of user args to remove
     if (is.null(usr))  return(as.list(rqd))
 
-    if (!class(usr) %in% c("list", "expression") |
-        is.null(names(usr))) {
+    if (!class(usr) %in% c("list", "expression") | is.null(names(usr))) {
         stop(message = .nicemsg("If given, args.DESeq and args.results must be
                                 named lists or R expressions containing argument
                                 names and values. See documentation"))

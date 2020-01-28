@@ -188,8 +188,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         return(reslist)
 
     } else {
-        .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize,
-                 FUN = FUN, simplify.multi.widths, field = field, NF = NF)
+        .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize, FUN = FUN,
+                 simplify.multi.widths, field = field, NF = NF)
     }
 }
 
@@ -234,8 +234,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         arridx_pad <- vapply(nbins,
                              function(nbins.i) seq_len(ncol(mat)) > nbins.i,
                              FUN.VALUE = logical(ncol(mat)))
-        arridx_pad <- t(arridx_pad) # sapply/vapply cbinds the rows
-        arridx_pad <- which(arridx_pad, arr.ind = TRUE)
+        # (transpose as sapply/vapply cbinds the rows)
+        arridx_pad <- which( t(arridx_pad), arr.ind = TRUE )
         mat[arridx_pad] <- ifelse(simplify.multi.widths == "pad 0", 0, NA)
         return(mat)
     }

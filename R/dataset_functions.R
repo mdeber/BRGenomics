@@ -285,13 +285,13 @@ subsampleGRanges <- function(dataset.gr,
                              field = "score") {
 
     if (!xor(is.null(n), is.null(prop))) {
-        msg <- "Must give either 'n' or 'prop' for subsampling, but not both."
+        msg <- "Must give either 'n' or 'prop' for subsampling (but not both)."
         stop(message = msg)
         return(geterrmessage())
     }
 
     if (is.null(field)) {
-        if (is.null(n)) n <- floor(prop * length(dataset.gr))
+        if (is.null(n))  n <- floor(prop * length(dataset.gr))
         return(sample(dataset.gr, n))
     }
 
