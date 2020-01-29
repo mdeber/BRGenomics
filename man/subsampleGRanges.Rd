@@ -34,8 +34,7 @@ function can be used in this scenario.
 \section{Use with normalized readcounts}{
  If the metadata field contains
   normalized readcounts, an attempt will be made to infer the normalization
-  factor based on the least-common-multiple of the signal found in the
-  specified field.
+  factor based on the lowest signal value found in the specified field.
 }
 
 \examples{

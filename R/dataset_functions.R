@@ -244,8 +244,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #'
 #' @section Use with normalized readcounts: If the metadata field contains
 #'   normalized readcounts, an attempt will be made to infer the normalization
-#'   factor based on the least-common-multiple of the signal found in the
-#'   specified field.
+#'   factor based on the lowest signal value found in the specified field.
 #'
 #' @author Mike DeBerardine
 #' @export
@@ -312,7 +311,7 @@ subsampleGRanges <- function(dataset.gr,
         } else {
             warning(.nicemsg("Signal given in 'field' are not whole numbers. A
                              normalization factor was inferred based on the
-                             least common multiple."))
+                             lowest signal value."))
             signal_counts <- round(unnorm_signal)
         }
     }
