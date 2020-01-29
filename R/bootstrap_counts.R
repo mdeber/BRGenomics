@@ -137,19 +137,16 @@ metaSubsample <- function(dataset.gr, regions.gr,
                                         binsize = binsize, field = field,
                                         ncores = ncores)
 
-    # Get arguments for call to metaSubsampleMatrix
-    fun_args <- as.list(match.call())[-1] # copy-paste arguments
-    args_to_pass <- names(formals(metaSubsampleMatrix))
-    fun_args <- fun_args[names(fun_args) %in% args_to_pass]
-    fun_args$binsize <- 1 # already did binning
+    fun_args <- list(counts.mat = signal.bins, binsize = 1,
+                     sample.name = sample.name, n.iter = n.iter,
+                     prop.sample = prop.sample, lower = lower, upper = upper,
+                     NF = NF, remove.empty = remove.empty, ncores = ncores)
 
     if (is.matrix(signal.bins)) {
         if (is.null(NF))  fun_args$NF <- 1
-        fun_args$counts.mat <- signal.bins
-        fun_args$sample.name <- sample.name
         df <- do.call(metaSubsampleMatrix, fun_args)
         # fix x-values to match bins, and binsize-normalize the returned values
-        if (binsize != 1)  df <- .fixbins(df, binsize, first.output.xval)
+        df <- .fixbins(df, binsize, first.output.xval)
         return(df)
     } else {
         if (remove.empty)  warning("remove.empty set with multiple fields")
@@ -162,12 +159,11 @@ metaSubsample <- function(dataset.gr, regions.gr,
             fun_args[args_i] <- list(mat.i, sample.name.i, NF.i)
             do.call(metaSubsampleMatrix, fun_args)
         }
-        dflist <- mapply(call_fun, signal.bins, sample.name, NF,
-                         SIMPLIFY = FALSE)
+        dflist <- mcMap(call_fun, signal.bins, sample.name, NF,
+                        mc.cores = ncores, mc.set.seed = FALSE)
         # fix x-values to match bins, and binsize-normalize the returned values
-        if (binsize != 1)
-            dflist <- lapply(dflist, .fixbins, binsize, first.output.xval)
-        return(Reduce(rbind, dflist))
+        dflist <- lapply(dflist, .fixbins, binsize, first.output.xval)
+        return(do.call(rbind, dflist))
     }
 }
 
@@ -181,10 +177,13 @@ metaSubsample <- function(dataset.gr, regions.gr,
 
 .fixbins <- function(df, binsize, first.output.xval) {
     nbins <- nrow(df)
-    df$x <- .binxval(nbins, binsize, first.output.xval)
-
-    y_vals <- c("mean", "lower", "upper")
-    df[, y_vals] <- df[, y_vals] / binsize
+    if (binsize == 1) {
+        df$x <- seq(0, nbins - 1) + first.output.xval
+    } else {
+        df$x <- .binxval(nbins, binsize, first.output.xval)
+        y_vals <- c("mean", "lower", "upper")
+        df[, y_vals] <- df[, y_vals] / binsize
+    }
     return(df)
 }
 
@@ -203,13 +202,14 @@ metaSubsample <- function(dataset.gr, regions.gr,
 #' @importFrom parallel mclapply detectCores
 #' @importFrom stats quantile
 metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
-                                sample.name = deparse(substitute(counts.mat)),
+                                sample.name = NULL,
                                 n.iter = 1000, prop.sample = 0.1,
                                 lower = 0.125, upper = 0.875, NF = 1,
                                 remove.empty = FALSE, ncores = detectCores()) {
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
     if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
+    if (is.null(sample.name)) sample.name <- deparse(substitute(counts.mat))
 
     nbins <- floor(ncol(counts.mat) / binsize)
     ngenes <- nrow(counts.mat)
@@ -232,7 +232,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
 
     # calculate final outputs
     if (n.iter == 1) {
-        message(.nicemsg("With n.iter = 1, output mean and quantiles are not
+        message(.nicemsg("With n.iter = 1, output means and quantiles are not
                          bootstrapped"))
         idx <- unlist(idx.list)
         mean <- NF * binavg.mat

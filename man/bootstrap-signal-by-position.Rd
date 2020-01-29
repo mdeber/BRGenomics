@@ -26,7 +26,7 @@ metaSubsampleMatrix(
   counts.mat,
   binsize = 1,
   first.output.xval = 1,
-  sample.name = deparse(substitute(counts.mat)),
+  sample.name = NULL,
   n.iter = 1000,
   prop.sample = 0.1,
   lower = 0.125,
