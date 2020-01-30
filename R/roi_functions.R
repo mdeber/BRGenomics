@@ -95,14 +95,13 @@ genebodies <- function(genelist, start = 300, end = -300,
 
     # shift with strand-specificity
     is_plus <- as.character(strand(genelist)) == "+"
-    sense_starts <- ifelse(is_plus, sense_starts + start, sense_starts - start)
-    sense_ends <- ifelse(is_plus, sense_ends + end, sense_ends - end)
+    idx.p <- which(is_plus)
+    idx.m <- which(!is_plus)
+    ranges(genelist)[idx.p] <- IRanges(start = sense_starts[idx.p] + start,
+                                       end = sense_ends[idx.p] + end)
+    ranges(genelist)[idx.m] <- IRanges(start = sense_ends[idx.m] - end,
+                                       end = sense_starts[idx.m] - start)
 
-    # actual GRanges starts/ends must be flipped for minus-strand genes
-    starts <- ifelse(is_plus, sense_starts, sense_ends)
-    ends <- ifelse(is_plus, sense_ends, sense_starts)
-
-    ranges(genelist) <- IRanges(start = starts, end = ends)
     return(genelist)
 }
 
