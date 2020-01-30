@@ -116,12 +116,13 @@ length(reads_expanded) == sum(score(ps_reads))
 
 # Basepair-Resolution GRanges Objects
 
-The 3' end of a mapped PRO-seq read gives the position of an RNA polymerase at basepair-resolution. The `import_bam` function also includes options for selecting specific bases of each read, which are applied after reverse-complementing:
+The base immediately before the 3' end of a mapped PRO-seq read gives the position of an RNA polymerase at basepair-resolution. The `import_bam` function also includes options for selecting specific bases of each read, which are applied after reverse-complementing. Here, we reverse complement, take the 3' end of the read, and then shift that base upstream by 1 base:
 
 ```{r}
 ps <- import_bam(bfile, 
                  mapq = 20, 
                  revcomp = TRUE,
+                 shift = -1,
                  trim.to = "3p",
                  paired_end = FALSE)
 ps
@@ -163,6 +164,7 @@ The `import_bam` function provides several options for processing aligned reads,
 ps <- import_bam(bfile, 
                  mapq = 20, 
                  revcomp = TRUE,
+                 shift = -1,
                  trim.to = "3p",
                  paired_end = FALSE)
 

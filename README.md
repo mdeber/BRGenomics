@@ -34,20 +34,19 @@ PRO-seq data<sup>\[1\]</sup>.
 
 ## Known issues and limitations
 
-  - **NOTE:** The `import_bam` function is currently for **single-end
-    sequencing only**. Patch for paired-end reads is coming soon.
+  - `import_bam` can sometimes return an error when `paired_end = NULL`.
+    If this occurs, make `paired_end` argument explicit by setting to
+    `TRUE` or `FALSE`
   - Currently no support for multicore processing on Windows
   - No support for importing bigWig files on Windows
   - Certain gene names can cause `getDESeqDataSet` to return an error
       - Systematic naming schemes work (e.g. ensembl IDs) while some
         lists of conventional gene names, i.e. “symbols”, will cause
         failure
-  - In some contexts, using multicore causes errors in `getDESeqResults`
-    If this occurs in your environment, set `ncores = 1`. If there’s no
-    error, I highly recommend using multiple cores for this function.
-      - *Yet to be verified, but I believe the problem only affects
-        users who are using modified BLAS libraries in lieu of R’s
-        defaults*
+  - Most multicore support is robust to the use of alternative BLAS
+    libraries, with the exception of `getDESeqResults`. Users opting to
+    use alternative, concurrent BLAS libraries may have to set `ncores
+    = 1`.
 
 -----
 

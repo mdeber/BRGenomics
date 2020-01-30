@@ -1,3 +1,12 @@
+## BRGenomics 0.5.6
+
+* Update `import_bam` function
+    + Added support for paired-end bam files
+    + Added the `shift` argument
+* Made `metaSubsample` functions robust to unevaluated inputs 
+* Small performance improvement to `genebodies` function
+* Return multicore as default for `getDESeqResults`
+
 ## BRGenomics 0.5.3
 
 * Substantial performance improvement for `mergeGRangesData`
