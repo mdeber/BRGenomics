@@ -8,8 +8,8 @@ import_bam(
   file,
   mapq = 20,
   revcomp = FALSE,
-  trim.to = c("whole", "5p", "3p", "center"),
   shift = 0L,
+  trim.to = c("whole", "5p", "3p", "center"),
   ignore.strand = FALSE,
   field = "score",
   paired_end = NULL,
@@ -25,17 +25,18 @@ filter multi-aligners.}
 \item{revcomp}{Logical indicating if aligned reads should be
 reverse-complemented.}
 
-\item{trim.to}{Option for selecting specific bases from the reads, applied
-after the \code{revcomp} option. By default, the entire read is maintained.
-Other options are to take only the 5' base, only the 3' base, or the only
-the center base of the read.}
+\item{shift}{Either an integer giving the number of bases by which to shift
+the entire read upstream or downstream, or a pair of integers indicating
+shifts to be applied to the 5' and 3' ends of the reads, respectively.
+Shifting is strand-specific, with negative numbers shifting the reads
+upstream, and positive numbers shiftem them downstream. This option is
+applied \emph{after} the \code{revcomp}, but before \code{trim.to} and
+\code{ignore.strand} options are applied.}
 
-\item{shift}{An integer giving the number of bases by which to shift the
-entire read upstream or downstream. Shifting is strand-specific, with
-negative numbers shifting the reads upstream, and positive numbers shiftem
-them downstream. This option is applied \emph{after} the \code{revcomp} and
-\code{trim.to} options are applied, but before \code{ignore.strand} is
-applied.}
+\item{trim.to}{Option for selecting specific bases from the reads, applied
+after the \code{revcomp} and \code{shift} options. By default, the entire
+read is maintained. Other options are to take only the 5' base, only the 3'
+base, or the only the center base of the read.}
 
 \item{ignore.strand}{Logical indicating if the strand information should be
 discarded. If \code{TRUE}, strand information is discarded \emph{after}
@@ -63,8 +64,8 @@ Import single-end or paired-end bam files as GRanges objects, with various
 processing options.
 }
 \details{
-If function produces an error, make the \code{paired_end} parameter explicit,
-i.e. \code{TRUE} or \code{FALSE}.
+If function produces an error, make the \code{paired_end} parameter
+  explicit, i.e. \code{TRUE} or \code{FALSE}.
 }
 \examples{
 # get local address for included bam file

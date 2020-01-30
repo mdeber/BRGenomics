@@ -207,16 +207,17 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #'   filter multi-aligners.
 #' @param revcomp Logical indicating if aligned reads should be
 #'   reverse-complemented.
+#' @param shift Either an integer giving the number of bases by which to shift
+#'   the entire read upstream or downstream, or a pair of integers indicating
+#'   shifts to be applied to the 5' and 3' ends of the reads, respectively.
+#'   Shifting is strand-specific, with negative numbers shifting the reads
+#'   upstream, and positive numbers shiftem them downstream. This option is
+#'   applied \emph{after} the \code{revcomp}, but before \code{trim.to} and
+#'   \code{ignore.strand} options are applied.
 #' @param trim.to Option for selecting specific bases from the reads, applied
-#'   after the \code{revcomp} option. By default, the entire read is maintained.
-#'   Other options are to take only the 5' base, only the 3' base, or the only
-#'   the center base of the read.
-#' @param shift An integer giving the number of bases by which to shift the
-#'   entire read upstream or downstream. Shifting is strand-specific, with
-#'   negative numbers shifting the reads upstream, and positive numbers shiftem
-#'   them downstream. This option is applied \emph{after} the \code{revcomp} and
-#'   \code{trim.to} options are applied, but before \code{ignore.strand} is
-#'   applied.
+#'   after the \code{revcomp} and \code{shift} options. By default, the entire
+#'   read is maintained. Other options are to take only the 5' base, only the 3'
+#'   base, or the only the center base of the read.
 #' @param ignore.strand Logical indicating if the strand information should be
 #'   discarded. If \code{TRUE}, strand information is discarded \emph{after}
 #'   \code{revcomp}, \code{trim.to}, and \code{shift} options are applied.
@@ -232,8 +233,8 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #'   which can increase speed if there is enough memory available. If chunking
 #'   is not necessary, set to \code{NA}.
 #'
-#' @details If function produces an error, make the \code{paired_end} parameter explicit,
-#' i.e. \code{TRUE} or \code{FALSE}.
+#' @details If function produces an error, make the \code{paired_end} parameter
+#'   explicit, i.e. \code{TRUE} or \code{FALSE}.
 #'
 #' @return A GRanges object.
 #' @author Mike DeBerardine & Nate Tippens
@@ -286,9 +287,9 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #' # will include bona fide TSSes as well as hydrolysis products
 #' import_bam(ps.bam, revcomp = TRUE, trim.to = "5p",
 #'            paired_end = FALSE)
-import_bam <- function(file, mapq = 20, revcomp = FALSE,
+import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
                        trim.to = c("whole", "5p", "3p", "center"),
-                       shift = 0L, ignore.strand = FALSE, field = "score",
+                       ignore.strand = FALSE, field = "score",
                        paired_end = NULL, yieldSize = 2.5e5) {
     trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
 
@@ -303,17 +304,18 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE,
 
     # Apply Options
     if (revcomp | shift != 0)  is_plus <- as.character(strand(gr)) == "+"
-    if (revcomp)  strand(gr) <- ifelse(is_plus, "-", "+")
+    if (revcomp) {
+        strand(gr) <- "+"
+        strand(gr)[is_plus] <- "-"
+        is_plus <- !is_plus
+    }
+    if (shift != 0)  gr <- .shift_gr(gr, is_plus, shift)
     if (trim.to != "whole") {
         opt <- paste0("opt.", trim.to)
         opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
         gr <- resize(gr, width = 1, fix = opt.arg[[opt]])
     }
-    if (shift != 0) {
-        shifts <- ifelse(is_plus, shift, -shift)
-        gr <- shift(gr, shifts)
-    }
-    if (ignore.strand) strand(gr) <- "*"
+    if (ignore.strand)  strand(gr) <- "*"
 
     gr <- sort(gr)
     if (!is.null(field))  gr <- .collapse_reads(gr, field)
@@ -327,6 +329,20 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE,
     } else {
         function(x) GRanges(readGAlignments(x, use.names = FALSE,
                                             param = param))
+    }
+}
+
+.shift_gr <- function(gr, is_plus, shift) {
+    if (length(shift) == 1) {
+        shifts <- rep(-shift, length(is_plus)) # minus strand
+        shifts[is_plus] <- shift
+        return(shift(gr, shifts))
+    } else if (length(shift) == 2) {
+        return(genebodies(gr, shift[1], shift[2], min.window = 0))
+    } else {
+        stop(message = .nicemsg("shift argument must be a numeric, or a numeric
+                                vector of length 2"))
+        return(geterrmessage())
     }
 }
 
