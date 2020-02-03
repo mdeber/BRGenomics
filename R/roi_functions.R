@@ -154,9 +154,9 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' most signal. Sites can be found at base-pair resolution, or defined for
 #' larger bins.
 #'
-#' @param regions.gr A GRanges object containing regions of interest.
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field).
+#' @param regions.gr A GRanges object containing regions of interest.
 #' @param binsize The size of bin in which to calculate signal scores.
 #' @param bin.centers Logical indicating if the centers of bins are returned, as
 #'   opposed to the entire bin. By default, entire bins are returned.
@@ -201,14 +201,14 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' # max sites
 #' #--------------------------------------------------#
 #'
-#' getMaxPositionsBySignal(pr[1:3], PROseq, keep.signal = TRUE)
+#' getMaxPositionsBySignal(PROseq, pr[1:3], keep.signal = TRUE)
 #'
 #' #--------------------------------------------------#
 #' # max sites in 5 bp bins
 #' #--------------------------------------------------#
 #'
-#' getMaxPositionsBySignal(pr[1:3], PROseq, binsize = 5, keep.signal = TRUE)
-getMaxPositionsBySignal <- function(regions.gr, dataset.gr, binsize = 1,
+#' getMaxPositionsBySignal(PROseq, pr[1:3], binsize = 5, keep.signal = TRUE)
+getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
                                     bin.centers = FALSE, field = "score",
                                     keep.signal = FALSE) {
     # keep only ranges with signal
