@@ -17,8 +17,10 @@
 #' This convenience function removes non-standard, mitochondrial, and/or sex
 #' chromosomes from any GRanges object.
 #'
-#' @param gr Any GRanges object, however the object should have a standard
-#'   genome set, e.g. \code{genome(gr) <- "hg38"}
+#' @param gr Any GRanges object, or any another object with associated
+#'   \code{seqinfo} (or a \code{Seqinfo} object itself). The object should
+#'   typically have a standard genome associated with it, e.g. \code{genome(gr)
+#'   <- "hg38"}.
 #' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
@@ -27,17 +29,17 @@
 #'   with trimmed chromosomes have been removed.
 #'
 #' @details Standard chromosomes are defined using the
-#' \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}} function
-#' from the \code{GenomeInfoDb} package.
+#'   \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}}
+#'   function from the \code{GenomeInfoDb} package.
 #'
 #' @author Mike DeBerardine
-#' @seealso
-#'    \code{\link[GenomeInfoDb:standardChromosomes]{
-#'    GenomeInfoDb::standardChromosomes}}
+#' @seealso \code{\link[GenomeInfoDb:standardChromosomes]{
+#' GenomeInfoDb::standardChromosomes}}
 #'
 #' @export
 #' @importFrom GenomeInfoDb standardChromosomes seqlevels keepSeqlevels
 #'   sortSeqlevels
+#' @importFrom methods is
 #' @examples
 #' # make a GRanges
 #' chrom <- c("chr2", "chr3", "chrX", "chrY", "chrM", "junk")
@@ -65,7 +67,13 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
     if (!keep.X)  chrom <- chrom[ chrom != "chrX" ]
     if (!keep.Y)  chrom <- chrom[ chrom != "chrY" ]
     if (!keep.M)  chrom <- chrom[ (chrom != "chrM") & (chrom != "chrMT") ]
-    gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
+
+    if (methods::is(gr, "Seqinfo")) {
+        gr <- keepSeqlevels(gr, chrom)
+    } else {
+        gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
+    }
+
     sortSeqlevels(gr)
 }
 
