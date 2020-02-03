@@ -116,6 +116,14 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   \code{dataset.gr}.
 #' @param NF An optional normalization factor by which to multiply the counts.
 #'   If given, \code{length(NF)} must be equal to \code{length(field)}.
+#' @param melt A logical indicating if the count matrices should be melted. If
+#'   set to \code{TRUE}, a dataframe is returned in containing columns for
+#'   "region", "position", and "signal". If \code{dataset.gr} is a list of
+#'   multiple GRanges, or if \code{length(field) > 1}, a single dataframe is
+#'   returned, which contains an additional column "sample", which contains
+#'   individual sample names. If used with multi-width \code{regions.gr}, the
+#'   resulting dataframe will only contain positions that are found within
+#'   each respective region.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return If the widths of all ranges in \code{regions.gr} are equal, a matrix
@@ -179,13 +187,14 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  simplify.multi.widths = c("error", "list",
                                                            "pad 0", "pad NA"),
-                                 field = "score", NF = NULL,
+                                 field = "score", NF = NULL, melt = FALSE,
                                  ncores = detectCores()) {
     if (is.list(dataset.gr)) {
         if (is.null(NF))  NF <- rep(1, length(dataset.gr))
         cl <- mcMap(getCountsByPositions, dataset.gr, list(regions.gr), binsize,
-                    FUN, simplify.multi.widths, field, NF, ncores = 1,
+                    FUN, simplify.multi.widths, field, NF, melt, ncores = 1,
                     mc.cores = ncores)
+        if (melt)  cl <- .dfList2df(cl, prepend = FALSE)
         return(cl)
     }
 
@@ -203,29 +212,31 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         .call_multifield <- function(field.i, NF.i) {
             .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize, FUN = FUN,
                      simplify.multi.widths = simplify.multi.widths,
-                     field = field.i, NF = NF.i)
+                     field = field.i, NF = NF.i, melt = melt)
         }
-        reslist <- mcMap(.call_multifield, field, NF, mc.cores = ncores)
-        names(reslist) <- field
-        return(reslist)
+        cl <- mcMap(.call_multifield, field, NF, mc.cores = ncores)
+        names(cl) <- field
+        if (melt)  cl <- .dfList2df(cl, prepend = FALSE)
+        return(cl)
 
     } else {
         .get_cbp(hits, dataset.gr, regions.gr, binsize = binsize, FUN = FUN,
-                 simplify.multi.widths, field = field, NF = NF)
+                 simplify.multi.widths, field = field, NF = NF, melt = melt)
     }
 }
 
 
 .get_cbp <- function(hits, dataset.gr, regions.gr, binsize,
-                     FUN, simplify.multi.widths, field, NF) {
+                     FUN, simplify.multi.widths, field, NF, melt) {
 
     multi_width <- length(unique(width(regions.gr))) > 1
 
     if (multi_width) {
         .get_cbp_mw(hits, dataset.gr, regions.gr, binsize, FUN,
-                    simplify.multi.widths, field, NF)
+                    simplify.multi.widths, field, NF, melt)
     } else {
-        .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field, NF)
+        .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field, NF,
+                        melt)
     }
 
 }
@@ -233,30 +244,24 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 #' @importFrom GenomicRanges width resize
 .get_cbp_mw <- function(hits, dataset.gr, regions.gr, binsize, FUN,
-                        simplify.multi.widths, field, NF) {
+                        simplify.multi.widths, field, NF, melt) {
 
-    simplify.multi.widths <- match.arg(simplify.multi.widths,
-                                       c("error", "list", "pad 0", "pad NA"))
-    if (simplify.multi.widths == "error") {
-        stop(message = .nicemsg("regions.gr contains ranges with multiple
-                                widths, but simplify.multi.widths is set to
-                                'error'. Did you mean to call getCountsByRegions
-                                instead?"))
-        return(geterrmessage())
-    }
+    simplify.multi.widths <- .get_mw_arg(simplify.multi.widths, melt)
 
     # expand all regions to be the same width, then get counts
     widths <- width(regions.gr) # save widths
     suppressWarnings( regions.gr <- resize(regions.gr, max(widths)) )
 
     mat <- .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN,
-                           field, NF)
+                           field, NF, melt = FALSE)
     nbins <- floor(widths / binsize) # number of bins to keep for each region
 
-    if (simplify.multi.widths == "list") {
+    if (simplify.multi.widths == "list") { # includes if melt == TRUE
         # list of vectors whose lengths determined by width of range i
         get_cols <- function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)]
-        Map(get_cols, seq_len(nrow(mat)), nbins)
+        cl <- Map(get_cols, seq_len(nrow(mat)), nbins)
+        if (melt)  cl <- .meltmw(cl)
+        return(cl)
 
     } else {
         # get array indices for out-of-range bins
@@ -270,10 +275,32 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     }
 }
 
+.get_mw_arg <- function(simplify.multi.widths, melt) {
+    simplify.multi.widths <- match.arg(simplify.multi.widths,
+                                       c("error", "list", "pad 0", "pad NA"))
+    if (simplify.multi.widths == "error") {
+        stop(message = .nicemsg("regions.gr contains ranges with multiple
+                                widths, but simplify.multi.widths is set to
+                                'error'. Did you mean to call getCountsByRegions
+                                instead?"))
+        return(geterrmessage())
+    }
+    if (melt)  simplify.multi.widths <- "list"
+    return(simplify.multi.widths)
+}
+
+
+.meltmw <- function(cl) {
+    lens <- lengths(cl)
+    data.frame(region = rep(seq_along(cl), lens),
+               position = unlist(lapply(lens, seq_len)),
+               signal = unlist(cl))
+}
+
 
 #' @importFrom GenomicRanges start mcols
 .get_signal_mat <- function(hits, dataset.gr, regions.gr, binsize, FUN,
-                            field, NF) {
+                            field, NF, melt) {
 
     # initialize signal matrix of dim = (region, position within region)
     mat <- matrix(0L, length(regions.gr), unique(width(regions.gr)))
@@ -291,7 +318,18 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                                     FUN = match.fun(FUN)))
         mat <- t(mat) # apply will cbind rather than rbind
     }
-    return(mat * NF)
+    mat <- mat * NF # apply normalization
+    if (melt)  mat <- .meltmat(mat)
+    return(mat)
+}
+
+.meltmat <- function(mat) {
+    mat <- t(mat) # (to sort by region, rather than position)
+    df <- expand.grid(seq_len(nrow(mat)), seq_len(ncol(mat)),
+                      KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE)
+    df <- cbind(df, data.frame(as.vector(mat)))
+    names(df) <- c("position", "region", "signal")
+    df[, c(2, 1, 3)]
 }
 
 

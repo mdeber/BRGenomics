@@ -50,7 +50,7 @@ test_that("simple counts matrix correctly calculated", {
 test_that("simple counts matrix works over multiple metadata fields", {
     fieldcounts <- getCountsByPositions(ps_rename, txs_pr,
                                         field = c("signal", "posnum"),
-                                       ncores = 2)
+                                        ncores = 2)
     expect_is(fieldcounts, "list")
     expect_equivalent(names(fieldcounts), c("signal", "posnum"))
     expect_is(fieldcounts[[1]], "matrix")
@@ -100,6 +100,28 @@ test_that("can get NA-padded counts matrix for multi-width regions", {
                                    simplify.multi.widths = "pad NA")
     expect_is(padmat, "matrix")
     expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
+})
+
+test_that("melting option works", {
+    countsdf <- getCountsByPositions(PROseq, txs_pr, melt = TRUE)
+    expect_equivalent(as.vector(t(countsmat)), countsdf$signal)
+    expect_equal(ncol(countsdf), 3)
+
+    # for multiple fields
+    fieldcountsdf <- getCountsByPositions(ps_rename, txs_pr,
+                                          field = c("signal", "posnum"),
+                                          melt = TRUE, ncores = 2)
+    expect_is(fieldcountsdf, "data.frame")
+    expect_equal(ncol(fieldcountsdf), 4) # has sample names now
+    expect_equivalent(unique(fieldcountsdf[,4]), c("signal", "posnum"))
+
+    # for multi-width regions
+    meltlist <- getCountsByPositions(PROseq, txs_dm6_chr4,
+                                     simplify.multi.widths = "list",
+                                     melt = TRUE)
+    expect_is(meltlist, "data.frame")
+    expect_equal(ncol(meltlist), 3)
+    expect_equivalent(unlist(countslist), meltlist[, 3])
 })
 
 test_that("error on incorrect simplify argument", {

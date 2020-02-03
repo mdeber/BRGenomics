@@ -12,6 +12,7 @@ getCountsByPositions(
   simplify.multi.widths = c("error", "list", "pad 0", "pad NA"),
   field = "score",
   NF = NULL,
+  melt = FALSE,
   ncores = detectCores()
 )
 }
@@ -40,6 +41,15 @@ output for generated each field. If \code{field} not found in
 
 \item{NF}{An optional normalization factor by which to multiply the counts.
 If given, \code{length(NF)} must be equal to \code{length(field)}.}
+
+\item{melt}{A logical indicating if the count matrices should be melted. If
+set to \code{TRUE}, a dataframe is returned in containing columns for
+"region", "position", and "signal". If \code{dataset.gr} is a list of
+multiple GRanges, or if \code{length(field) > 1}, a single dataframe is
+returned, which contains an additional column "sample", which contains
+individual sample names. If used with multi-width \code{regions.gr}, the
+resulting dataframe will only contain positions that are found within
+each respective region.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
