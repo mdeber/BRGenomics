@@ -38,7 +38,7 @@ metaSubsampleMatrix(
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
-(typically in the \code{"score"} field).}
+(typically in the \code{"score"} field), or a list of such GRanges objects.}
 
 \item{regions.gr}{A GRanges object containing intervals over which to
 metaplot. All ranges must have the same width.}
@@ -87,10 +87,11 @@ subsampling its rows. Typically, a matrix of readcounts with rows for genes
 and columns for positions within those genes.}
 }
 \value{
-Dataframe containing x-values, means, lower quantiles, upper
+A dataframe containing x-values, means, lower quantiles, upper
   quantiles, and the sample name (as a convenience for row-binding multiple
-  of these dataframes). If multiple fields are given, a single dataframe is
-  still returned, but will contain data for all fields.
+  of these dataframes). If a list of GRanges is given as input, or if
+  multiple fields are given, a single, combined dataframe is returned
+  containing data for all fields/datasets.
 }
 \description{
 These functions perform bootstrap subsampling of mean readcounts at different

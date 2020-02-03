@@ -13,7 +13,7 @@
 #' base-pair resolution, or over larger bins.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
-#'   (typically in the \code{"score"} field).
+#'   (typically in the \code{"score"} field), or a list of such GRanges objects.
 #' @param regions.gr A GRanges object containing intervals over which to
 #'   metaplot. All ranges must have the same width.
 #' @param counts.mat A matrix over which to bootstrap column means by
@@ -49,10 +49,11 @@
 #'   fields, as the gene lists will no longer be equivalent.
 #' @param ncores Number of cores to use for computations.
 #'
-#' @return Dataframe containing x-values, means, lower quantiles, upper
+#' @return A dataframe containing x-values, means, lower quantiles, upper
 #'   quantiles, and the sample name (as a convenience for row-binding multiple
-#'   of these dataframes). If multiple fields are given, a single dataframe is
-#'   still returned, but will contain data for all fields.
+#'   of these dataframes). If a list of GRanges is given as input, or if
+#'   multiple fields are given, a single, combined dataframe is returned
+#'   containing data for all fields/datasets.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -120,7 +121,7 @@ NULL
 
 #' @rdname bootstrap-signal-by-position
 #' @export
-#' @importFrom parallel mclapply detectCores
+#' @importFrom parallel detectCores
 metaSubsample <- function(dataset.gr, regions.gr,
                           binsize = 1, first.output.xval = 1,
                           sample.name = deparse(substitute(dataset.gr)),
@@ -130,8 +131,23 @@ metaSubsample <- function(dataset.gr, regions.gr,
                           ncores = detectCores()) {
     .check_regions(regions.gr) # check that all widths are the same
 
-    # Get signal in each bin of each gene
-    # -> Matrix of dim = (ngenes, nbins) // or a list if length(field) > 1
+    if (is.list(dataset.gr) | length(field) > 1) {
+        .metasample_multi(dataset.gr, regions.gr, binsize, first.output.xval,
+                          sample.name, n.iter, prop.sample, lower, upper,
+                          field, NF, remove.empty, ncores)
+    } else {
+        .metasample_gr(dataset.gr, regions.gr, binsize, first.output.xval,
+                       sample.name, n.iter, prop.sample, lower, upper,
+                       field, NF, remove.empty, ncores)
+    }
+}
+
+
+.metasample_gr <- function(dataset.gr, regions.gr, binsize, first.output.xval,
+                           sample.name, n.iter, prop.sample, lower, upper,
+                           field, NF, remove.empty, ncores) {
+
+    # Get signal in each bin of each gene --> Matrix of dim = (ngenes, nbins)
     signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
                                         binsize = binsize, field = field,
@@ -142,29 +158,53 @@ metaSubsample <- function(dataset.gr, regions.gr,
                      prop.sample = prop.sample, lower = lower, upper = upper,
                      NF = NF, remove.empty = remove.empty, ncores = ncores)
 
-    if (is.matrix(signal.bins)) {
-        if (is.null(NF))  fun_args$NF <- 1
-        df <- do.call(metaSubsampleMatrix, fun_args)
-        # fix x-values to match bins, and binsize-normalize the returned values
-        df <- .fixbins(df, binsize, first.output.xval)
-        return(df)
-    } else {
-        if (remove.empty)  warning("remove.empty set with multiple fields")
-        if (is.null(NF))  NF <- rep(1, length(signal.bins))
-        if (length(sample.name) != length(signal.bins))
-            sample.name <- names(signal.bins)
+    if (is.null(NF))  fun_args$NF <- 1
+    df <- do.call(metaSubsampleMatrix, fun_args)
+    # fix x-values to match bins, and binsize-normalize the returned values
+    df <- .fixbins(df, binsize, first.output.xval)
+    return(df)
+}
 
-        args_i <- c("counts.mat", "sample.name", "NF")
-        call_fun <- function(mat.i, sample.name.i, NF.i) {
-            fun_args[args_i] <- list(mat.i, sample.name.i, NF.i)
-            do.call(metaSubsampleMatrix, fun_args)
-        }
-        dflist <- mcMap(call_fun, signal.bins, sample.name, NF,
-                        mc.cores = ncores, mc.set.seed = FALSE)
-        # fix x-values to match bins, and binsize-normalize the returned values
-        dflist <- lapply(dflist, .fixbins, binsize, first.output.xval)
-        return(do.call(rbind, dflist))
+#' @importFrom parallel mcMap
+.metasample_multi <- function(dataset.gr, regions.gr, binsize,
+                              first.output.xval, sample.name, n.iter,
+                              prop.sample, lower, upper, field, NF,
+                              remove.empty, ncores) {
+
+    # Get signal in each bin of each gene --> A list of matrices
+    if (is.list(dataset.gr)) {
+        signal.bins <- mcMap(getCountsByPositions, dataset.gr,
+                             regions.gr = list(regions.gr), binsize = binsize,
+                             field = field, ncores = 1, mc.cores = ncores)
+    } else {
+        signal.bins <- getCountsByPositions(dataset.gr, regions.gr,
+                                            binsize = binsize, field = field,
+                                            ncores = ncores)
     }
+
+    if (remove.empty)  warning("remove.empty set with multiple fields/datasets")
+    if (is.null(NF))  NF <- rep(1, length(signal.bins))
+    if (length(sample.name) != length(signal.bins))
+        sample.name <- names(signal.bins)
+    if (length(sample.name) == 0)
+        sample.name <- as.character(seq_along(signal.bins))
+
+    fun_args <- list(binsize = 1, n.iter = n.iter, prop.sample = prop.sample,
+                     lower = lower, upper = upper, remove.empty = remove.empty,
+                     ncores = ncores)
+
+    args_i <- c("counts.mat", "sample.name", "NF")
+    call_fun <- function(mat.i, sample.name.i, NF.i) {
+        fun_args[args_i] <- list(mat.i, sample.name.i, NF.i)
+        do.call(metaSubsampleMatrix, fun_args)
+    }
+
+    dflist <- mcMap(call_fun, signal.bins, sample.name, NF,
+                    mc.cores = ncores, mc.set.seed = FALSE)
+
+    # fix x-values to match bins, and binsize-normalize the returned values
+    dflist <- lapply(dflist, .fixbins, binsize, first.output.xval)
+    return(do.call(rbind, dflist))
 }
 
 #' @importFrom GenomicRanges width
