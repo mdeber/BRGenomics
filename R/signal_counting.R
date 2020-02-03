@@ -6,7 +6,9 @@
 #' \code{regions.gr}.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
-#'   (typically in the "score" field).
+#'   (typically in the "score" field), or a named list of such GRanges objects.
+#'   If a list is given, a dataframe is returned containing the counts in each
+#'   region for each dataset.
 #' @param regions.gr A GRanges object containing regions of interest.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, a dataframe is returned containing the counts for
@@ -18,7 +20,9 @@
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return An atomic vector the same length as \code{regions.gr} containing the
-#'   sum of the signal overlapping each range of \code{regions.gr}.
+#'   sum of the signal overlapping each range of \code{regions.gr}. If
+#'   \code{dataset.gr} is a list of multiple GRanges, or if \code{length(field)
+#'   > 1}, a dataframe is returned.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -43,27 +47,36 @@
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
                                NF = NULL, ncores = detectCores()) {
 
+    if (is.list(dataset.gr)) {
+        if (is.null(NF))  NF <- rep(1, length(dataset.gr))
+        cl <- mcMap(.get_cbr, dataset.gr, list(regions.gr), field, NF,
+                    mc.cores = ncores)
+        return(as.data.frame(cl))
+    }
+
     # convenience: if field not in dataset.gr, use all fields that are
     field <- .check_fields(dataset.gr, field)
 
-    if (length(field) == 1) {
-        hits <- findOverlaps(regions.gr, dataset.gr)
-        counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
-                            by = list(hits@from), FUN = sum)
-        names(counts) <- c("gene.idx", "signal")
-        counts.all <- rep(0L, length(regions.gr)) # include regions without hits
-        counts.all[counts$gene.idx] <- counts$signal
-        if (!is.null(NF))  counts.all <- counts.all * NF
-        return(counts.all)
-
+    if (length(field) > 1) {
+        if (is.null(NF))  NF <- rep(1, length(field))
+        cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF)
+        names(cl) <- field
+        as.data.frame(cl)
     } else {
-        # recursive call
-        call_each <- function(x) getCountsByRegions(dataset.gr, regions.gr, x)
-        counts <- mclapply(field, call_each, mc.cores = ncores)
-        names(counts) <- field
-        if (!is.null(NF)) counts <- Map("*", counts, NF)
-        return(as.data.frame(counts))
+        .get_cbr(dataset.gr, regions.gr, field, NF)
     }
+}
+
+#' @importFrom GenomicRanges findOverlaps mcols
+.get_cbr <- function(dataset.gr, regions.gr, field, NF) {
+    hits <- findOverlaps(regions.gr, dataset.gr)
+    counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
+                        by = list(hits@from), FUN = sum)
+    names(counts) <- c("gene.idx", "signal")
+    counts.all <- rep(0L, length(regions.gr)) # include regions without hits
+    counts.all[counts$gene.idx] <- counts$signal
+    if (!is.null(NF))  counts.all <- counts.all * NF
+    counts.all
 }
 
 
@@ -86,7 +99,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' overlapping each bin.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
-#'   (typically in the "score" field).
+#'   (typically in the "score" field), or a named list of such GRanges objects.
 #' @param regions.gr A GRanges object containing regions of interest.
 #' @param binsize Size of bins (in bp) to use for counting within each range of
 #'   \code{regions.gr}. Note that counts will \emph{not} be length-normalized.
@@ -94,8 +107,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   within each bin. By default, the signal is summed, but any function
 #'   operating on a numeric vector can be used.
 #' @param simplify.multi.widths A string indicating the output format if the
-#'   ranges in \code{regions.gr} have variable widths. Default is \code{"list"}.
-#'   See details below.
+#'   ranges in \code{regions.gr} have variable widths. By default, an error
+#'   is returned. See details below.
 #' @param field The metadata field of \code{dataset.gr} to be counted. If
 #'   \code{length(field) > 1}, the output is a list whose elements contain the
 #'   output for generated each field. If \code{field} not found in
@@ -107,7 +120,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'
 #' @return If the widths of all ranges in \code{regions.gr} are equal, a matrix
 #'   is returned that contains a row for each region of interest, and a column
-#'   for each position (each base if \code{binsize = 1}) within each region.
+#'   for each position (each base if \code{binsize = 1}) within each region. If
+#'   \code{dataset.gr} is a list, a parallel list is returned containing a
+#'   matrix for each input dataset.
 #'
 #' @section Use of multi-width regions of interest: If the input
 #'   \code{regions.gr} contains ranges of varying widths, setting
@@ -162,11 +177,18 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
 #' round(countsmat[10:15, ], 1)
 getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
-                                 simplify.multi.widths = c("list",
-                                                           "pad 0",
-                                                           "pad NA"),
+                                 simplify.multi.widths = c("error", "list",
+                                                           "pad 0", "pad NA"),
                                  field = "score", NF = NULL,
                                  ncores = detectCores()) {
+    if (is.list(dataset.gr)) {
+        if (is.null(NF))  NF <- rep(1, length(dataset.gr))
+        cl <- mcMap(getCountsByPositions, dataset.gr, list(regions.gr), binsize,
+                    FUN, simplify.multi.widths, field, NF, ncores = 1,
+                    mc.cores = ncores)
+        return(cl)
+    }
+
     # convenience: if field not in dataset.gr, use all fields that are
     field <- .check_fields(dataset.gr, field)
 
@@ -214,7 +236,14 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                         simplify.multi.widths, field, NF) {
 
     simplify.multi.widths <- match.arg(simplify.multi.widths,
-                                       c("list", "pad 0", "pad NA"))
+                                       c("error", "list", "pad 0", "pad NA"))
+    if (simplify.multi.widths == "error") {
+        stop(message = .nicemsg("regions.gr contains ranges with multiple
+                                widths, but simplify.multi.widths is set to
+                                'error'. Did you mean to call getCountsByRegions
+                                instead?"))
+        return(geterrmessage())
+    }
 
     # expand all regions to be the same width, then get counts
     widths <- width(regions.gr) # save widths
@@ -259,7 +288,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     if (binsize > 1) {
         mat <- apply(mat, 1, function(x) .binVector(x, binsize = binsize,
-                                                    FUN = FUN))
+                                                    FUN = match.fun(FUN)))
         mat <- t(mat) # apply will cbind rather than rbind
     }
     return(mat * NF)
@@ -277,7 +306,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #' calculated.
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
-#'   (typically in the "score" field).
+#'   (typically in the "score" field), or a named list of such GRanges objects.
 #' @param promoters.gr A GRanges object containing promoter-proximal regions of
 #'   interest.
 #' @param genebodies.gr A GRanges object containing genebody regions of
@@ -286,12 +315,16 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #'   \code{length(field) > 1}, a dataframe is returned containing the pausing
 #'   indices for each region in each field. If \code{field} not found in
 #'   \code{names(mcols(dataset.gr))}, will default to using all fields found in
-#'   \code{dataset.gr}.
+#'   \code{dataset.gr}. If \code{dataset.gr} is a list, a single \code{field}
+#'   should be given, or \code{length(field)} should be the equal to the number
+#'   of datasets in \code{dataset.gr}.
 #' @param length.normalize A logical indicating if signal counts within regions
 #'   of interest should be length normalized. The default is \code{TRUE}, which
 #'   is recommended, especially if input regions don't all have the same width.
 #' @param remove.empty A logical indicating if genes without any signal in
-#'   \code{promoters.gr} should be removed. No genes are filtered by default.
+#'   \code{promoters.gr} should be removed. No genes are filtered by default. If
+#'   \code{dataset.gr} is a list of datasets, or if \code{length(field) > 1},
+#'   regions are filtered unless they have promoter signal in all datasets.
 #' @param ncores Multiple cores can only be used if \code{length(field) > 1}.
 #'
 #' @return A vector parallel to the input genelist, unless \code{remove.empty =
@@ -301,7 +334,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom parallel detectCores
+#' @importFrom parallel detectCores mcMap
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -348,51 +381,71 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                               remove.empty = FALSE, ncores = detectCores()) {
 
     if (length(promoters.gr) != length(genebodies.gr)) {
-        stop(message = .nicemsg("Number of ranges in promoters.gr != number of
-                                ranges in genebodies.gr"))
+        stop(message = .nicemsg("Number of ranges in promoters.gr not equal to
+                                number of ranges in genebodies.gr"))
         return(geterrmessage())
     }
 
-    # convenience: if field not in dataset.gr, use all fields that are
-    field <- .check_fields(dataset.gr, field)
+    # vectors for single dataset; dataframes for lists or multiple fields
+    counts_pr <- getCountsByRegions(dataset.gr, promoters.gr, field = field,
+                                    ncores = ncores)
+    counts_gb <- getCountsByRegions(dataset.gr, genebodies.gr, field = field,
+                                    ncores = ncores)
 
-    counts_pr <- getCountsByRegions(dataset.gr = dataset.gr,
-                                    regions.gr = promoters.gr,
-                                    field = field, ncores = ncores)
-    counts_gb <- getCountsByRegions(dataset.gr = dataset.gr,
-                                    regions.gr = genebodies.gr,
-                                    field = field, ncores = ncores)
+    if (is.list(dataset.gr)) {
+        .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
+                    names(dataset.gr), length.normalize, remove.empty)
+    } else if (length(field) > 1) {
+        .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
+                    field, length.normalize, remove.empty)
+    } else {
+        .pidx_single(counts_pr, counts_gb, promoters.gr, genebodies.gr,
+                     length.normalize, remove.empty)
+    }
+}
+
+
+.pidx_single <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
+                         length.normalize, remove.empty) {
 
     if (length.normalize) {
-        if (length(field) > 1) {
-            counts_pr <- .lnorm_multifields(counts_pr, promoters.gr, field)
-            counts_gb <- .lnorm_multifields(counts_gb, genebodies.gr, field)
-        } else {
-            counts_pr <- counts_pr / GenomicRanges::width(promoters.gr)
-            counts_gb <- counts_gb / GenomicRanges::width(genebodies.gr)
-        }
+        counts_pr <- counts_pr / GenomicRanges::width(promoters.gr)
+        counts_gb <- counts_gb / GenomicRanges::width(genebodies.gr)
     }
 
     if (remove.empty) {
-        if (length(field) > 1) {
-            idx <- lapply(counts_pr, function(x) which(x != 0))
-            idx <- Reduce(union, idx)
-            counts_pr <- counts_pr[idx, ]
-            counts_gb <- counts_gb[idx, ]
-        } else {
-            idx <- which(counts_pr != 0)
-            counts_pr <- counts_pr[idx]
-            counts_gb <- counts_gb[idx]
-        }
+        idx <- which(counts_pr != 0)
+        counts_pr <- counts_pr[idx]
+        counts_gb <- counts_gb[idx]
     }
 
     return(counts_pr / counts_gb)
 }
 
-.lnorm_multifields <- function(counts, regions, field) {
+
+.pidx_multi <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
+                        dnames, length.normalize, remove.empty) {
+
+    if (length.normalize) {
+        counts_pr <- .lnorm_multi(counts_pr, promoters.gr, dnames)
+        counts_gb <- .lnorm_multi(counts_gb, genebodies.gr, dnames)
+    }
+
+    if (remove.empty) {
+        idx <- lapply(counts_pr, function(x) which(x != 0))
+        idx <- Reduce(union, idx)
+        counts_pr <- counts_pr[idx, ]
+        counts_gb <- counts_gb[idx, ]
+    }
+
+    return(counts_pr / counts_gb)
+}
+
+
+.lnorm_multi <- function(counts, regions, dnames) {
     counts <- lapply(counts, "/", GenomicRanges::width(regions))
     counts <- as.data.frame(counts)
-    names(counts) <- field
+    names(counts) <- dnames
     return(counts)
 }
 

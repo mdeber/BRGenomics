@@ -63,7 +63,12 @@ test_that("simple counts matrix works over multiple metadata fields", {
                                            NF = c(1, 0.5), ncores = 2)[[2]])
 })
 
-countslist <- getCountsByPositions(PROseq, txs_dm6_chr4)
+test_that("error if multi-width is not explicit", {
+    expect_error(getCountsByPositions(PROseq, txs_dm6_chr4))
+})
+
+countslist <- getCountsByPositions(PROseq, txs_dm6_chr4,
+                                   simplify.multi.widths = "list")
 
 test_that("can get list from multi-width counts matrix", {
     expect_is(countslist, "list")
@@ -76,7 +81,9 @@ test_that("can get list from multi-width counts matrix", {
 
     # with normalization factor
     expect_equivalent(countslist[[1]] * 0.5,
-                      getCountsByPositions(PROseq, txs_dm6_chr4, NF = 0.5)[[1]])
+                      getCountsByPositions(PROseq, txs_dm6_chr4,
+                                           simplify.multi.widths = "list",
+                                           NF = 0.5)[[1]])
 })
 
 test_that("can get 0-padded counts matrix for multi-width regions", {

@@ -14,7 +14,9 @@ getCountsByRegions(
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
-(typically in the "score" field).}
+(typically in the "score" field), or a named list of such GRanges objects.
+If a list is given, a dataframe is returned containing the counts in each
+region for each dataset.}
 
 \item{regions.gr}{A GRanges object containing regions of interest.}
 
@@ -31,7 +33,9 @@ If given, \code{length(NF)} must be equal to \code{length(field)}.}
 }
 \value{
 An atomic vector the same length as \code{regions.gr} containing the
-  sum of the signal overlapping each range of \code{regions.gr}.
+  sum of the signal overlapping each range of \code{regions.gr}. If
+  \code{dataset.gr} is a list of multiple GRanges, or if \code{length(field)
+  > 1}, a dataframe is returned.
 }
 \description{
 Get the sum of the signal in \code{dataset.gr} that overlaps each range in

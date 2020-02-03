@@ -9,7 +9,7 @@ getCountsByPositions(
   regions.gr,
   binsize = 1,
   FUN = sum,
-  simplify.multi.widths = c("list", "pad 0", "pad NA"),
+  simplify.multi.widths = c("error", "list", "pad 0", "pad NA"),
   field = "score",
   NF = NULL,
   ncores = detectCores()
@@ -17,7 +17,7 @@ getCountsByPositions(
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
-(typically in the "score" field).}
+(typically in the "score" field), or a named list of such GRanges objects.}
 
 \item{regions.gr}{A GRanges object containing regions of interest.}
 
@@ -29,8 +29,8 @@ within each bin. By default, the signal is summed, but any function
 operating on a numeric vector can be used.}
 
 \item{simplify.multi.widths}{A string indicating the output format if the
-ranges in \code{regions.gr} have variable widths. Default is \code{"list"}.
-See details below.}
+ranges in \code{regions.gr} have variable widths. By default, an error
+is returned. See details below.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, the output is a list whose elements contain the
@@ -46,7 +46,9 @@ If given, \code{length(NF)} must be equal to \code{length(field)}.}
 \value{
 If the widths of all ranges in \code{regions.gr} are equal, a matrix
   is returned that contains a row for each region of interest, and a column
-  for each position (each base if \code{binsize = 1}) within each region.
+  for each position (each base if \code{binsize = 1}) within each region. If
+  \code{dataset.gr} is a list, a parallel list is returned containing a
+  matrix for each input dataset.
 }
 \description{
 Get the sum of the signal in \code{dataset.gr} that overlaps each position

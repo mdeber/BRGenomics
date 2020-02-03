@@ -16,7 +16,7 @@ getPausingIndices(
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal is contained in metadata
-(typically in the "score" field).}
+(typically in the "score" field), or a named list of such GRanges objects.}
 
 \item{promoters.gr}{A GRanges object containing promoter-proximal regions of
 interest.}
@@ -28,14 +28,18 @@ interest.}
 \code{length(field) > 1}, a dataframe is returned containing the pausing
 indices for each region in each field. If \code{field} not found in
 \code{names(mcols(dataset.gr))}, will default to using all fields found in
-\code{dataset.gr}.}
+\code{dataset.gr}. If \code{dataset.gr} is a list, a single \code{field}
+should be given, or \code{length(field)} should be the equal to the number
+of datasets in \code{dataset.gr}.}
 
 \item{length.normalize}{A logical indicating if signal counts within regions
 of interest should be length normalized. The default is \code{TRUE}, which
 is recommended, especially if input regions don't all have the same width.}
 
 \item{remove.empty}{A logical indicating if genes without any signal in
-\code{promoters.gr} should be removed. No genes are filtered by default.}
+\code{promoters.gr} should be removed. No genes are filtered by default. If
+\code{dataset.gr} is a list of datasets, or if \code{length(field) > 1},
+regions are filtered unless they have promoter signal in all datasets.}
 
 \item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
 }
