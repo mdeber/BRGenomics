@@ -79,6 +79,7 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
 
 #' @importFrom GenomeInfoDb dropSeqlevels
+#' @importFrom parallel mclapply
 #' @rdname getSpikeInCounts
 #' @export
 removeSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
@@ -93,6 +94,7 @@ removeSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 }
 
 #' @importFrom GenomeInfoDb keepSeqlevels
+#' @importFrom parallel mclapply
 #' @rdname getSpikeInCounts
 #' @export
 getSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
