@@ -2,6 +2,9 @@
 % Please edit documentation in R/data_import.R
 \name{import_bam}
 \alias{import_bam}
+\alias{import_bam_PROseq}
+\alias{import_bam_PROcap}
+\alias{import_bam_ATACseq}
 \title{Import bam files}
 \usage{
 import_bam(
@@ -13,6 +16,42 @@ import_bam(
   ignore.strand = FALSE,
   field = "score",
   paired_end = NULL,
+  yieldSize = 250000
+)
+
+import_bam_PROseq(
+  file,
+  mapq = 20,
+  revcomp = TRUE,
+  shift = -1L,
+  trim.to = "3p",
+  ignore.strand = FALSE,
+  field = "score",
+  paired_end = NULL,
+  yieldSize = 250000
+)
+
+import_bam_PROcap(
+  file,
+  mapq = 20,
+  revcomp = FALSE,
+  shift = 0L,
+  trim.to = "5p",
+  ignore.strand = FALSE,
+  field = "score",
+  paired_end = NULL,
+  yieldSize = 250000
+)
+
+import_bam_ATACseq(
+  file,
+  mapq = 20,
+  revcomp = FALSE,
+  shift = c(2, -2),
+  trim.to = "whole",
+  ignore.strand = TRUE,
+  field = "score",
+  paired_end = TRUE,
   yieldSize = 250000
 )
 }
