@@ -132,20 +132,6 @@ genebodies <- function(genelist, start = 300, end = -300,
     }
 }
 
-# .find_min_width <- function(fix.start, fix.end, min.window) {
-#     if (fix.start == "start") {
-#         if (fix.end == "end") {
-#             return(start - end + min.window)
-#         } else {
-#             # filter by distance from end of new interval to annotated end
-#             return(end + min.window)
-#         }
-#     } else {
-#         # filter by distance from annotated start to beginning of interval
-#         min.window - start
-#     }
-# }
-
 
 
 #' Find sites with max signal in regions of interest
