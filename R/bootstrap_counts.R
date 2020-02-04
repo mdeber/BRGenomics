@@ -242,10 +242,10 @@ metaSubsample <- function(dataset.gr, regions.gr,
 #' @importFrom parallel mclapply detectCores
 #' @importFrom stats quantile
 metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
-                                sample.name = NULL,
-                                n.iter = 1000, prop.sample = 0.1,
-                                lower = 0.125, upper = 0.875, NF = 1,
-                                remove.empty = FALSE, ncores = detectCores()) {
+                                sample.name = NULL, n.iter = 1000,
+                                prop.sample = 0.1, lower = 0.125, upper = 0.875,
+                                NF = 1, remove.empty = FALSE,
+                                ncores = detectCores()) {
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
     if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
@@ -266,7 +266,8 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     #    -> Matrix of dim = (nbins, n.iter)
     idx.list <- replicate(n.iter, sample(ngenes, size = nsample),
                           simplify = FALSE)
-    binavg.list <- mclapply(idx.list, function(idx) colMeans(counts.mat[idx, ]),
+    binavg.list <- mclapply(idx.list,
+                            function(idx) colMeans(counts.mat[idx, ], TRUE),
                             mc.cores = ncores)
     binavg.mat <- matrix(unlist(binavg.list), ncol = n.iter)
 
@@ -277,7 +278,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
         idx <- unlist(idx.list)
         mean <- NF * binavg.mat
         lower <- NF * apply(counts.mat[idx, ], 2, quantile, lower)
-        lower <- NF * apply(counts.mat[idx, ], 2, quantile, upper)
+        upper <- NF * apply(counts.mat[idx, ], 2, quantile, upper)
     } else {
         mean <- NF * apply(binavg.mat, 1, quantile, 0.5, names = FALSE)
         lower <- NF * apply(binavg.mat, 1, quantile, lower, names = FALSE)
