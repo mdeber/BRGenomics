@@ -4,20 +4,35 @@
 \alias{subsampleGRanges}
 \title{Randomly subsample reads from GRanges dataset}
 \usage{
-subsampleGRanges(dataset.gr, n = NULL, prop = NULL, field = "score")
+subsampleGRanges(
+  dataset.gr,
+  n = NULL,
+  prop = NULL,
+  field = "score",
+  ncores = detectCores()
+)
 }
 \arguments{
 \item{dataset.gr}{A GRanges object in which signal (e.g. readcounts) are
-contained within metadata.}
+contained within metadata, or a list of such GRanges objects.}
 
-\item{n}{Number of reads to subsample. Either \code{n} or \code{prop} can be
-given.}
-
-\item{prop}{Proportion of total signal to subsample.}
+\item{n, prop}{Either the number of reads to subsample (\code{n}), or the
+proportion of total \emph{signal} to subsample (\code{prop}). Either
+\code{n} or \code{prop} can be given, but not both. If \code{dataset.gr} is
+a list, or if \code{length(field) > 1}, users can supply a vector or list
+of \code{n} or \code{prop} values to match the individual datasets, but
+care should be taken to ensure that a value is given for each and every
+dataset.}
 
 \item{field}{The metadata field of \code{dataset.gr} that contains readcounts
 for reach position. If each range represents a single read, set \code{field
-= NULL}}
+= NULL}. If multiple fields are given, and \code{dataset.gr} is not a list,
+then \code{dataset.gr} will be treated as a multiplexed GRanges, and each
+field will be treated as an indpendent dataset. See
+\code{\link[BRGenomics:mergeGRangesData]{mergeGRangesData}}.}
+
+\item{ncores}{Number of cores to use for computations. Multicore only used
+when \code{dataset.gr} is a list, or if \code{length(field) > 1}.}
 }
 \value{
 A GRanges object identical in format to \code{dataset.gr}, but
