@@ -9,23 +9,29 @@
 #'   \code{si_pattern}.
 #' @param field The metadata field in \code{dataset.gr} that contains
 #'   readcounts. If each range is an individual read, set \code{field = NULL}.
+#' @param sample_names An optional character vector used to rename the datasets
+#'   in \code{dataset.gr}
 #' @param ncores The number of cores to use for computations.
 #'
 #' @return A dataframe containing total readcounts, experimental (non-spike-in)
 #'   readcounts, and spike-in readcounts.
 #' @author Mike DeBerardine
-#' @export
+#'
 #' @import GenomicRanges
+#' @export
 #'
 #' @examples
 getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
-                             field = "score", ncores = detectCores()) {
+                             field = "score", sample_names = NULL,
+                             ncores = detectCores()) {
 
     if (!is.list(dataset.gr)) {
         name_in <- deparse(substitute(dataset.gr))
         dataset.gr <- list(dataset.gr)
         names(dataset.gr) <- name_in
     }
+
+    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
 
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
     .get_spikecounts(dataset.gr, spike_chrom, field, ncores)
@@ -57,6 +63,8 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @importFrom GenomicRanges seqnames mcols
 .get_spikecounts <- function(dataset.list, spike_chrom, field, ncores) {
 
+    snames <- names(dataset.list)
+
     if (is.null(field)) {
         cl <- mclapply(dataset.list, function(x) {
             si <- seqnames(x) %in% spike_chrom
@@ -74,6 +82,7 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         }, dataset.list, field, mc.cores = ncores)
     }
 
+    names(cl) <- snames
     .dfList2df(cl)
 }
 
@@ -92,6 +101,7 @@ removeSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         dropSeqlevels(dataset.gr, spike_chrom, pruning.mode = "tidy")
     }
 }
+
 
 #' @importFrom GenomeInfoDb keepSeqlevels
 #' @importFrom parallel mclapply

@@ -11,6 +11,7 @@ getSpikeInCounts(
   si_pattern = NULL,
   si_names = NULL,
   field = "score",
+  sample_names = NULL,
   ncores = detectCores()
 )
 
@@ -42,6 +43,9 @@ chromosomes. Can be used in addition to, or as an alternative to
 
 \item{field}{The metadata field in \code{dataset.gr} that contains
 readcounts. If each range is an individual read, set \code{field = NULL}.}
+
+\item{sample_names}{An optional character vector used to rename the datasets
+in \code{dataset.gr}}
 
 \item{ncores}{The number of cores to use for computations.}
 }
