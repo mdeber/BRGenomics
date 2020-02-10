@@ -228,10 +228,10 @@ metaSubsample <- function(dataset.gr, regions.gr,
 }
 
 
-#' @importFrom stats quantile
+#' @importFrom stats median
 .binxval <- function(nbins, binsize, first.output.xval) {
     firstbin <- seq(first.output.xval, by = 1, length.out = binsize)
-    binstart <- quantile(firstbin, 0.5) # center of first bin
+    binstart <- median(firstbin) # center of first bin
     seq(binstart, by = binsize, length.out = nbins)
 }
 
