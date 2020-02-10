@@ -518,10 +518,13 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                                 exclude = c("object", "contrast",
                                             "alpha", "parallel"))
 
-    if (!quiet) return( do.call(DESeq2::results, args.results) )
-    suppressWarnings(suppressMessages(
+    if (!quiet) {
         do.call(DESeq2::results, args.results)
-    ))
+    } else {
+        suppressWarnings(suppressMessages(
+            do.call(DESeq2::results, args.results)
+        ))
+    }
 }
 
 
