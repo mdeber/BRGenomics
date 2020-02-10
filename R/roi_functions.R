@@ -239,8 +239,7 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 
     mat <- getCountsByPositions(dataset.gr = dataset.gr,
                                 regions.gr = regions.gr,
-                                binsize = binsize,
-                                field = field)
+                                binsize = binsize, field = field)
 
     max_pos <- apply(mat, 1, which.max)
     max_scores <- apply(mat, 1, max)
@@ -252,18 +251,11 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 #' @importFrom GenomicRanges width resize
 .get_maxsite_mw <- function(dataset.gr, regions.gr, binsize, field) {
 
-    # faster to simply expand all regions for initial counting
-    widths <- width(regions.gr) # store widths
-    suppressWarnings( regions.gr <- resize(regions.gr, max(width(regions.gr))) )
-
-    mat <- getCountsByPositions(dataset.gr = dataset.gr,
-                                regions.gr = regions.gr,
-                                binsize = binsize,
-                                field = field)
-    # get number of bins for each region; & trim if remainder to widths/binsize
-    bins_i <- floor(widths / binsize)
-    countslist <- lapply(seq_len(nrow(mat)),
-                         function(i) mat[ i, seq_len(bins_i[i]) ])
+    countslist <- getCountsByPositions(dataset.gr = dataset.gr,
+                                       regions.gr = regions.gr,
+                                       binsize = binsize,
+                                       simplify.multi.widths = "list",
+                                       field = field)
 
     max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
     max_scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
