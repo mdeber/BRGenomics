@@ -19,7 +19,15 @@
     # aggregate(x[seq_len(binsize*nbins)], by = list(bin_idx), FUN = FUN)[, 2]
 
     mat <- matrix(x[seq_len(nbins*binsize)], nrow = binsize)
-    apply(mat, 2, FUN)
+
+    fname <- deparse(substitute(FUN))
+    if (fname == "sum") {
+        colSums(mat)
+    } else if (fname == "mean") {
+        colMeans(mat)
+    } else {
+        apply(mat, 2, FUN)
+    }
 }
 
 
