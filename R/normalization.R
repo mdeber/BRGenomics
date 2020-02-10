@@ -119,13 +119,16 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     method <- match.arg(method, c("SRPMC", "SNR", "RPM"))
 
-    if (!is.null(sample_names)) {
-        if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
-        names(dataset.gr) <- sample_names
+    if (!is.list(dataset.gr)) {
+        name_in <- deparse(substitute(dataset.gr))
+        dataset.gr <- list(dataset.gr)
+        names(dataset.gr) <- name_in
     }
 
+    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
+
     counts.df <- getSpikeInCounts(dataset.gr, si_pattern, si_names, field,
-                                  ncores)
+                                  sample_names = names(dataset.gr), ncores)
 
     if (method == "SRPMC") {
         .get_nf_srpmc(counts.df, ctrl_pattern, ctrl_names, batch_norm)
@@ -208,30 +211,44 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
 #' @importFrom parallel detectCores mcMap
 #' @rdname getSpikeInNFs
+#' @export
 spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                method = c("SRPMC", "SNR", "RPM"),
                                batch_norm = TRUE, ctrl_pattern = NULL,
                                ctrl_names = NULL, field = "score",
                                sample_names = NULL, ncores = detectCores()) {
 
+    if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
+    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
+
     nf <- getSpikeInNFs(dataset.gr, si_pattern, si_names, method, batch_norm,
-                        ctrl_pattern, ctrl_names, field, sample_names, ncores)
+                        ctrl_pattern, ctrl_names, field, sample_names = NULL,
+                        ncores)
 
     if (is.null(field)) {
-        warning("With field = NULL, will calculate stranded coverage and make
-                GRanges basepair-resolution before returning normalized
-                GRanges")
+        message(.nicemsg("With field = NULL, will calculate stranded coverage
+                         and make GRanges basepair-resolution before returning
+                         normalized GRanges"))
+
         dataset.gr <- mclapply(dataset.gr, function(x) {
             makeGRangesBRG(getStrandedCoverage(x, field = NULL))
         }, mc.cores = ncores)
+        field <- "score"
     }
 
-    mcMap(function(x, field, nf) {
-        gr <- x
-        mcols(gr)[field] <- mcols(gr)[[field]] * nf
-        gr
-    }, dataset.gr, field, nf, mc.cores = ncores)
+    if (length(dataset.gr) == 1)
+        return(.norm_gr(dataset.gr[[1]], field, nf, ncores))
+
+    mcMap(.norm_gr, dataset.gr, field, nf, ncores = 1, mc.cores = ncores)
 }
+
+.norm_gr <- function(gr, field, nf, ncores) {
+    # mcols(gr)[field] <- mcols(gr)[[field]] * nf
+    # (below supports for multiplexed GRanges)
+    mcols(gr)[field] <- mcmapply("*", mcols(gr)[field], nf, mc.cores = ncores)
+    gr
+}
+
 
 # goal of SNR (spike-in normalized reads) is to downward adjust readcounts to be
 # correctly normalized; and then this can be used to subsample reads
@@ -258,8 +275,9 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @param RPM_units If set to \code{TRUE}, the final readcount values will be
 #'   converted to \code{negative control RPM}.
 #'
-#' @return A list of GRanges parallel to \code{dataset.gr}, but containing fewer
-#'   reads.
+#' @return An object parallel to \code{dataset.gr}, but with fewer reads. E.g.
+#'   if \code{dataset.gr} is a list of GRanges, the output is a list of the same
+#'   GRanges, but in which each GRanges has fewer reads.
 #' @author Mike DeBerardine
 #'
 #' @seealso \code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}},
@@ -275,22 +293,32 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                field = "score", sample_names = NULL,
                                ncores = detectCores()) {
 
-    if (!is.null(sample_names)) {
-        if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
-        names(dataset.gr) <- sample_names
-    }
+    if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
+    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
 
     counts.df <- getSpikeInCounts(dataset.gr, si_pattern, si_names, field,
-                                  ncores)
+                                  sample_names = NULL, ncores)
 
     # get NFs for subsampling
     nf_snr <- .get_nf_snr(counts.df, ctrl_pattern, ctrl_names, batch_norm)
     nreads <- floor(counts.df$exp_reads * nf_snr)
 
-    samples.gr <- mcMap(subsampleGRanges, dataset.gr, n = nreads, field = field,
-                        mc.cores = ncores)
+    # remove spike-in reads and subsample
+    dataset.gr <- removeSpikeInReads(dataset.gr, si_pattern, si_names, field,
+                                     ncores)
+    samples.gr <- subsampleGRanges(dataset.gr, n = nreads, field = field,
+                                   ncores = ncores)
 
     if (RPM_units) {
+        if (is.null(ctrl_pattern) & is.null(ctrl_names)) {
+            stop(.nicemsg("Must give either ctrl_pattern or ctrl_names argument
+                          if using the RPM_units option"))
+            return(geterrmessage())
+        }
+        if (is.null(field)) {
+            samples.gr <- makeGRangesBRG(samples.gr)
+            field <- "score"
+        }
         # get RPM NF for negative controls
         idx_ctrl <- .get_idx_ctrl(counts.df, ctrl_pattern, ctrl_names)
         nf_rpm <- 1e6 / mean(nreads[idx_ctrl])
@@ -301,5 +329,7 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         }, samples.gr, field, mc.cores = ncores)
     }
 
+    if (length(samples.gr) == 1)
+        return(samples.gr[[1]])
     return(samples.gr)
 }

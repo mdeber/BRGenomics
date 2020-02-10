@@ -24,8 +24,9 @@ subsampleBySpikeIn(
 converted to \code{negative control RPM}.}
 }
 \value{
-A list of GRanges parallel to \code{dataset.gr}, but containing fewer
-  reads.
+An object parallel to \code{dataset.gr}, but with fewer reads. E.g.
+  if \code{dataset.gr} is a list of GRanges, the output is a list of the same
+  GRanges, but in which each GRanges has fewer reads.
 }
 \description{
 Randomly subsample reads according to spike-in normalization

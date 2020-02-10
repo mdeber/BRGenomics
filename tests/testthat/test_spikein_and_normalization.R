@@ -168,6 +168,56 @@ test_that("error if give names and regex for control samples", {
 
 
 
+# Normalizing GRanges objects ---------------------------------------------
+
+context("normalizing GRanges objects")
+
+test_that("can RPM norm a single GRanges object", {
+    gr1_rpm <- spikeInNormGRanges(grl[[1]], method = "RPM", ncores = 1)
+    expect_is(gr1_rpm, "GRanges")
+    expect_equivalent(2.5e5*score(grl[[1]]), score(gr1_rpm))
+})
+
+test_that("correctly spike-in normalize multiple GRanges objects", {
+    nf_snr <- getSpikeInNFs(grl[1:2], si_pattern = "spike", method = "SNR",
+                            batch_norm = FALSE, ncores = 2)
+    # snr with 1 and 2 makes them identical
+    norm12snr <- spikeInNormGRanges(grl[1:2], si_pattern = "spike",
+                                    method = "SNR", batch_norm = FALSE,
+                                    ncores = 2)
+    expect_is(norm12snr, "list")
+    expect_is(norm12snr[[1]], "GRanges")
+    expect_identical(norm12snr[[1]], norm12snr[[2]])
+})
+
+
+
+# Subsampling by spike-in -------------------------------------------------
+
+context("subsampling by spike-in NFs")
+
+test_that("can subsample single GRanges by spike-in NF", {
+    gr_ss <- subsampleBySpikeIn(grl[[1]], si_pattern = "spike",
+                                batch_norm = FALSE)
+    expect_equal(sum(score(gr_ss)), sum(score(grl[[1]][1:2])))
+})
+
+test_that("subsampled GRanges list have correct readcounts", {
+    grl_ss <- subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE)
+    grl_nf_snr <- getSpikeInNFs(grl, si_pattern = "spike", method = "SNR",
+                                batch_norm = FALSE)
+    # (ranges 3 and 4 are the spike-ins)
+    counts <- floor(sapply(grl, function(x) sum(score(x[1:2]))) * grl_nf_snr)
+
+    expect_equivalent(counts, sapply(grl_ss, function(x) sum(score(x))))
+
+    grl_ss_rpm <- subsampleBySpikeIn(grl, si_pattern = "spike",
+                                     batch_norm = FALSE, ctrl_pattern = "gr1",
+                                     RPM_units = TRUE)
+})
+
+
+
 
 
 
