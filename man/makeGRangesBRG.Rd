@@ -4,10 +4,13 @@
 \alias{makeGRangesBRG}
 \title{Make base-pair resolution GRanges object}
 \usage{
-makeGRangesBRG(dataset.gr)
+makeGRangesBRG(dataset.gr, ncores = detectCores())
 }
 \arguments{
-\item{dataset.gr}{A disjoint GRanges object}
+\item{dataset.gr}{A disjoint GRanges object, or a list of such objects.}
+
+\item{ncores}{If \code{dataset.gr} is a list, the number of cores to use for
+computations.}
 }
 \value{
 A GRanges object for which \code{length(output) ==

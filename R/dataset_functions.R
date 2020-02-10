@@ -10,7 +10,9 @@
 #' inherited by its daughter ranges, and therefore the transformation is
 #' non-destructive.
 #'
-#' @param dataset.gr A disjoint GRanges object
+#' @param dataset.gr A disjoint GRanges object, or a list of such objects.
+#' @param ncores If \code{dataset.gr} is a list, the number of cores to use for
+#'   computations.
 #'
 #' @return A GRanges object for which \code{length(output) ==
 #'   sum(width(dataset.gr))}, and for which \code{all(width(output) == 1)}.
@@ -88,7 +90,11 @@
 #' range(width(undo))
 #' length(undo) == length(bw)
 #' all(score(undo) == score(bw))
-makeGRangesBRG <- function(dataset.gr) {
+makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
+
+    if (is.list(dataset.gr)) {
+        return(mclapply(dataset.gr, makeGRangesBRG, mc.cores = ncores))
+    }
 
     if (!isDisjoint(dataset.gr)) {
         stop("Input dataset.gr is not disjoint. See documentation")
@@ -115,13 +121,15 @@ makeGRangesBRG <- function(dataset.gr) {
 #'
 #' @param dataset.gr A GRanges object either containing ranges for each read, or
 #'   one in which readcounts for individual ranges are contained in metadata
-#'   (typically in the "score" field).
+#'   (typically in the "score" field). \code{dataset.gr} can also be a list of
+#'   such GRanges objects.
 #' @param field The name of the metadata field that contains readcounts. If no
 #'   metadata field contains readcounts, and each range represents a single
 #'   read, set to NULL.
-#' @param ncores Number of cores to use for calculating coverage. The max that
-#'   will be used is 3, one for each possible strand (plus, minus, and
-#'   unstranded).
+#' @param ncores Number of cores to use for calculating coverage. For a single
+#'   dataset, the max that will be used is 3, one for each possible strand
+#'   (plus, minus, and unstranded). More cores can be used if \code{dataset.gr}
+#'   is a list.
 #'
 #' @return A GRanges object with signal in the "score" metadata column. Note
 #'   that the output is \emph{not} automatically converted into a
@@ -192,6 +200,11 @@ makeGRangesBRG <- function(dataset.gr) {
 getStrandedCoverage <- function(dataset.gr, field = "score",
                                 ncores = detectCores()) {
 
+    if (is.list(dataset.gr)) {
+        if (is.null(field))  field <- list(NULL)
+        return(mcMap(getStrandedCoverage, dataset.gr, field, mc.cores = ncores))
+    }
+
     if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
         msg <- .nicemsg("The given value for 'field' is not found in
                         mcols(dataset.gr). If no field contains signal counts
@@ -229,13 +242,22 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #' function can be used in this scenario.
 #'
 #' @param dataset.gr A GRanges object in which signal (e.g. readcounts) are
-#'   contained within metadata.
-#' @param n Number of reads to subsample. Either \code{n} or \code{prop} can be
-#'   given.
-#' @param prop Proportion of total signal to subsample.
+#'   contained within metadata, or a list of such GRanges objects.
+#' @param n,prop Either the number of reads to subsample (\code{n}), or the
+#'   proportion of total \emph{signal} to subsample (\code{prop}). Either
+#'   \code{n} or \code{prop} can be given, but not both. If \code{dataset.gr} is
+#'   a list, or if \code{length(field) > 1}, users can supply a vector or list
+#'   of \code{n} or \code{prop} values to match the individual datasets, but
+#'   care should be taken to ensure that a value is given for each and every
+#'   dataset.
 #' @param field The metadata field of \code{dataset.gr} that contains readcounts
 #'   for reach position. If each range represents a single read, set \code{field
-#'   = NULL}
+#'   = NULL}. If multiple fields are given, and \code{dataset.gr} is not a list,
+#'   then \code{dataset.gr} will be treated as a multiplexed GRanges, and each
+#'   field will be treated as an indpendent dataset. See
+#'   \code{\link[BRGenomics:mergeGRangesData]{mergeGRangesData}}.
+#' @param ncores Number of cores to use for computations. Multicore only used
+#'   when \code{dataset.gr} is a list, or if \code{length(field) > 1}.
 #'
 #' @return A GRanges object identical in format to \code{dataset.gr}, but
 #'   containing a random subset of its data. If \code{field != NULL}, the length
@@ -249,6 +271,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #' @author Mike DeBerardine
 #' @export
 #' @importFrom GenomicRanges mcols mcols<- countOverlaps
+#' @importFrom parallel detectCores mcMap
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -278,12 +301,34 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #' # Alternatively
 #' ps_sample <- sample(PROseq, 0.1 * length(PROseq))
 #' length(ps_sample)
-subsampleGRanges <- function(dataset.gr,
-                             n = NULL,
-                             prop = NULL,
-                             field = "score") {
+subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
+                             ncores = detectCores()) {
 
     .check_xor_args(n, prop)
+
+    if (is.list(dataset.gr)) {
+        if (is.null(field))  field <- list(NULL)
+        if (is.null(n))  n <- list(NULL)
+        if (is.null(prop))  prop <- list(NULL)
+
+        mcMap(.subsample_gr, dataset.gr, n, prop, field, mc.cores = ncores)
+
+    } else if (length(field) > 1) {
+        if (is.null(n))  n <- list(NULL)
+        if (is.null(prop))  prop <- list(NULL)
+
+        grl <- mcMap(.subsample_gr, list(dataset.gr), n, prop, field,
+                     mc.cores = ncores)
+        mergeGRangesData(grl, field = field, multiplex = TRUE, ncores = ncores)
+
+    } else {
+        .subsample_gr(dataset.gr, n, prop, field)
+
+    }
+}
+
+
+.subsample_gr <- function(dataset.gr, n, prop, field) {
 
     if (is.null(field)) {
         if (is.null(n))  n <- floor(prop * length(dataset.gr))
@@ -321,7 +366,6 @@ subsampleGRanges <- function(dataset.gr,
     if (normed_signal) mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm
     return(sort(gr_out))
 }
-
 
 
 #' Merge basepair-resolution GRanges objects
@@ -428,11 +472,11 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
         names(data_in) <- in.names[!names(in.names) %in% exclude]
     }
 
+    # data must be *sorted*, base-pair resolution coverage data
+    data_in <- .check_sorted_BRG(data_in, field, ncores)
+
     # check length of fields vs. data_in
     field <- .check_merge_fields(data_in, field)
-
-    # data must be *sorted*, base-pair resolution coverage data
-    data_in <- .check_sorted_BRG(data_in, ncores)
 
     # merge ranges
     gr <- do.call(c, c(data_in, use.names = FALSE))
@@ -459,6 +503,22 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     return(gr)
 }
 
+
+#' @importFrom GenomicRanges width sort
+.check_sorted_BRG <- function(data_in, field, ncores) {
+
+    widths_ok <- vapply(data_in, function(x) all(width(x) == 1),
+                        FUN.VALUE = logical(1))
+
+    if (all(widths_ok) & !is.null(field))
+        return(mclapply(data_in, sort, mc.cores = ncores))
+
+    warning(.nicemsg("One or more inputs are not 'basepair resolution GRanges'
+                     objects. Coercing them using makeGRangesBRG()..."),
+            immediate. = TRUE)
+    return(mclapply(data_in, makeGRangesBRG, mc.cores = ncores)) # (sorted)
+}
+
 .check_merge_fields <- function(data_in, field) {
 
     if (length(field) > 1) {
@@ -466,30 +526,12 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
             stop("given fields not equal to number of datasets")
             return(geterrmessage())
         }
-    } else {
-        field <- rep(field, length(data_in))
+        return(field)
     }
 
-    return(field)
+    if (is.null(field))  field <- "score" # (modified in .check_sorted_BRG)
+
+    rep(field, length(data_in))
 }
 
-#' @importFrom GenomicRanges width sort
-.check_sorted_BRG <- function(data_in, ncores) {
 
-    widths_ok <- vapply(data_in, function(x) all(width(x) == 1),
-                        FUN.VALUE = logical(1))
-
-    if (all(widths_ok)) {
-        # ensure all data is sorted
-        data_in <- mclapply(data_in, sort, mc.cores = ncores)
-
-    } else {
-        warning(.nicemsg("One or more inputs are not single-width GRanges
-                         objects. Will coerce them using makeGRangesBRG()..."),
-                immediate. = TRUE)
-        # (makeGRangesBRG sorts its output)
-        data_in <- mclapply(data_in, makeGRangesBRG, mc.cores = ncores)
-    }
-
-    return(data_in)
-}

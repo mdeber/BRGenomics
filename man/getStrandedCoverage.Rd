@@ -9,15 +9,17 @@ getStrandedCoverage(dataset.gr, field = "score", ncores = detectCores())
 \arguments{
 \item{dataset.gr}{A GRanges object either containing ranges for each read, or
 one in which readcounts for individual ranges are contained in metadata
-(typically in the "score" field).}
+(typically in the "score" field). \code{dataset.gr} can also be a list of
+such GRanges objects.}
 
 \item{field}{The name of the metadata field that contains readcounts. If no
 metadata field contains readcounts, and each range represents a single
 read, set to NULL.}
 
-\item{ncores}{Number of cores to use for calculating coverage. The max that
-will be used is 3, one for each possible strand (plus, minus, and
-unstranded).}
+\item{ncores}{Number of cores to use for calculating coverage. For a single
+dataset, the max that will be used is 3, one for each possible strand
+(plus, minus, and unstranded). More cores can be used if \code{dataset.gr}
+is a list.}
 }
 \value{
 A GRanges object with signal in the "score" metadata column. Note
