@@ -11,6 +11,7 @@ getPausingIndices(
   field = "score",
   length.normalize = TRUE,
   remove.empty = FALSE,
+  blacklist = NULL,
   ncores = detectCores()
 )
 }
@@ -41,7 +42,11 @@ is recommended, especially if input regions don't all have the same width.}
 \code{dataset.gr} is a list of datasets, or if \code{length(field) > 1},
 regions are filtered unless they have promoter signal in all datasets.}
 
-\item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
+\item{blacklist}{An optional GRanges object containing regions that should be
+excluded from signal counting.}
+
+\item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
+of multiple datasets, or if \code{length(field) > 1}.}
 }
 \value{
 A vector parallel to the input genelist, unless \code{remove.empty =

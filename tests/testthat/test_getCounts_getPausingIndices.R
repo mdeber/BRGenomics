@@ -4,6 +4,17 @@ library(BRGenomics)
 data("PROseq")
 data("txs_dm6_chr4")
 
+# for testing list inputs
+ps_list <- list(A_rep1 = PROseq[seq(1, length(PROseq), 6)],
+                A_rep2 = PROseq[seq(4, length(PROseq), 6)],
+                B_rep1 = PROseq[seq(2, length(PROseq), 6)],
+                B_rep2 = PROseq[seq(5, length(PROseq), 6)],
+                C_rep1 = PROseq[seq(3, length(PROseq), 6)],
+                C_rep2 = PROseq[seq(6, length(PROseq), 6)])
+
+
+# getCountsByRegions ------------------------------------------------------
+
 test_counts <- getCountsByRegions(PROseq, txs_dm6_chr4)
 
 test_that("signal counts correct returns correct vector", {
@@ -31,6 +42,35 @@ test_that("signal counts work over multiple metadata fields", {
     expect_equivalent(counts_multiple$signal, test_counts)
 })
 
+test_that("signal counting works over a list", {
+    countsl <- getCountsByRegions(ps_list, txs_dm6_chr4, ncores = 2)
+    expect_is(countsl, "data.frame")
+    expect_equal(names(ps_list), names(countsl))
+    expect_equal(nrow(countsl), length(txs_dm6_chr4))
+    expect_equal(sum(sapply(countsl, sum)), sum(test_counts))
+
+    # with nfs
+    countslnf <- getCountsByRegions(ps_list, txs_dm6_chr4, NF=1:6, ncores=2)
+    expect_equivalent(countslnf, as.data.frame(Map("*", countsl, 1:6)))
+})
+
+test_that("error if NFs given don't match input", {
+    expect_error(getCountsByRegions(ps_list, txs_dm6_chr4, NF = 1:5,
+                                    ncores = 2))
+    expect_error(getCountsByRegions(ps_rename, txs_dm6_chr4,
+                                    field = c("signal", "posnum"),
+                                    NF = 1, ncores = 2))
+})
+
+test_that("blacklisting works", {
+    bl <- txs_dm6_chr4[2]
+    blcounts <- getCountsByRegions(PROseq, txs_dm6_chr4, blacklist = bl)
+
+    test_bl <- test_counts
+    test_bl[2] <- 0
+    expect_equivalent(blcounts, test_bl)
+})
+
 # getCountsByPositions ----------------------------------------------------
 
 context("Counting signal at positions within regions")
@@ -47,6 +87,14 @@ test_that("simple counts matrix correctly calculated", {
                       countsmat * 0.5)
 })
 
+test_that("melt option melts simple counts matrix", {
+    countsmelt <- getCountsByPositions(PROseq, txs_pr, melt = TRUE)
+    expect_is(countsmelt, "data.frame")
+    expect_equal(ncol(countsmelt), 3)
+    expect_equal(length(countsmat), nrow(countsmelt))
+    expect_equivalent(as.vector(t(countsmat)), countsmelt[,3])
+})
+
 test_that("simple counts matrix works over multiple metadata fields", {
     fieldcounts <- getCountsByPositions(ps_rename, txs_pr,
                                         field = c("signal", "posnum"),
@@ -61,6 +109,24 @@ test_that("simple counts matrix works over multiple metadata fields", {
                       getCountsByPositions(ps_rename, txs_pr,
                                            field = c("signal", "posnum"),
                                            NF = c(1, 0.5), ncores = 2)[[2]])
+})
+
+test_that("simple counts matrix works for list input", {
+    countsl <- getCountsByPositions(ps_list, txs_pr, ncores = 2)
+    expect_is(countsl, "list")
+    expect_equivalent(names(countsl), names(ps_list))
+    expect_is(countsl[[1]], "matrix")
+    expect_equivalent(dim(countsmat), dim(countsl[[1]]))
+
+    arr3d <- simplify2array(countsl)
+    expect_equivalent(apply(arr3d, 1:2, sum), countsmat)
+})
+
+test_that("melting for list input returns single dataframe", {
+    countslmelt <- getCountsByPositions(ps_list, txs_pr, melt=TRUE, ncores = 2)
+    expect_is(countslmelt, "data.frame")
+    expect_equal(ncol(countslmelt), 4)
+    expect_equivalent(unique(countslmelt[,4]), names(ps_list))
 })
 
 test_that("error if multi-width is not explicit", {
@@ -187,6 +253,7 @@ test_that("can get pause indices over multiple fields", {
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi[, 1], pidx)
 
+    # with remove.empty
     pidx_multi_re <- getPausingIndices(ps_rename, txs_pr, txs_gb,
                                        field = c("signal", "posnum"),
                                        remove.empty = TRUE, ncores = 2)
@@ -194,3 +261,17 @@ test_that("can get pause indices over multiple fields", {
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi_re[, 1], pidx_re)
 })
+
+test_that("can get pause indices for a list", {
+    pidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, ncores = 2)
+    expect_is(pidxl, "data.frame")
+    expect_equivalent(colnames(pidxl), names(ps_list))
+    expect_equal(nrow(pidxl), length(txs_pr))
+
+    # with remove.empty
+    pidxl_re <- getPausingIndices(ps_list, txs_pr, txs_gb, remove.empty = TRUE,
+                                  ncores = 2)
+    expect_equal(nrow(pidxl_re), 189)
+})
+
+

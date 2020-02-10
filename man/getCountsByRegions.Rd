@@ -9,6 +9,7 @@ getCountsByRegions(
   regions.gr,
   field = "score",
   NF = NULL,
+  blacklist = NULL,
   ncores = detectCores()
 )
 }
@@ -29,7 +30,11 @@ each region in each field. If \code{field} not found in
 \item{NF}{An optional normalization factor by which to multiply the counts.
 If given, \code{length(NF)} must be equal to \code{length(field)}.}
 
-\item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
+\item{blacklist}{An optional GRanges object containing regions that should be
+excluded from signal counting.}
+
+\item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
+of multiple datasets, or if \code{length(field) > 1}.}
 }
 \value{
 An atomic vector the same length as \code{regions.gr} containing the

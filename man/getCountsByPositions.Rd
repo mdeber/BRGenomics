@@ -13,6 +13,8 @@ getCountsByPositions(
   field = "score",
   NF = NULL,
   melt = FALSE,
+  blacklist = NULL,
+  NA_blacklisted = FALSE,
   ncores = detectCores()
 )
 }
@@ -30,8 +32,8 @@ within each bin. By default, the signal is summed, but any function
 operating on a numeric vector can be used.}
 
 \item{simplify.multi.widths}{A string indicating the output format if the
-ranges in \code{regions.gr} have variable widths. By default, an error
-is returned. See details below.}
+ranges in \code{regions.gr} have variable widths. By default, an error is
+returned. See details below.}
 
 \item{field}{The metadata field of \code{dataset.gr} to be counted. If
 \code{length(field) > 1}, the output is a list whose elements contain the
@@ -48,10 +50,19 @@ set to \code{TRUE}, a dataframe is returned in containing columns for
 multiple GRanges, or if \code{length(field) > 1}, a single dataframe is
 returned, which contains an additional column "sample", which contains
 individual sample names. If used with multi-width \code{regions.gr}, the
-resulting dataframe will only contain positions that are found within
-each respective region.}
+resulting dataframe will only contain positions that are found within each
+respective region.}
 
-\item{ncores}{Multiple cores can only be used if \code{length(field) > 1}.}
+\item{blacklist}{An optional GRanges object containing regions that should be
+excluded from signal counting.}
+
+\item{NA_blacklisted}{A logical indicating if NA values should be returned
+for blacklisted regions. By default, signal in the blacklisted sites is
+ignored, i.e. the reads are excluded. If \code{NA_blacklisted = TRUE},
+those positions are set to \code{NA} in the final output.}
+
+\item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
+of multiple datasets, or if \code{length(field) > 1}.}
 }
 \value{
 If the widths of all ranges in \code{regions.gr} are equal, a matrix
