@@ -3,35 +3,60 @@
 ### ------------------------------------------------------------------------- #
 ###
 
-
-#' N-dimensional binning
+#' Generating and Aggregating Data Within N-dimensional Bins
 #'
-#' This function takes in data along 1 or more dimensions, and for each
-#' dimension the data is divided into evenly-sized bins from the minimum
-#' value to the maximum value, and bin numbers are returned. For instance, if
-#' each index of the input data were a gene, the input dimensions would be
-#' various quantitative measures of that gene, e.g. expression level, number of
-#' exons, length, etc. If plotted in cartesian coordinates, each gene would be a
-#' single datapoint, and each measurement would be a separate dimension. The bin
-#' numbers for each datapoint in each dimension are returned in a dataframe,
-#' with a column for each dimension and a row for each index.
+#' Divide data along different dimensions into equally spaced bins, and
+#' summarize the datapoints that fall into any of these n-dimensional bins.
 #'
-#' @param ... A single dataframe, or any number of lists or vectors containing
-#'   different measurements across the same datapoints. If a dataframe is given,
-#'   columns should correspond to measurements (dimensions). If lists or
-#'   vectors are given, they must all have the same lengths. Other input classes
-#'   will be coerced into a single dataframe.
-#' @param nbins Either a number giving the number of bins to use for
-#'   all dimensions (default = 10), or a vector containing the number of
-#'   bins to use for each dimension of input data given.
+#' @param x The name of the dimension in \code{dims.df} to aggregate, or a
+#'   separate numerical vector of data to be aggregated. If a numerical vector
+#'   is given, each value in \code{x} corresponds to a row of \code{dims.df},
+#'   and so \code{length(x)} must be equal to \code{nrow(dims.df)},
+#' @param dims.df A dataframe containing one or more columns of numerical data
+#'   for which bins will be generated.
+#' @param nbins Either a number giving the number of bins to use for all
+#'   dimensions (default = 10), or a vector containing the number of bins to use
+#'   for each dimension of input data given.
+#' @param FUN A function to use for aggregating data within each bin.
+#' @param ... Additional arguments passed to \code{FUN}.
+#' @param ignore.na Logical indicating if \code{NA} values of \code{x} should be
+#'   ignored. Default is \code{TRUE}.
+#' @param drop A logical indicating if empty bin combinations should be removed
+#'   from the output. By default (\code{FALSE}), all possible combinations of
+#'   bins are returned, and empty bins contain a value given by \code{empty}.
+#' @param empty When \code{drop = FALSE}, the value returned for empty bins. By
+#'   default, empty bins return \code{NA}. However, in many circumstances (e.g.
+#'   if \code{FUN = sum}), the empty value should be \code{0}.
+#' @param ncores Number of cores to use for computations.
 #'
-#' @return A dataframe containing indices in \code{1:nbins} for each
-#'   datapoint in each dimension.
+#' @return A dataframe.
+#'
+#' @details These functions take in data along 1 or more dimensions, and for
+#'   each dimension the data is divided into evenly-sized bins from the minimum
+#'   value to the maximum value. For instance, if each row of \code{dims.df}
+#'   were a gene, the columns (the different dimensions) would be various
+#'   quantitative measures of that gene, e.g. expression level, number of exons,
+#'   length, etc. If plotted in cartesian coordinates, each gene would be a
+#'   single datapoint, and each measurement would be a separate dimension.
+#'
+#'   \code{binNdimensions} returns the bin numbers themselves. The output
+#'   dataframe has the same dimensions as the input \code{dims.df}, but each
+#'   input data has been replaced by its bin number (an integer).
+#'
+#'   \code{aggregateByNdimensionalBins} summarizes some input data \code{x} in
+#'   each combination of bins, i.e. in each n-dimensional bin. Each row of the
+#'   output dataframe is a unique combination of the input bins (i.e. each
+#'   n-dimensional bin), and the output columns are identical to those in
+#'   \code{dims.df}, with the addition of a "value" column containing the
+#'   aggregated \code{x} data in that n-dimensional bin.
+#'
+#'   \code{densityInNdimensionalBins} returns a dataframe just like
+#'   \code{aggregateByNdimensionalBins}, except the "value" column contains the
+#'   number of observations that fall into each n-dimensional bin.
 #'
 #' @author Mike DeBerardine
-#'
 #' @export
-#'
+#' @importFrom parallel detectCores mcMap mclapply
 #' @examples
 #' data("PROseq") # import included PROseq data
 #' data("txs_dm6_chr4") # import included transcripts
@@ -44,95 +69,154 @@
 #' early_gb <- genebodies(txs_dm6_chr4, 500, 1000, fix.end = "start")
 #' cps <- genebodies(txs_dm6_chr4, -500, 500, fix.start = "end")
 #'
-#' counts_pr <- getCountsByRegions(PROseq, pr)
-#' counts_gb <- getCountsByRegions(PROseq, early_gb)
-#' counts_cps <- getCountsByRegions(PROseq, cps)
+#' df <- data.frame(counts_pr = getCountsByRegions(PROseq, pr),
+#'                  counts_gb = getCountsByRegions(PROseq, early_gb),
+#'                  counts_cps = getCountsByRegions(PROseq, cps))
 #'
 #' #--------------------------------------------------#
 #' # divide genes into 20 bins for each measurement
 #' #--------------------------------------------------#
 #'
-#' count_bins <- binNdimensions(counts_pr, counts_gb, counts_cps, nbins = 20)
+#' bin3d <- binNdimensions(df, nbins = 20)
 #'
 #' length(txs_dm6_chr4)
-#' nrow(count_bins)
-#' count_bins[1:10, ]
-binNdimensions <- function(..., nbins = 10) {
-
-    # check input data; convert to dataframe; give good dim. names
-    in.names <- .get_unnamed_names() # names of args/objects in '...'
-    data <- .get_data(list(...), in.names)
+#' nrow(bin3d)
+#' bin3d[1:6, ]
+#'
+#' #--------------------------------------------------#
+#' # get number of genes in each bin
+#' #--------------------------------------------------#
+#'
+#' bin_counts <- densityInNdimensionalBins(df, nbins = 20)
+#'
+#' bin_counts[1:6, ]
+#'
+#' #--------------------------------------------------#
+#' # get mean cps reads in bins of promoter and genebody reads
+#' #--------------------------------------------------#
+#'
+#' bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20)
+#'
+#' bin2d_cps[1:6, ]
+#'
+#' subset(bin2d_cps, is.finite(value))[1:6, ]
+#'
+#' #--------------------------------------------------#
+#' # get median cps reads for those bins
+#' #--------------------------------------------------#
+#'
+#' bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
+#'                                              FUN = median)
+#'
+#' bin2d_cps_med[1:6, ]
+#'
+#' subset(bin2d_cps_med, is.finite(value))[1:6, ]
+binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
 
     # check input bins
-    n_dim <- ncol(data)
+    n_dim <- ncol(dims.df)
     if (length(nbins) > 1 & length(nbins) != n_dim) {
         stop(.nicemsg("User input %d dimensions of data, but length(nbins) = %d.
-                      nbins must match number of dimensions, or be a single
-                      number.", n_dim, length(nbins)))
+                      length(nbins) must be equal to ncol(dims.df), or be a
+                      single number.", n_dim, length(nbins)))
         return(geterrmessage())
     }
 
     # get bin divisions for each dimension, evenly spaced from min to max values
-    seqRange <- function(x, y) seq(min(Filter(is.finite, x)),
-                                   max(Filter(is.finite, x)),
-                                   length = y)
-    bin_seqs <- Map(seqRange, data, nbins)
+    getBreaks <- function(x, y) {
+        xfin <- x[is.finite(x)]
+        seq(min(xfin), max(xfin), length = y)
+    }
+    breaks <- mcMap(getBreaks, dims.df, nbins, mc.cores = ncores)
 
     # get bin indices for each datapoint along each dimension
-    bin_idx <- Map(findInterval, data, bin_seqs)
-    names(bin_idx) <- paste0("bin.", names(data))
+    bin_idx <- mcMap(findInterval, dims.df, breaks, mc.cores = ncores)
+    names(bin_idx) <- paste0("bin.", names(dims.df))
 
     as.data.frame(bin_idx)
 }
 
 
-.get_data <- function(in.data, in.names) {
-    classes.in <- vapply(in.data, class, FUN.VALUE = character(1))
-    if (all(classes.in %in% c("list", "numeric", "integer"))) {
-        data <- as.data.frame( lapply(in.data, unlist) )
-        names(data) <- in.names
-        return(data)
 
-    } else if (any(classes.in == "data.frame")) {
-        if (length(in.data) > 1) {
-            stop(.nicemsg("If a dataframe is given as input, no additional data
-                          objects can be given."))
-            return(geterrmessage())
-        }
-        return(in.data[[1]])
 
-    } else if (length(in.data) == 1) {
-        warning(.nicemsg("Coercing input of class %s into adataframe...",
-                         classes.in[[1]]), immediate. = TRUE)
-        return(as.data.frame(in.data[[1]]))
+#' @rdname binNdimensions
+#' @importFrom parallel detectCores
+#' @export
+aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
+                                        ignore.na = TRUE, drop = FALSE,
+                                        empty = NA, ncores = detectCores()) {
+
+    if (is.character(x))  {
+        colx <- which(names(dims.df) == x)
+        x <- dims.df[, colx]
+        dims.df <- dims.df[, -colx]
+    }
+
+    if (ignore.na) {
+        idx <- !is.na(x)
+        x <- x[idx]
+        dims.df <- dims.df[idx, ]
+    }
+
+    # get bins for data
+    bins.df <- binNdimensions(dims.df, nbins, ncores)
+
+    if (!drop && !is.na(empty) && !ignore.na) {
+        # only for this combination of arguments do we need to differentiate the
+        # NAs that are returned by FUN from the NAs that result from empty bins
+        .aggbins_sep_inout_na(x, bins.df, FUN, ..., empty)
 
     } else {
-        data <- as.data.frame(lapply(in.data, as.vector))
-        warning(.nicemsg("Coerced a list of input of class(es) %s into a
-                         dataframe.",
-                         Reduce(function(...) paste(..., sep = ","),
-                                classes.in)))
-        names(data) <- in.names
-        return(data)
+        ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = FUN,
+                             ..., drop = drop)
+        if (!is.na(empty))  ag.bins$value[is.na(ag.bins$value)] <- empty
+        return(ag.bins)
+
     }
 }
 
+# make list of vectors of dimension values for used bins and all possible
+# .col_comb <- function(df) lapply(seq_len(nrow(df)),
+#                                  function(x) as.matrix(df)[x, ])
+# usedbins <- .col_comb(ag.bins[, -ncol(ag.bins)])
+# allbins <- .col_comb(df)
 
-.get_unnamed_names <- function(...) {
-    # This function returns a character vector providing names for unnamed args
-    #   passed to a parent function. If arguments were named by user (i.e.
-    #   x = data_x, ...), it uses those names; but otherwise uses the names of
-    #   the objects themselves.
-    # This function excludes the named argument "nbins"
-    dim_names <- as.list( match.call(call = sys.call(sys.parent(1))) )[-1]
-    if (!is.null(names(dim_names))) {
-        dim_names <- dim_names[names(dim_names) != "nbins"]
-        # if nbins the only named argument, or not all named, don't return
-        if (all(nchar(names(dim_names)) > 0)) {
-            return(names(dim_names))
-        }
-    }
-    return(as.character(dim_names))
+#' @importFrom S4Vectors pc
+.aggbins_sep_inout_na <- function(x, bins.df, FUN, ..., empty) {
+
+    # get all combinations of bins
+    bin_comb <- lapply(bins.df, function(x) sort(unique(x)))
+    df <- expand.grid(bin_comb)
+
+    # aggregate in non-empty bins
+    ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = FUN, ...,
+                         drop = TRUE)
+
+    # make list of vectors of dimension values for used bins
+    usedbins <- do.call(pc, as.list(ag.bins[-ncol(ag.bins)]))
+    allbins <- do.call(pc, as.list(df)) # and for all possible bins
+
+    # get indices of non-empty bins (expand.grid and aggregate order the same)
+    idx <- which(allbins %in% usedbins)
+
+    # fill values
+    df$value <- empty
+    df$value[idx] <- ag.bins$value
+    return(df)
 }
 
+
+#' @rdname binNdimensions
+#' @importFrom parallel detectCores
+#' @export
+densityInNdimensionalBins <- function(dims.df, nbins = 10,
+                                      ncores = detectCores()) {
+    # avoid unnecessary evaluations in the aggregate function
+    x <- rep(0L, nrow(dims.df))
+    bins.df <- binNdimensions(dims.df, nbins, ncores)
+    ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = length,
+                         drop = FALSE)
+    ag.bins$value[is.na(ag.bins$value)] <- 0
+    return(ag.bins)
+}
 

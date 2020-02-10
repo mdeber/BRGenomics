@@ -14,60 +14,57 @@ idx <- union(which(counts_pr > 0), which(counts_gb > 0))
 counts_pr <- counts_pr[idx]
 counts_gb <- counts_gb[idx]
 
-bin_deciles <- binNdimensions(counts_pr, counts_gb, nbins = 10)
+df <- data.frame(pr = counts_pr, gb = counts_gb)
 
-test_that("ndim binning on numeric vectors", {
-    expect_is(bin_deciles, "data.frame")
-    expect_equivalent(names(bin_deciles), c("bin.counts_pr",
-                                            "bin.counts_gb"))
-})
-
-test_that("names given in function call are used in output", {
-    bin_alt <- binNdimensions(pr = counts_pr, gb = counts_gb,
-                              nbins = 10)
-    expect_equivalent(names(bin_alt), c("bin.pr", "bin.gb"))
-})
-
-test_that("ndim binning the same on a dataframe", {
-    expect_equivalent(bin_deciles,
-                      binNdimensions(data.frame(counts_pr, counts_gb),
-                                     nbins = 10))
-})
-
-test_that("error if >1 unnamed args given when dataframe given", {
-    expect_error(binNdimensions(data.frame(counts_pr, counts_gb),
-                                counts_gb, nbins = 10))
-})
-
-test_that("ndim binning on list, and mixed list/vector inputs", {
-    expect_equivalent(bin_deciles,
-                      binNdimensions(list(counts_pr), list(counts_gb),
-                                     nbins = 10))
-    expect_equivalent(bin_deciles,
-                      binNdimensions(list(counts_pr), counts_gb,
-                                     nbins = 10))
+test_that("names given in input are used in output", {
+    bin_deciles <- binNdimensions(df, nbins = 10)
+    expect_equivalent(names(bin_deciles), c("bin.pr", "bin.gb"))
 })
 
 pidx <- counts_pr / counts_gb
 
 test_that("can use different nbins for different dimensions", {
-    expect_is(binNdimensions(counts_pr, counts_gb, pidx), "data.frame")
-    expect_error(binNdimensions(counts_pr, counts_gb, pidx,
-                                nbins = c(10, 15)))
-    bin_3d <- binNdimensions(counts_pr, counts_gb, pidx,
-                             nbins = c(10, 15, 20))
+    df3 <- data.frame(counts_pr, counts_gb, pidx)
+
+    expect_is(binNdimensions(df3), "data.frame")
+    expect_error(binNdimensions(df3, nbins = c(10, 15)))
+    bin_3d <- binNdimensions(df3, nbins = c(10, 15, 20))
     expect_is(bin_3d, "data.frame")
     expect_equivalent(sapply(bin_3d, max), c(10, 15, 20))
 })
 
-test_that("messages produced on attempts to coerce unexpected classes", {
-    # expect_warning(binNdimensions(cbind(counts_pr, counts_gb)))
-    # R CMD CHECK doesn't like that for some reason
-    expect_error(binNdimensions(rle(counts_pr), rle(counts_gb)))
-    expect_warning(binNdimensions(counts_pr = Rle(counts_pr),
-                                  counts_gb = Rle(counts_pr), nbins = 10))
+
+# Test aggregation --------------------------------------------------------
+
+
+test_that("can aggregate in ndimensional bins", {
+    mean_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, ncores = 2)
+
+    expect_is(mean_bins, "data.frame")
+    expect_equal(names(mean_bins), c("bin.pr", "bin.gb", "value"))
+    expect_equal(round(mean_bins$value[1]), 139)
+    expect_equal(sum(is.na(mean_bins$value)), 21)
 })
 
 
+test_that("can modify function and default output values", {
+    sum_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
+                                            ncores = 2)
+    expect_equal(sum_bins$value[1], 18540)
+    expect_true(is.na(sum_bins$value[3]))
+
+    sum_bins2 <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
+                                             empty = 0, ncores = 2)
+    expect_equal(sum_bins2$value[1], 18540)
+    expect_equal(sum_bins2$value[3], 0)
+})
+
+
+# Test density ------------------------------------------------------------
+
+test_that("can find density in ndimensional bins", {
+    bin_density <- densityInNdimensionalBins(df, ncores = 2)
+    expect_equivalent(bin_density$value[1:3], c(133, 9, 0))
+})
 
 
