@@ -368,8 +368,8 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 import_bam_PROseq <- function(file, mapq = 20, revcomp = TRUE, shift = -1L,
                               trim.to = "3p", ignore.strand = FALSE,
                               field = "score", paired_end = NULL,
-                              yieldSize = 2.5e5)
-{
+                              yieldSize = 2.5e5) {
+
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
                paired_end = paired_end, yieldSize = yieldSize)
@@ -380,20 +380,23 @@ import_bam_PROseq <- function(file, mapq = 20, revcomp = TRUE, shift = -1L,
 import_bam_PROcap <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
                               trim.to = "5p", ignore.strand = FALSE,
                               field = "score", paired_end = NULL,
-                              yieldSize = 2.5e5)
-{
+                              yieldSize = 2.5e5) {
+
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
                paired_end = paired_end, yieldSize = yieldSize)
 }
 
+# must also mention that people should not use these options if their ATAC-seq
+# pipeline has already trimmed the read overhangs down
+
 #' @rdname import_bam
 #' @export
 import_bam_ATACseq <- function(file, mapq = 20, revcomp = FALSE,
-                               shift = c(2, -2), trim.to = "whole",
+                               shift = c(4, -5), trim.to = "whole",
                                ignore.strand = TRUE, field = "score",
-                               paired_end = TRUE, yieldSize = 2.5e5)
-{
+                               paired_end = TRUE, yieldSize = 2.5e5) {
+
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
                paired_end = paired_end, yieldSize = yieldSize)

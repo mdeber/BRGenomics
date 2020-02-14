@@ -47,7 +47,7 @@ import_bam_ATACseq(
   file,
   mapq = 20,
   revcomp = FALSE,
-  shift = c(2, -2),
+  shift = c(4, -5),
   trim.to = "whole",
   ignore.strand = TRUE,
   field = "score",
