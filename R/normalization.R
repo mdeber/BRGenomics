@@ -111,6 +111,77 @@
 #' @importFrom parallel detectCores
 #'
 #' @examples
+#' #--------------------------------------------------#
+#' # Make list of dummy GRanges
+#' #--------------------------------------------------#
+#' gr1_rep1 <- GRanges(seqnames = c("chr1", "chr2", "spikechr1", "spikechr2"),
+#'                     ranges = IRanges(start = 1:4, width = 1),
+#'                     strand = "+")
+#' gr2_rep2 <- gr2_rep1 <- gr1_rep2 <- gr1_rep1
+#'
+#' # set readcounts
+#' score(gr1_rep1) <- c(1, 1, 1, 1) # 2 exp + 2 spike = 4 total
+#' score(gr2_rep1) <- c(2, 2, 1, 1) # 4 exp + 2 spike = 6 total
+#' score(gr1_rep2) <- c(1, 1, 2, 1) # 2 exp + 3 spike = 5 total
+#' score(gr2_rep2) <- c(4, 4, 2, 2) # 8 exp + 4 spike = 12 total
+#'
+#' grl <- list(gr1_rep1, gr2_rep1,
+#'             gr1_rep2, gr2_rep2)
+#' names(grl) <- c("gr1_rep1", "gr2_rep1",
+#'                 "gr1_rep2", "gr2_rep2")
+#'
+#' grl
+#'
+#' #--------------------------------------------------#
+#' # Get RPM NFs
+#' #--------------------------------------------------#
+#'
+#' # can use the names of all spike-in chromosomes
+#' getSpikeInNFs(grl, si_names = c("spikechr1", "spikechr2"), method = "RPM",
+#'               ncores = 2)
+#'
+#' # or use a regular expression that matches the spike-in chromosome names
+#' grep("spike", as.vector(seqnames(gr1_rep1)))
+#'
+#' getSpikeInNFs(grl, si_pattern = "spike", method = "RPM", ncores = 2)
+#'
+#'
+#' #--------------------------------------------------#
+#' # Get simple spike-in NFs ("SNR")
+#' #--------------------------------------------------#
+#'
+#' # without batch normalization, NFs make all spike-in readcounts match
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
+#'               batch_norm = FALSE, ncores = 2)
+#'
+#' # with batch normalization, negative controls will have same normalized reads;
+#' # other samples are normalized to have same spike-in reads as their matched
+#' # control
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
+#'               batch_norm = TRUE, ncores = 2)
+#'
+#' #--------------------------------------------------#
+#' # Get spike-in NFs with more meaningful units ("RPMC")
+#' #--------------------------------------------------#
+#'
+#' # compare to raw RPM NFs above; takes into account spike-in reads;
+#' # units are directly comparable to the negative controls
+#'
+#' # with batch normalization, these negative controls are the same, as they have
+#' # the same number of non-spike-in readcounts (they're simply RPM)
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
+#'
+#' # batch_norm = FALSE, the average reads-per-spike-in for the negative controls
+#' # are used to calculate all NFs; unless the controls have the exact same
+#' # ratio of non-spike-in to spike-in reads, nothing is precisely RPM
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'               batch_norm = FALSE, ncores = 2)
+#'
+#' #--------------------------------------------------#
+#' # Apply NFs to the GRanges
+#' #--------------------------------------------------#
+#'
+#' spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
 getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                           method = c("SRPMC", "SNR", "RPM"), batch_norm = TRUE,
                           ctrl_pattern = NULL, ctrl_names = NULL,
@@ -231,7 +302,7 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                          normalized GRanges"))
 
         dataset.gr <- mclapply(dataset.gr, function(x) {
-            makeGRangesBRG(getStrandedCoverage(x, field = NULL))
+            makeGRangesBRG(getStrandedCoverage(x, field = NULL, ncores = 1))
         }, mc.cores = ncores)
         field <- "score"
     }
@@ -273,7 +344,12 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' dataset.gr,si_pattern,si_names,ctrl_pattern,ctrl_names,batch_norm,field,sample_names,ncores
 #' See \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}
 #' @param RPM_units If set to \code{TRUE}, the final readcount values will be
-#'   converted to \code{negative control RPM}.
+#'   converted to units equivalent to/directly comparable with \code{RPM} for
+#'   the negative control(s). If \code{field = NULL}, the GRanges objects will
+#'   be converted to disjoint
+#'   \code{\link[BRGenomics:makeGRangesBRG]{"basepair-resolution"}} GRanges
+#'   objects, with normalized readcounts contained in the "score" metadata
+#'   column.
 #'
 #' @return An object parallel to \code{dataset.gr}, but with fewer reads. E.g.
 #'   if \code{dataset.gr} is a list of GRanges, the output is a list of the same
@@ -287,6 +363,52 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @export
 #'
 #' @examples
+#' #--------------------------------------------------#
+#' # Make list of dummy GRanges
+#' #--------------------------------------------------#
+#' gr1_rep1 <- GRanges(seqnames = c("chr1", "chr2", "spikechr1", "spikechr2"),
+#'                     ranges = IRanges(start = 1:4, width = 1),
+#'                     strand = "+")
+#' gr2_rep2 <- gr2_rep1 <- gr1_rep2 <- gr1_rep1
+#'
+#' # set readcounts
+#' score(gr1_rep1) <- c(1, 1, 1, 1) # 2 exp + 2 spike = 4 total
+#' score(gr2_rep1) <- c(2, 2, 1, 1) # 4 exp + 2 spike = 6 total
+#' score(gr1_rep2) <- c(1, 1, 2, 1) # 2 exp + 3 spike = 5 total
+#' score(gr2_rep2) <- c(4, 4, 2, 2) # 8 exp + 4 spike = 12 total
+#'
+#' grl <- list(gr1_rep1, gr2_rep1,
+#'             gr1_rep2, gr2_rep2)
+#' names(grl) <- c("gr1_rep1", "gr2_rep1",
+#'                 "gr1_rep2", "gr2_rep2")
+#'
+#' grl
+#'
+#' #--------------------------------------------------#
+#' # (The simple spike-in NFs)
+#' #--------------------------------------------------#
+#'
+#' # see examples for getSpikeInNFs for more
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
+#'               ncores = 2)
+#'
+#' #--------------------------------------------------#
+#' # Subsample the GRanges according to the spike-in NFs
+#' #--------------------------------------------------#
+#'
+#' ss <- subsampleBySpikeIn(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'                          ncores = 2)
+#' ss
+#'
+#' lapply(ss, function(x) sum(score(x))) # total reads in each
+#'
+#' # Put in units of RPM for the negative control
+#' ssr <- subsampleBySpikeIn(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'                           RPM_units = TRUE, ncores = 2)
+#'
+#' ssr
+#'
+#' lapply(ssr, function(x) sum(score(x))) # total signal in each
 subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                ctrl_pattern = NULL, ctrl_names = NULL,
                                batch_norm = TRUE, RPM_units = FALSE,
@@ -305,7 +427,7 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     # remove spike-in reads and subsample
     dataset.gr <- removeSpikeInReads(dataset.gr, si_pattern, si_names, field,
-                                     ncores)
+                                     ncores = ncores)
     samples.gr <- subsampleGRanges(dataset.gr, n = nreads, field = field,
                                    ncores = ncores)
 
@@ -316,17 +438,18 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
             return(geterrmessage())
         }
         if (is.null(field)) {
-            samples.gr <- makeGRangesBRG(samples.gr)
+            sc <- getStrandedCoverage(samples.gr, field = NULL, ncores = ncores)
+            samples.gr <- makeGRangesBRG(sc, ncores = ncores)
             field <- "score"
         }
         # get RPM NF for negative controls
         idx_ctrl <- .get_idx_ctrl(counts.df, ctrl_pattern, ctrl_names)
         nf_rpm <- 1e6 / mean(nreads[idx_ctrl])
-        samples.gr <- mcMap(function(x, field) {
+        samples.gr <- mcMap(function(x, field, nf_rpm) {
             gr <- x
             mcols(gr)[field] <- mcols(gr)[[field]] * nf_rpm
             gr
-        }, samples.gr, field, mc.cores = ncores)
+        }, samples.gr, field, nf_rpm, mc.cores = ncores)
     }
 
     if (length(samples.gr) == 1)

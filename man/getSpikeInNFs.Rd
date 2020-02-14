@@ -143,6 +143,79 @@ readcounts spike-in normalized.
   factors are calculated.
 }
 
+\examples{
+#--------------------------------------------------#
+# Make list of dummy GRanges
+#--------------------------------------------------#
+gr1_rep1 <- GRanges(seqnames = c("chr1", "chr2", "spikechr1", "spikechr2"),
+                    ranges = IRanges(start = 1:4, width = 1),
+                    strand = "+")
+gr2_rep2 <- gr2_rep1 <- gr1_rep2 <- gr1_rep1
+
+# set readcounts
+score(gr1_rep1) <- c(1, 1, 1, 1) # 2 exp + 2 spike = 4 total
+score(gr2_rep1) <- c(2, 2, 1, 1) # 4 exp + 2 spike = 6 total
+score(gr1_rep2) <- c(1, 1, 2, 1) # 2 exp + 3 spike = 5 total
+score(gr2_rep2) <- c(4, 4, 2, 2) # 8 exp + 4 spike = 12 total
+
+grl <- list(gr1_rep1, gr2_rep1,
+            gr1_rep2, gr2_rep2)
+names(grl) <- c("gr1_rep1", "gr2_rep1",
+                "gr1_rep2", "gr2_rep2")
+
+grl
+
+#--------------------------------------------------#
+# Get RPM NFs
+#--------------------------------------------------#
+
+# can use the names of all spike-in chromosomes
+getSpikeInNFs(grl, si_names = c("spikechr1", "spikechr2"), method = "RPM",
+              ncores = 2)
+
+# or use a regular expression that matches the spike-in chromosome names
+grep("spike", as.vector(seqnames(gr1_rep1)))
+
+getSpikeInNFs(grl, si_pattern = "spike", method = "RPM", ncores = 2)
+
+
+#--------------------------------------------------#
+# Get simple spike-in NFs ("SNR")
+#--------------------------------------------------#
+
+# without batch normalization, NFs make all spike-in readcounts match
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
+              batch_norm = FALSE, ncores = 2)
+
+# with batch normalization, negative controls will have same normalized reads;
+# other samples are normalized to have same spike-in reads as their matched
+# control
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
+              batch_norm = TRUE, ncores = 2)
+
+#--------------------------------------------------#
+# Get spike-in NFs with more meaningful units ("RPMC")
+#--------------------------------------------------#
+
+# compare to raw RPM NFs above; takes into account spike-in reads;
+# units are directly comparable to the negative controls
+
+# with batch normalization, these negative controls are the same, as they have
+# the same number of non-spike-in readcounts (they're simply RPM)
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
+
+# batch_norm = FALSE, the average reads-per-spike-in for the negative controls
+# are used to calculate all NFs; unless the controls have the exact same
+# ratio of non-spike-in to spike-in reads, nothing is precisely RPM
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+              batch_norm = FALSE, ncores = 2)
+
+#--------------------------------------------------#
+# Apply NFs to the GRanges
+#--------------------------------------------------#
+
+spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
+}
 \seealso{
 \code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}}
 }

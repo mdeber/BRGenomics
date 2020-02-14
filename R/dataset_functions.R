@@ -202,7 +202,8 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 
     if (is.list(dataset.gr)) {
         if (is.null(field))  field <- list(NULL)
-        return(mcMap(getStrandedCoverage, dataset.gr, field, mc.cores = ncores))
+        return(mcMap(getStrandedCoverage, dataset.gr, field, ncores = 1,
+                     mc.cores = ncores))
     }
 
     if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
@@ -319,6 +320,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 
         grl <- mcMap(.subsample_gr, list(dataset.gr), n, prop, field,
                      mc.cores = ncores)
+        names(grl) <- field
         mergeGRangesData(grl, field = field, multiplex = TRUE, ncores = ncores)
 
     } else {

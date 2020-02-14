@@ -178,6 +178,18 @@ test_that("can RPM norm a single GRanges object", {
     expect_equivalent(2.5e5*score(grl[[1]]), score(gr1_rpm))
 })
 
+
+test_that("can spike-in normalize a GRanges with field = NULL", {
+    gr_ones <- grl[[1]]
+    score(gr_ones) <- 1
+    gr_ones1 <- spikeInNormGRanges(gr_ones, method = "RPM", ncores = 1)
+    expect_message(gr_ones2 <- spikeInNormGRanges(grl[[1]], field = NULL,
+                                                  method = "RPM", ncores = 1))
+    expect_identical(gr_ones1, gr_ones2)
+    expect_equivalent(gr_ones1$score, gr_ones2$score)
+})
+
+
 test_that("correctly spike-in normalize multiple GRanges objects", {
     nf_snr <- getSpikeInNFs(grl[1:2], si_pattern = "spike", method = "SNR",
                             batch_norm = FALSE, ncores = 2)
@@ -198,14 +210,15 @@ context("subsampling by spike-in NFs")
 
 test_that("can subsample single GRanges by spike-in NF", {
     gr_ss <- subsampleBySpikeIn(grl[[1]], si_pattern = "spike",
-                                batch_norm = FALSE)
+                                batch_norm = FALSE, ncores = 2)
     expect_equal(sum(score(gr_ss)), sum(score(grl[[1]][1:2])))
 })
 
 test_that("subsampled GRanges list have correct readcounts", {
-    grl_ss <- subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE)
+    grl_ss <- subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE,
+                                 ncores = 2)
     grl_nf_snr <- getSpikeInNFs(grl, si_pattern = "spike", method = "SNR",
-                                batch_norm = FALSE)
+                                batch_norm = FALSE, ncores = 2)
     # (ranges 3 and 4 are the spike-ins)
     counts <- floor(sapply(grl, function(x) sum(score(x[1:2]))) * grl_nf_snr)
 
@@ -213,10 +226,36 @@ test_that("subsampled GRanges list have correct readcounts", {
 
     grl_ss_rpm <- subsampleBySpikeIn(grl, si_pattern = "spike",
                                      batch_norm = FALSE, ctrl_pattern = "gr1",
-                                     RPM_units = TRUE)
+                                     RPM_units = TRUE, ncores = 2)
+})
+
+grl_ones <- lapply(grl, function(x) {
+    score(x) <- 1
+    x
+})
+
+test_that("can subsample with field = NULL", {
+    sslones <- subsampleBySpikeIn(grl_ones, si_pattern = "spike",
+                                  batch_norm = FALSE, ncores = 2)
+    nullsslones <- subsampleBySpikeIn(grl_ones, si_pattern = "spike",
+                                      batch_norm = FALSE, field = NULL,
+                                      ncores = 2)
+    expect_equivalent(sapply(sslones, function(x) sum(score(x))),
+                      sapply(nullsslones, function(x) sum(score(x))))
 })
 
 
+test_that("can subsample with field = NULL and RPM_units", {
+    sslonesr <- subsampleBySpikeIn(grl_ones, si_pattern = "spike",
+                                   batch_norm = FALSE, ctrl_pattern = "gr1",
+                                   RPM_units = TRUE, ncores = 1)
+    nullsslonesr <- subsampleBySpikeIn(grl_ones, si_pattern = "spike",
+                                       batch_norm = FALSE, ctrl_pattern = "gr1",
+                                       RPM_units = TRUE, field = NULL,
+                                       ncores = 1)
+    expect_equivalent(sapply(sslonesr, function(x) sum(score(x))),
+                      sapply(nullsslonesr, function(x) sum(score(x))))
+})
 
 
 

@@ -21,7 +21,12 @@ subsampleBySpikeIn(
 \item{dataset.gr, si_pattern, si_names, ctrl_pattern, ctrl_names, batch_norm, field, sample_names, ncores}{See \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}}
 
 \item{RPM_units}{If set to \code{TRUE}, the final readcount values will be
-converted to \code{negative control RPM}.}
+converted to units equivalent to/directly comparable with \code{RPM} for
+the negative control(s). If \code{field = NULL}, the GRanges objects will
+be converted to disjoint
+\code{\link[BRGenomics:makeGRangesBRG]{"basepair-resolution"}} GRanges
+objects, with normalized readcounts contained in the "score" metadata
+column.}
 }
 \value{
 An object parallel to \code{dataset.gr}, but with fewer reads. E.g.
@@ -30,6 +35,54 @@ An object parallel to \code{dataset.gr}, but with fewer reads. E.g.
 }
 \description{
 Randomly subsample reads according to spike-in normalization
+}
+\examples{
+#--------------------------------------------------#
+# Make list of dummy GRanges
+#--------------------------------------------------#
+gr1_rep1 <- GRanges(seqnames = c("chr1", "chr2", "spikechr1", "spikechr2"),
+                    ranges = IRanges(start = 1:4, width = 1),
+                    strand = "+")
+gr2_rep2 <- gr2_rep1 <- gr1_rep2 <- gr1_rep1
+
+# set readcounts
+score(gr1_rep1) <- c(1, 1, 1, 1) # 2 exp + 2 spike = 4 total
+score(gr2_rep1) <- c(2, 2, 1, 1) # 4 exp + 2 spike = 6 total
+score(gr1_rep2) <- c(1, 1, 2, 1) # 2 exp + 3 spike = 5 total
+score(gr2_rep2) <- c(4, 4, 2, 2) # 8 exp + 4 spike = 12 total
+
+grl <- list(gr1_rep1, gr2_rep1,
+            gr1_rep2, gr2_rep2)
+names(grl) <- c("gr1_rep1", "gr2_rep1",
+                "gr1_rep2", "gr2_rep2")
+
+grl
+
+#--------------------------------------------------#
+# (The simple spike-in NFs)
+#--------------------------------------------------#
+
+# see examples for getSpikeInNFs for more
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
+              ncores = 2)
+
+#--------------------------------------------------#
+# Subsample the GRanges according to the spike-in NFs
+#--------------------------------------------------#
+
+ss <- subsampleBySpikeIn(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+                         ncores = 2)
+ss
+
+lapply(ss, function(x) sum(score(x))) # total reads in each
+
+# Put in units of RPM for the negative control
+ssr <- subsampleBySpikeIn(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+                          RPM_units = TRUE, ncores = 2)
+
+ssr
+
+lapply(ssr, function(x) sum(score(x))) # total signal in each
 }
 \seealso{
 \code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}},
