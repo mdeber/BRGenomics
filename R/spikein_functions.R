@@ -21,6 +21,50 @@
 #' @export
 #'
 #' @examples
+#' #--------------------------------------------------#
+#' # Make list of dummy GRanges
+#' #--------------------------------------------------#
+#'
+#' gr1_rep1 <- GRanges(seqnames = c("chr1", "chr2", "spikechr1", "spikechr2"),
+#'                     ranges = IRanges(start = 1:4, width = 1),
+#'                     strand = "+")
+#' gr2_rep2 <- gr2_rep1 <- gr1_rep2 <- gr1_rep1
+#'
+#' # set readcounts
+#' score(gr1_rep1) <- c(1, 1, 1, 1) # 2 exp + 2 spike = 4 total
+#' score(gr2_rep1) <- c(2, 2, 1, 1) # 4 exp + 2 spike = 6 total
+#' score(gr1_rep2) <- c(1, 1, 2, 1) # 2 exp + 3 spike = 5 total
+#' score(gr2_rep2) <- c(4, 4, 2, 2) # 8 exp + 4 spike = 12 total
+#'
+#' grl <- list(gr1_rep1, gr2_rep1,
+#'             gr1_rep2, gr2_rep2)
+#'
+#' names(grl) <- c("gr1_rep1", "gr2_rep1",
+#'                 "gr1_rep2", "gr2_rep2")
+#'
+#' grl
+#'
+#' #--------------------------------------------------#
+#' # Count spike-in reads
+#' #--------------------------------------------------#
+#'
+#' # by giving names of all spike-in chromosomes
+#' getSpikeInCounts(grl, si_names = c("spikechr1", "spikechr2"), ncores = 2)
+#'
+#' # or by matching the string/regular expression "spike" in chromosome names
+#' getSpikeInCounts(grl, si_pattern = "spike", ncores = 2)
+#'
+#' #--------------------------------------------------#
+#' # Filter out spike-in reads
+#' #--------------------------------------------------#
+#'
+#' removeSpikeInReads(grl, si_pattern = "spike", ncores = 2)
+#'
+#' #--------------------------------------------------#
+#' # Return spike-in reads
+#' #--------------------------------------------------#
+#'
+#' getSpikeInReads(grl, si_pattern = "spike", ncores = 2)
 getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                              field = "score", sample_names = NULL,
                              ncores = detectCores()) {
