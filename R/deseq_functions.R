@@ -10,16 +10,19 @@
 #' but this function also adds support for counting reads across non-contiguous
 #' regions.
 #'
-#' @param dataset.list A list of GRanges datasets that can be individually
-#'   passed to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}.
-#'   Alternatively, a \code{\link[BRGenomics:mergeGRangesData]{
-#'   multiplexed GRanges}} object can also be used (see details below).
+#' @param dataset.list An object containing GRanges datasets that can be passed
+#'   to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}},
+#'   typically a list of GRanges objects, or a
+#'   \code{\link[BRGenomics:mergeGRangesData]{ multiplexed GRanges}} object (see
+#'   details below).
 #' @param regions.gr A GRanges object containing regions of interest.
 #' @param sample_names Names for each dataset in \code{dataset.list} are
-#'   required, and by default the names of the list elements are used. The names
-#'   must each contain the string "_rep#", where "#" is a single character
-#'   (usually a number) indicating the replicate. Sample names across different
-#'   replicates must be otherwise identical.
+#'   required. By default (\code{sample_names = NULL}), if \code{dataset.list}
+#'   is a list, the names of the list elements are used; for a multiplexed
+#'   GRanges object, the field names are used. The names must each contain the
+#'   string "_rep#", where "#" is a single character (usually a number)
+#'   indicating the replicate. Sample names across different replicates must be
+#'   otherwise identical.
 #' @param gene_names An optional character vector giving gene names, or any
 #'   other identifier over which reads should be counted. Gene names are
 #'   required if counting is to be performed over non-contiguous ranges, i.e. if
@@ -30,11 +33,19 @@
 #'   later on, either by the user or in a call to \code{getDESeqResults}.
 #'   Applying the \code{sizeFactors} later is useful if multiple sets of factors
 #'   will be explored, although \code{sizeFactors} can be overwritten at any
-#'   time.
-#' @param field Argument passed to \code{getCountsByRegions}. Optional if
-#'   \code{dataset.list} is a multiplexed GRanges object (see details below).
-#' @param ncores Number of cores to use for read counting across all samples.
-#'   By default, all available cores are used.
+#'   time. Note that DESeq2 \code{sizeFactors} are \emph{not} the same as
+#'   normalization factors defined elsewhere in this package. See details below.
+#' @param field Argument passed to \code{getCountsByRegions}. Can be used to
+#'   specify fields in a single multiplexed GRanges object, or individual fields
+#'   for each GRanges object in \code{dataset.list}.
+#' @param blacklist An optional GRanges object containing regions that should be
+#'   excluded from signal counting. Use of this argument is distinct from the
+#'   use of non-contiguous gene regions (see details below), and the two can be
+#'   used simultaneously. Blacklisting doesn't affect the ranges returned as
+#'   rowRanges in the output DESeqDataSet object (unlike the use of
+#'   non-contiguous regions).
+#' @param ncores Number of cores to use for read counting across all samples. By
+#'   default, all available cores are used.
 #' @param quiet If \code{TRUE}, all output messages from call to
 #'   \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}} will be suppressed.
 #'
@@ -46,21 +57,15 @@
 #'   treated as distinct, and the DESeq2 design = \code{~condition}.
 #'
 #' @section Use of non-contiguous gene regions: In DESeq2, genes must be defined
-#'   by single, contiguous chromosomal locations. This function allows
-#'   individual genes to be encompassed by multiple distinct ranges in
+#'   by single, contiguous chromosomal locations. In contrast, this function
+#'   allows individual genes to be encompassed by multiple distinct ranges in
 #'   \code{regions.gr}. To use non-contiguous gene regions, provide
 #'   \code{gene_names} in which some names are duplicated. For each unique gene
 #'   in \code{gene_names}, this function will generate counts across all ranges
 #'   for that gene, but be aware that it will only keep the largest range for
 #'   each gene in the resulting \code{DESeqDataSet} object's \code{rowRanges}.
-#'
-#' @section Using multiplexed GRanges as input: If a single multiplexed GRanges
-#'   object is used in lieu of a list of GRanges, the default arguments for
-#'   \code{field} and \code{sample_names} can be left, and \code{sample_names}
-#'   will match the names of the fields in the input GRanges. If provided,
-#'   \code{field} will be used to access/subset the multiplexed GRanges object,
-#'   and thus all elements of \code{field} must be found in
-#'   \code{names(mcols(dataset.list))}.
+#'   If the desired use is to blacklist certain sites in a genelist, note that
+#'   the \code{blacklist} argument can be used.
 #'
 #' @section A note on DESeq2 sizeFactors: DESeq2 \code{sizeFactors} are
 #'   sample-specific normalization factors that are applied by division, i.e.
@@ -74,7 +79,6 @@
 #'
 #' @export
 #' @importFrom parallel detectCores
-#' @importFrom GenomicRanges mcols mcols<-
 #' @importFrom DESeq2 DESeqDataSet sizeFactors<-
 #'
 #' @author Mike DeBerardine
@@ -108,37 +112,28 @@
 #'                        quiet = TRUE,
 #'                        ncores = 2)
 #' dds
-getDESeqDataSet <- function(dataset.list, regions.gr,
-                            sample_names = names(dataset.list),
+getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
                             gene_names = NULL, sizeFactors = NULL,
-                            field = "score", ncores = detectCores(),
-                            quiet = FALSE) {
-    .check_if_regions_granges(regions.gr)
-    # check if multiplexed GRanges given
-    if (.check_multiplex(dataset.list, quiet)) {
-        dataset.list <- .use_multiplex(dataset.list, sample_names, field)
-        if (!"sample_names" %in% names(match.call())) # 'missing' fun no good
-            sample_names <- names(dataset.list)
-        if (length(field) > 1) field <- "score" # modified in .use_multiplex
-    }
+                            field = "score", blacklist = NULL,
+                            ncores = detectCores(), quiet = FALSE) {
+
+    # Get counts dataframe for all samples in each range of regions.gr
+    counts.df <- getCountsByRegions(dataset.list, regions.gr, field = field,
+                                    blacklist = blacklist, ncores = ncores)
 
     # check for valid sample_names
-    .check_snames(dataset.list, sample_names)
+    if (is.null(sample_names))  sample_names <- names(counts.df)
+    .check_snames(ncol(counts.df), sample_names = sample_names)
 
     # if given, check gene_names match regions.gr, and if they match multiple
     discont.genes <- FALSE
     if (!is.null(gene_names)) {
-        .check_gnames(regions.gr, gene_names)
+        .check_gnames(length(regions.gr), gene_names)
         discont.genes <- length(unique(gene_names)) != length(gene_names)
     }
 
     # Make column data (colData) for SummarizedExperiment
     coldat <- .get_coldat(sample_names)
-
-    # Get counts dataframe for all samples in each range of regions.gr
-    counts.df <- as.data.frame(mclapply(dataset.list, getCountsByRegions,
-                                        regions.gr = regions.gr, field = field,
-                                        mc.cores = ncores))
 
     # Make SummarizedExperiment object
     se <- .get_se(counts.df, regions.gr, gene_names, discont.genes, coldat)
@@ -149,54 +144,13 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
         dds <- DESeqDataSet(se, design = ~condition)
     }
 
-    if (!is.null(sizeFactors)) sizeFactors(dds) <- sizeFactors
+    if (!is.null(sizeFactors))  sizeFactors(dds) <- sizeFactors
     return(dds)
 }
 
-.check_if_regions_granges <- function(regions.gr) {
-    if (!methods::is(regions.gr, "GRanges")) {
-        stop("regions.gr must be a GRanges object")
-        return(geterrmessage())
-    }
-}
 
-.check_multiplex <- function(dataset.list, quiet) {
-    if (methods::is(dataset.list, "GRanges")) {
-        if (!quiet) message(.nicemsg("Input is GRanges, not a list. Treating
-                                     input as multiplexed GRanges."))
-        return(TRUE)
-    }
-    return(FALSE)
-}
-
-#' @importFrom GenomicRanges mcols mcols<-
-.use_multiplex <- function(dataset.list, sample_names, field) {
-
-    # if user gave values for "field", try to use them
-    if (length(field) > 1) {
-        field_names <- field
-        field <- "score"
-    } else {
-        field_names <- names(mcols(dataset.list))
-    }
-
-    dataset.list <- lapply(field_names, function(x) {
-        gr <- subset(dataset.list, x != 0, select = x)
-        names(mcols(gr)) <- field
-        gr
-    })
-
-    # if user gave valid sample_names, use them
-    if (length(sample_names) == length(dataset.list)) {
-        names(dataset.list) <- sample_names
-    } else {
-        names(dataset.list) <- field_names
-    }
-    return(dataset.list)
-}
-
-.check_snames <- function(dataset.list, sample_names) {
-    if (length(sample_names) != length(dataset.list)) {
+.check_snames <- function(n, sample_names) {
+    if (length(sample_names) != n) {
         stop(message = .nicemsg("sample_names are required, and a name is
                                 required for each element of dataset.list"))
         return(geterrmessage())
@@ -209,14 +163,16 @@ getDESeqDataSet <- function(dataset.list, regions.gr,
     }
 }
 
-.check_gnames <- function(regions.gr, gene_names) {
-    if (length(gene_names) != length(regions.gr)) {
+
+.check_gnames <- function(n, gene_names) {
+    if (length(gene_names) != n) {
         stop(message = .nicemsg("gene_names given are not the same length as
                                 regions.gr; gene_names must correspond 1:1 with
                                 the ranges in regions.gr"))
         return(geterrmessage())
     }
 }
+
 
 .get_coldat <- function(sample_names) {
     data.frame(condition = sub("_rep.", "", sample_names),

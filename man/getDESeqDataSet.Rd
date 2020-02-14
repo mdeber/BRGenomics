@@ -7,27 +7,31 @@
 getDESeqDataSet(
   dataset.list,
   regions.gr,
-  sample_names = names(dataset.list),
+  sample_names = NULL,
   gene_names = NULL,
   sizeFactors = NULL,
   field = "score",
+  blacklist = NULL,
   ncores = detectCores(),
   quiet = FALSE
 )
 }
 \arguments{
-\item{dataset.list}{A list of GRanges datasets that can be individually
-passed to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}.
-Alternatively, a \code{\link[BRGenomics:mergeGRangesData]{
-multiplexed GRanges}} object can also be used (see details below).}
+\item{dataset.list}{An object containing GRanges datasets that can be passed
+to \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}},
+typically a list of GRanges objects, or a
+\code{\link[BRGenomics:mergeGRangesData]{ multiplexed GRanges}} object (see
+details below).}
 
 \item{regions.gr}{A GRanges object containing regions of interest.}
 
 \item{sample_names}{Names for each dataset in \code{dataset.list} are
-required, and by default the names of the list elements are used. The names
-must each contain the string "_rep#", where "#" is a single character
-(usually a number) indicating the replicate. Sample names across different
-replicates must be otherwise identical.}
+required. By default (\code{sample_names = NULL}), if \code{dataset.list}
+is a list, the names of the list elements are used; for a multiplexed
+GRanges object, the field names are used. The names must each contain the
+string "_rep#", where "#" is a single character (usually a number)
+indicating the replicate. Sample names across different replicates must be
+otherwise identical.}
 
 \item{gene_names}{An optional character vector giving gene names, or any
 other identifier over which reads should be counted. Gene names are
@@ -40,13 +44,22 @@ the \code{DESeqDataSet} object in this function, or they can be applied
 later on, either by the user or in a call to \code{getDESeqResults}.
 Applying the \code{sizeFactors} later is useful if multiple sets of factors
 will be explored, although \code{sizeFactors} can be overwritten at any
-time.}
+time. Note that DESeq2 \code{sizeFactors} are \emph{not} the same as
+normalization factors defined elsewhere in this package. See details below.}
 
-\item{field}{Argument passed to \code{getCountsByRegions}. Optional if
-\code{dataset.list} is a multiplexed GRanges object (see details below).}
+\item{field}{Argument passed to \code{getCountsByRegions}. Can be used to
+specify fields in a single multiplexed GRanges object, or individual fields
+for each GRanges object in \code{dataset.list}.}
 
-\item{ncores}{Number of cores to use for read counting across all samples.
-By default, all available cores are used.}
+\item{blacklist}{An optional GRanges object containing regions that should be
+excluded from signal counting. Use of this argument is distinct from the
+use of non-contiguous gene regions (see details below), and the two can be
+used simultaneously. Blacklisting doesn't affect the ranges returned as
+rowRanges in the output DESeqDataSet object (unlike the use of
+non-contiguous regions).}
+
+\item{ncores}{Number of cores to use for read counting across all samples. By
+default, all available cores are used.}
 
 \item{quiet}{If \code{TRUE}, all output messages from call to
 \code{\link[DESeq2:DESeqDataSet]{DESeqDataSet}} will be suppressed.}
@@ -66,23 +79,15 @@ regions.
 }
 \section{Use of non-contiguous gene regions}{
  In DESeq2, genes must be defined
-  by single, contiguous chromosomal locations. This function allows
-  individual genes to be encompassed by multiple distinct ranges in
+  by single, contiguous chromosomal locations. In contrast, this function
+  allows individual genes to be encompassed by multiple distinct ranges in
   \code{regions.gr}. To use non-contiguous gene regions, provide
   \code{gene_names} in which some names are duplicated. For each unique gene
   in \code{gene_names}, this function will generate counts across all ranges
   for that gene, but be aware that it will only keep the largest range for
   each gene in the resulting \code{DESeqDataSet} object's \code{rowRanges}.
-}
-
-\section{Using multiplexed GRanges as input}{
- If a single multiplexed GRanges
-  object is used in lieu of a list of GRanges, the default arguments for
-  \code{field} and \code{sample_names} can be left, and \code{sample_names}
-  will match the names of the fields in the input GRanges. If provided,
-  \code{field} will be used to access/subset the multiplexed GRanges object,
-  and thus all elements of \code{field} must be found in
-  \code{names(mcols(dataset.list))}.
+  If the desired use is to blacklist certain sites in a genelist, note that
+  the \code{blacklist} argument can be used.
 }
 
 \section{A note on DESeq2 sizeFactors}{
