@@ -47,6 +47,13 @@
 #'   (\code{metaSubsample}) or rows (\code{metaSubsampleMatrix}) without signal
 #'   should be removed from the analysis. Not recommended if using multiple
 #'   fields, as the gene lists will no longer be equivalent.
+#' @param blacklist An optional GRanges object containing regions that should be
+#'   excluded from signal counting.
+#' @param zero_blacklisted When set to \code{FALSE} (the default), signal at
+#'   blacklisted sites is ignored from computations. If set to \code{TRUE},
+#'   signal at blacklisted sites will be treated as equal to zero. For
+#'   bootstrapping, the default behavior of ignoring signal at blacklisted sites
+#'   should almost always be kept.
 #' @param ncores Number of cores to use for computations.
 #'
 #' @return A dataframe containing x-values, means, lower quantiles, upper
@@ -117,95 +124,56 @@
 NULL
 
 
-
-
 #' @rdname bootstrap-signal-by-position
 #' @export
-#' @importFrom parallel detectCores
-metaSubsample <- function(dataset.gr, regions.gr,
-                          binsize = 1, first.output.xval = 1,
+#' @importFrom parallel detectCores mcMap
+metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
+                          first.output.xval = 1,
                           sample.name = deparse(substitute(dataset.gr)),
-                          n.iter = 1000, prop.sample = 0.1,
-                          lower = 0.125, upper = 0.875,
-                          field = "score", NF = NULL, remove.empty = FALSE,
-                          ncores = detectCores()) {
+                          n.iter = 1000, prop.sample = 0.1, lower = 0.125,
+                          upper = 0.875, field = "score", NF = NULL,
+                          remove.empty = FALSE, blacklist = NULL,
+                          zero_blacklisted = FALSE, ncores = detectCores()) {
+
     .check_regions(regions.gr) # check that all widths are the same
 
-    if (is.list(dataset.gr) | length(field) > 1) {
-        .metasample_multi(dataset.gr, regions.gr, binsize, first.output.xval,
-                          sample.name, n.iter, prop.sample, lower, upper,
-                          field, NF, remove.empty, ncores)
-    } else {
-        .metasample_gr(dataset.gr, regions.gr, binsize, first.output.xval,
-                       sample.name, n.iter, prop.sample, lower, upper,
-                       field, NF, remove.empty, ncores)
-    }
-}
-
-
-.metasample_gr <- function(dataset.gr, regions.gr, binsize, first.output.xval,
-                           sample.name, n.iter, prop.sample, lower, upper,
-                           field, NF, remove.empty, ncores) {
-
-    # Get signal in each bin of each gene --> Matrix of dim = (ngenes, nbins)
-    signal.bins <- getCountsByPositions(dataset.gr = dataset.gr,
-                                        regions.gr = regions.gr,
+    # Signal in each gene; matrix of dim = (ngenes, nbins), or list of matrices
+    signal.bins <- getCountsByPositions(dataset.gr, regions.gr,
                                         binsize = binsize, field = field,
+                                        blacklist = blacklist,
+                                        NA_blacklisted = !zero_blacklisted,
                                         ncores = ncores)
-
-    fun_args <- list(counts.mat = signal.bins, binsize = 1,
-                     sample.name = sample.name, n.iter = n.iter,
-                     prop.sample = prop.sample, lower = lower, upper = upper,
-                     NF = NF, remove.empty = remove.empty, ncores = ncores)
-
-    if (is.null(NF))  fun_args$NF <- 1
-    df <- do.call(metaSubsampleMatrix, fun_args)
-    # fix x-values to match bins, and binsize-normalize the returned values
-    df <- .fixbins(df, binsize, first.output.xval)
-    return(df)
-}
-
-#' @importFrom parallel mcMap
-.metasample_multi <- function(dataset.gr, regions.gr, binsize,
-                              first.output.xval, sample.name, n.iter,
-                              prop.sample, lower, upper, field, NF,
-                              remove.empty, ncores) {
-
-    # Get signal in each bin of each gene --> A list of matrices
-    if (is.list(dataset.gr)) {
-        signal.bins <- mcMap(getCountsByPositions, dataset.gr,
-                             regions.gr = list(regions.gr), binsize = binsize,
-                             field = field, ncores = 1, mc.cores = ncores)
+    if (is.list(signal.bins)) {
+        if (length(sample.name) != length(signal.bins))
+            sample.name <- names(signal.bins)
+        if (length(sample.name) == 0)
+            sample.name <- as.character(seq_along(signal.bins))
+        if (remove.empty)
+            warning("remove.empty set with multiple fields/datasets")
+        ncores_in <- 1
+        ncores_out <- ncores
     } else {
-        signal.bins <- getCountsByPositions(dataset.gr, regions.gr,
-                                            binsize = binsize, field = field,
-                                            ncores = ncores)
+        ncores_in <- ncores
+        ncores_out <- 1
+        signal.bins <- list(signal.bins)
     }
+    if (is.null(NF))  NF <- rep(1L, length(signal.bins))
 
-    if (remove.empty)  warning("remove.empty set with multiple fields/datasets")
-    if (is.null(NF))  NF <- rep(1, length(signal.bins))
-    if (length(sample.name) != length(signal.bins))
-        sample.name <- names(signal.bins)
-    if (length(sample.name) == 0)
-        sample.name <- as.character(seq_along(signal.bins))
-
-    fun_args <- list(binsize = 1, n.iter = n.iter, prop.sample = prop.sample,
-                     lower = lower, upper = upper, remove.empty = remove.empty,
-                     ncores = ncores)
-
-    args_i <- c("counts.mat", "sample.name", "NF")
-    call_fun <- function(mat.i, sample.name.i, NF.i) {
-        fun_args[args_i] <- list(mat.i, sample.name.i, NF.i)
-        do.call(metaSubsampleMatrix, fun_args)
-    }
-
-    dflist <- mcMap(call_fun, signal.bins, sample.name, NF,
-                    mc.cores = ncores, mc.set.seed = FALSE)
+    cl <- mcMap(metaSubsampleMatrix, signal.bins, binsize = 1,
+                sample.name = sample.name, n.iter = n.iter,
+                prop.sample = prop.sample, lower = lower, upper = upper,
+                NF = NF, remove.empty = remove.empty, ncores = ncores_in,
+                mc.cores = ncores_out, mc.set.seed = FALSE)
 
     # fix x-values to match bins, and binsize-normalize the returned values
-    dflist <- lapply(dflist, .fixbins, binsize, first.output.xval)
-    return(do.call(rbind, dflist))
+    if (length(cl) == 1) {
+        .fixbins(cl[[1]], binsize, first.output.xval)
+    } else {
+        cl <- lapply(cl, .fixbins, binsize, first.output.xval)
+        do.call(rbind, cl)
+    }
 }
+
 
 #' @importFrom GenomicRanges width
 .check_regions <- function(regions.gr) {
@@ -224,6 +192,7 @@ metaSubsample <- function(dataset.gr, regions.gr,
         y_vals <- c("mean", "lower", "upper")
         df[, y_vals] <- df[, y_vals] / binsize
     }
+    rownames(df) <- NULL
     return(df)
 }
 

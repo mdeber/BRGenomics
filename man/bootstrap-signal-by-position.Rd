@@ -19,6 +19,8 @@ metaSubsample(
   field = "score",
   NF = NULL,
   remove.empty = FALSE,
+  blacklist = NULL,
+  zero_blacklisted = FALSE,
   ncores = detectCores()
 )
 
@@ -79,6 +81,15 @@ If given, \code{length(NF)} must be equal to \code{length(field)}.}
 (\code{metaSubsample}) or rows (\code{metaSubsampleMatrix}) without signal
 should be removed from the analysis. Not recommended if using multiple
 fields, as the gene lists will no longer be equivalent.}
+
+\item{blacklist}{An optional GRanges object containing regions that should be
+excluded from signal counting.}
+
+\item{zero_blacklisted}{When set to \code{FALSE} (the default), signal at
+blacklisted sites is ignored from computations. If set to \code{TRUE},
+signal at blacklisted sites will be treated as equal to zero. For
+bootstrapping, the default behavior of ignoring signal at blacklisted sites
+should almost always be kept.}
 
 \item{ncores}{Number of cores to use for computations.}
 
