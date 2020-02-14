@@ -13,21 +13,8 @@
     #   (output length = nbins)
     if (missing(nbins))  nbins <- floor(length(x) / binsize)
     if (missing(binsize))  binsize <- floor(length(x) / nbins)
-
-    # bin_breaks <- seq(1, binsize * nbins, binsize)
-    # bin_idx <- findInterval(seq_len(binsize * nbins), bin_breaks)
-    # aggregate(x[seq_len(binsize*nbins)], by = list(bin_idx), FUN = FUN)[, 2]
-
     mat <- matrix(x[seq_len(nbins*binsize)], nrow = binsize)
-
-    fname <- deparse(substitute(FUN))
-    if (fname == "sum") {
-        colSums(mat)
-    } else if (fname == "mean") {
-        colMeans(mat)
-    } else {
-        apply(mat, 2, FUN)
-    }
+    apply(mat, 2, FUN)
 }
 
 
