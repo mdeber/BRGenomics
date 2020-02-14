@@ -10,6 +10,8 @@ getCountsByRegions(
   field = "score",
   NF = NULL,
   blacklist = NULL,
+  melt = FALSE,
+  region_names = NULL,
   ncores = detectCores()
 )
 }
@@ -33,6 +35,16 @@ If given, \code{length(NF)} must be equal to \code{length(field)}.}
 \item{blacklist}{An optional GRanges object containing regions that should be
 excluded from signal counting.}
 
+\item{melt}{If \code{melt = TRUE}, a dataframe is returned containing a
+column for regions and another column for signal. If multiple datasets are
+given (if \code{dataset.gr} is a list or if \code{length(field) > 1}), the
+output dataframe is melted to contain a third column indicating the sample
+names. (See section on return values below).}
+
+\item{region_names}{If \code{melt = TRUE}, an optional vector of names for
+the regions in \code{regions.gr}. If left as \code{NULL}, indices of
+\code{regions.gr} are used instead.}
+
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}
 }
@@ -40,7 +52,12 @@ of multiple datasets, or if \code{length(field) > 1}.}
 An atomic vector the same length as \code{regions.gr} containing the
   sum of the signal overlapping each range of \code{regions.gr}. If
   \code{dataset.gr} is a list of multiple GRanges, or if \code{length(field)
-  > 1}, a dataframe is returned.
+  > 1}, a dataframe is returned. If \code{melt = FALSE} (the default),
+  dataframes have a column for each dataset and a row for each region. If
+  \code{melt = TRUE}, dataframes contain one column to indicate regions
+  (either by their indices, or by \code{region_names}, if given), another
+  column to indicate signal, and a third column containing the sample name
+  (unless \code{dataset.gr} is a single GRanges object).
 }
 \description{
 Get the sum of the signal in \code{dataset.gr} that overlaps each range in

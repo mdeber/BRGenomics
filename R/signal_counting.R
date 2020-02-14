@@ -19,13 +19,26 @@
 #'   If given, \code{length(NF)} must be equal to \code{length(field)}.
 #' @param blacklist An optional GRanges object containing regions that should be
 #'   excluded from signal counting.
+#' @param melt If \code{melt = TRUE}, a dataframe is returned containing a
+#'   column for regions and another column for signal. If multiple datasets are
+#'   given (if \code{dataset.gr} is a list or if \code{length(field) > 1}), the
+#'   output dataframe is melted to contain a third column indicating the sample
+#'   names. (See section on return values below).
+#' @param region_names If \code{melt = TRUE}, an optional vector of names for
+#'   the regions in \code{regions.gr}. If left as \code{NULL}, indices of
+#'   \code{regions.gr} are used instead.
 #' @param ncores Multiple cores will only be used if \code{dataset.gr} is a list
 #'   of multiple datasets, or if \code{length(field) > 1}.
 #'
 #' @return An atomic vector the same length as \code{regions.gr} containing the
 #'   sum of the signal overlapping each range of \code{regions.gr}. If
 #'   \code{dataset.gr} is a list of multiple GRanges, or if \code{length(field)
-#'   > 1}, a dataframe is returned.
+#'   > 1}, a dataframe is returned. If \code{melt = FALSE} (the default),
+#'   dataframes have a column for each dataset and a row for each region. If
+#'   \code{melt = TRUE}, dataframes contain one column to indicate regions
+#'   (either by their indices, or by \code{region_names}, if given), another
+#'   column to indicate signal, and a third column containing the sample name
+#'   (unless \code{dataset.gr} is a single GRanges object).
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -48,10 +61,8 @@
 #'
 #' txs_dm6_chr4[1:6]
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
-                               NF = NULL, blacklist = NULL,
-                               ncores = detectCores()) {
-
-
+                               NF = NULL, blacklist = NULL, melt = FALSE,
+                               region_names = NULL, ncores = detectCores()) {
 
     if (!is.null(blacklist))
         dataset.gr <- .blacklist(dataset.gr, blacklist, ncores)
@@ -60,7 +71,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         NF <- .check_nfs(dataset.gr, NF, field)
         cl <- mcMap(.get_cbr, dataset.gr, list(regions.gr), field, NF,
                     mc.cores = ncores)
-        return(as.data.frame(cl))
+        cl <- as.data.frame(cl)
+        if (melt)  return(.melt_counts(cl, colnames(cl), region_names))
+        return(cl)
     }
 
     # convenience: if field not in dataset.gr, use all fields that are
@@ -70,10 +83,34 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     if (length(field) > 1) {
         cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF)
         names(cl) <- field
-        as.data.frame(cl)
+        cl <- as.data.frame(cl)
+        if (melt)  return(.melt_counts(cl, field, region_names))
+        return(cl)
     } else {
-        .get_cbr(dataset.gr, regions.gr, field, NF)
+        counts <- .get_cbr(dataset.gr, regions.gr, field, NF)
+        if (melt)  return(.melt_counts(counts, snames = NULL, region_names))
+        return(counts)
     }
+}
+
+.melt_counts <- function(df, snames, region_names) {
+
+    if (is.vector(df))  df <- data.frame(df)
+    nr <- nrow(df) # number of regions
+    ns <- ncol(df) # number of samples
+
+    if (is.null(region_names))  region_names <- seq_len(nr)
+
+    if (length(snames) > 1) {
+        df <- data.frame(region = rep(region_names, ns),
+                         signal = unlist(df),
+                         sample = rep(snames, each = nr))
+    } else {
+        df <- data.frame(region = region_names,
+                         signal = unlist(df))
+    }
+    rownames(df) <- NULL
+    df
 }
 
 
@@ -160,6 +197,12 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   \code{dataset.gr}.
 #' @param NF An optional normalization factor by which to multiply the counts.
 #'   If given, \code{length(NF)} must be equal to \code{length(field)}.
+#' @param blacklist An optional GRanges object containing regions that should be
+#'   excluded from signal counting.
+#' @param NA_blacklisted A logical indicating if NA values should be returned
+#'   for blacklisted regions. By default, signal in the blacklisted sites is
+#'   ignored, i.e. the reads are excluded. If \code{NA_blacklisted = TRUE},
+#'   those positions are set to \code{NA} in the final output.
 #' @param melt A logical indicating if the count matrices should be melted. If
 #'   set to \code{TRUE}, a dataframe is returned in containing columns for
 #'   "region", "position", and "signal". If \code{dataset.gr} is a list of
@@ -168,12 +211,6 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   individual sample names. If used with multi-width \code{regions.gr}, the
 #'   resulting dataframe will only contain positions that are found within each
 #'   respective region.
-#' @param blacklist An optional GRanges object containing regions that should be
-#'   excluded from signal counting.
-#' @param NA_blacklisted A logical indicating if NA values should be returned
-#'   for blacklisted regions. By default, signal in the blacklisted sites is
-#'   ignored, i.e. the reads are excluded. If \code{NA_blacklisted = TRUE},
-#'   those positions are set to \code{NA} in the final output.
 #' @param ncores Multiple cores will only be used if \code{dataset.gr} is a list
 #'   of multiple datasets, or if \code{length(field) > 1}.
 #'
@@ -238,8 +275,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  simplify.multi.widths = c("error", "list",
                                                            "pad 0", "pad NA"),
-                                 field = "score", NF = NULL, melt = FALSE,
-                                 blacklist = NULL, NA_blacklisted = FALSE,
+                                 field = "score", NF = NULL, blacklist = NULL,
+                                 NA_blacklisted = FALSE, melt = FALSE,
                                  ncores = detectCores()) {
 
     smw <- match.arg(simplify.multi.widths, c("error", "list",
@@ -399,9 +436,11 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 .meltmw <- function(cl) {
     lens <- lengths(cl)
-    data.frame(region = rep(seq_along(cl), lens),
-               position = unlist(lapply(lens, seq_len)),
-               signal = unlist(cl))
+    df <- data.frame(region = rep(seq_along(cl), lens),
+                     position = unlist(lapply(lens, seq_len)),
+                     signal = unlist(cl))
+    rownames(df) <- NULL
+    df
 }
 
 
@@ -447,6 +486,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     df <- expand.grid( seq_len(nrow(mat)), seq_len(ncol(mat)) )
     df <- cbind(df, data.frame(as.vector(mat)))
     names(df) <- c("position", "region", "signal")
+    rownames(df) <- NULL
     df[, c(2, 1, 3)]
 }
 
@@ -483,12 +523,26 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #'   regions are filtered unless they have promoter signal in all datasets.
 #' @param blacklist An optional GRanges object containing regions that should be
 #'   excluded from signal counting.
+#' @param melt If \code{melt = TRUE}, a dataframe is returned containing a
+#'   column for regions and another column for pausing indices. If multiple
+#'   datasets are given (if \code{dataset.gr} is a list or if
+#'   \code{length(field) > 1}), the output dataframe is melted to contain a
+#'   third column indicating the sample names. (See section on return values
+#'   below).
+#' @param region_names If \code{melt = TRUE}, an optional vector of names for
+#'   the regions in \code{regions.gr}. If left as \code{NULL}, indices of
+#'   \code{regions.gr} are used instead.
 #' @param ncores Multiple cores will only be used if \code{dataset.gr} is a list
 #'   of multiple datasets, or if \code{length(field) > 1}.
 #'
 #' @return A vector parallel to the input genelist, unless \code{remove.empty =
-#'   TRUE}, in which case the vector may be shorter. If \code{length(field) >
-#'   1}, a dataframe is returned, containing a column for each field.
+#'   TRUE}, in which case the vector may be shorter. If \code{dataset.gr} is a
+#'   list, or if \code{length(field) > 1}, a dataframe is returned, containing a
+#'   column for each field. However, if \code{melt = TRUE}, dataframes contain
+#'   one column to indicate regions (either by their indices, or by
+#'   \code{region_names}, if given), another column to indicate signal, and a
+#'   third column containing the sample name (unless \code{dataset.gr} is a
+#'   single GRanges object).
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
@@ -538,6 +592,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                               field = "score", length.normalize = TRUE,
                               remove.empty = FALSE, blacklist = NULL,
+                              melt = FALSE, region_names = NULL,
                               ncores = detectCores()) {
 
     if (length(promoters.gr) != length(genebodies.gr)) {
@@ -557,19 +612,22 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
 
     if (is.list(dataset.gr)) {
         .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                    names(dataset.gr), length.normalize, remove.empty)
+                    names(dataset.gr), length.normalize, remove.empty, melt,
+                    region_names)
+
     } else if (length(field) > 1) {
         .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                    field, length.normalize, remove.empty)
+                    field, length.normalize, remove.empty, melt, region_names)
+
     } else {
         .pidx_single(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                     length.normalize, remove.empty)
+                     length.normalize, remove.empty, melt, region_names)
     }
 }
 
 
 .pidx_single <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                         length.normalize, remove.empty) {
+                         length.normalize, remove.empty, melt, region_names) {
 
     if (length.normalize) {
         counts_pr <- counts_pr / GenomicRanges::width(promoters.gr)
@@ -582,12 +640,26 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         counts_gb <- counts_gb[idx]
     }
 
-    return(counts_pr / counts_gb)
+    pidx <- counts_pr / counts_gb
+
+    if (melt) {
+        if (remove.empty) {
+            if (is.null(region_names)) {
+                region_names <- idx
+            } else {
+                region_names <- region_names[idx]
+            }
+        }
+        pidx <- .melt_counts(pidx, NULL, region_names)
+        colnames(pidx) <- c("region", "pauseIndex")
+    }
+    return(pidx)
 }
 
 
 .pidx_multi <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                        dnames, length.normalize, remove.empty) {
+                        dnames, length.normalize, remove.empty, melt,
+                        region_names) {
 
     if (length.normalize) {
         counts_pr <- .lnorm_multi(counts_pr, promoters.gr, dnames)
@@ -602,7 +674,20 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         counts_gb <- counts_gb[-idx, ]
     }
 
-    return(counts_pr / counts_gb)
+    pidx <- counts_pr / counts_gb
+
+    if (melt) {
+        if (remove.empty) {
+            if (is.null(region_names)) {
+                region_names <- seq_along(promoters.gr)[-idx]
+            } else {
+                region_names <- region_names[-idx]
+            }
+        }
+        pidx <- .melt_counts(pidx, colnames(pidx), region_names)
+        colnames(pidx) <- c("region", "pauseIndex", "sample")
+    }
+    return(pidx)
 }
 
 

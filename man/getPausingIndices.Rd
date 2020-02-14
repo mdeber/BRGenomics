@@ -12,6 +12,8 @@ getPausingIndices(
   length.normalize = TRUE,
   remove.empty = FALSE,
   blacklist = NULL,
+  melt = FALSE,
+  region_names = NULL,
   ncores = detectCores()
 )
 }
@@ -45,13 +47,29 @@ regions are filtered unless they have promoter signal in all datasets.}
 \item{blacklist}{An optional GRanges object containing regions that should be
 excluded from signal counting.}
 
+\item{melt}{If \code{melt = TRUE}, a dataframe is returned containing a
+column for regions and another column for pausing indices. If multiple
+datasets are given (if \code{dataset.gr} is a list or if
+\code{length(field) > 1}), the output dataframe is melted to contain a
+third column indicating the sample names. (See section on return values
+below).}
+
+\item{region_names}{If \code{melt = TRUE}, an optional vector of names for
+the regions in \code{regions.gr}. If left as \code{NULL}, indices of
+\code{regions.gr} are used instead.}
+
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}
 }
 \value{
 A vector parallel to the input genelist, unless \code{remove.empty =
-  TRUE}, in which case the vector may be shorter. If \code{length(field) >
-  1}, a dataframe is returned, containing a column for each field.
+  TRUE}, in which case the vector may be shorter. If \code{dataset.gr} is a
+  list, or if \code{length(field) > 1}, a dataframe is returned, containing a
+  column for each field. However, if \code{melt = TRUE}, dataframes contain
+  one column to indicate regions (either by their indices, or by
+  \code{region_names}, if given), another column to indicate signal, and a
+  third column containing the sample name (unless \code{dataset.gr} is a
+  single GRanges object).
 }
 \description{
 Pausing index (PI) is calculated for each gene (within matched

@@ -12,9 +12,9 @@ getCountsByPositions(
   simplify.multi.widths = c("error", "list", "pad 0", "pad NA"),
   field = "score",
   NF = NULL,
-  melt = FALSE,
   blacklist = NULL,
   NA_blacklisted = FALSE,
+  melt = FALSE,
   ncores = detectCores()
 )
 }
@@ -44,6 +44,14 @@ output for generated each field. If \code{field} not found in
 \item{NF}{An optional normalization factor by which to multiply the counts.
 If given, \code{length(NF)} must be equal to \code{length(field)}.}
 
+\item{blacklist}{An optional GRanges object containing regions that should be
+excluded from signal counting.}
+
+\item{NA_blacklisted}{A logical indicating if NA values should be returned
+for blacklisted regions. By default, signal in the blacklisted sites is
+ignored, i.e. the reads are excluded. If \code{NA_blacklisted = TRUE},
+those positions are set to \code{NA} in the final output.}
+
 \item{melt}{A logical indicating if the count matrices should be melted. If
 set to \code{TRUE}, a dataframe is returned in containing columns for
 "region", "position", and "signal". If \code{dataset.gr} is a list of
@@ -52,14 +60,6 @@ returned, which contains an additional column "sample", which contains
 individual sample names. If used with multi-width \code{regions.gr}, the
 resulting dataframe will only contain positions that are found within each
 respective region.}
-
-\item{blacklist}{An optional GRanges object containing regions that should be
-excluded from signal counting.}
-
-\item{NA_blacklisted}{A logical indicating if NA values should be returned
-for blacklisted regions. By default, signal in the blacklisted sites is
-ignored, i.e. the reads are excluded. If \code{NA_blacklisted = TRUE},
-those positions are set to \code{NA} in the final output.}
 
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}

@@ -23,6 +23,13 @@ test_that("signal counts correct returns correct vector", {
     expect_equivalent(test_counts[1:4], c(1, 58, 13, 125))
 })
 
+test_that("melt option works for single sample", {
+    mcounts <- getCountsByRegions(PROseq, txs_dm6_chr4, melt = TRUE, ncores = 1)
+    expect_is(mcounts, "data.frame")
+    expect_equivalent(names(mcounts), c("region", "signal"))
+    expect_equivalent(mcounts$signal, test_counts)
+})
+
 ps_rename <- PROseq
 names(mcols(ps_rename)) <- "signal"
 
@@ -42,8 +49,9 @@ test_that("signal counts work over multiple metadata fields", {
     expect_equivalent(counts_multiple$signal, test_counts)
 })
 
+countsl <- getCountsByRegions(ps_list, txs_dm6_chr4, ncores = 2)
+
 test_that("signal counting works over a list", {
-    countsl <- getCountsByRegions(ps_list, txs_dm6_chr4, ncores = 2)
     expect_is(countsl, "data.frame")
     expect_equal(names(ps_list), names(countsl))
     expect_equal(nrow(countsl), length(txs_dm6_chr4))
@@ -54,6 +62,15 @@ test_that("signal counting works over a list", {
     expect_equivalent(countslnf, as.data.frame(Map("*", countsl, 1:6)))
 })
 
+test_that("melt option works for list", {
+    mcountsl <- getCountsByRegions(ps_list, txs_dm6_chr4, melt = TRUE,
+                                   ncores = 2)
+    expect_is(mcountsl, "data.frame")
+    expect_equivalent(names(mcountsl), c("region", "signal", "sample"))
+    expect_equivalent(subset(mcountsl, sample == "B_rep1")$signal,
+                      countsl[, "B_rep1"])
+})
+
 test_that("error if NFs given don't match input", {
     expect_error(getCountsByRegions(ps_list, txs_dm6_chr4, NF = 1:5,
                                     ncores = 2))
@@ -62,8 +79,9 @@ test_that("error if NFs given don't match input", {
                                     NF = 1, ncores = 2))
 })
 
+bl <- txs_dm6_chr4[2]
+
 test_that("blacklisting works", {
-    bl <- txs_dm6_chr4[2]
     blcounts <- getCountsByRegions(PROseq, txs_dm6_chr4, blacklist = bl)
 
     test_bl <- test_counts
@@ -193,6 +211,14 @@ test_that("melting option works", {
 test_that("error on incorrect simplify argument", {
     expect_error(getCountsByPositions(PROseq, txs_dm6_chr4,
                                       simplify.multi.widths = "notright"))
+
+    # can't set argument if not multiwidth (not my ideal...)
+    expect_error(getCountsByPositions(PROseq, txs_pr,
+                                      simplify.multi.widths = "list"))
+})
+
+test_that("error on empty regions", {
+    expect_error(getCountsByPositions(PROseq, txs_pr[0], ncores = 1))
 })
 
 test_that("can perform arbitrary binning operations on count matrix", {
@@ -213,6 +239,35 @@ test_that("can perform arbitrary binning operations on count matrix", {
     expect_false(all(rowSums(binmedians) == 0))
     expect_false(all((binmedians == 0) == (binmeans == 0)))
 })
+
+test_that("blacklisting works", {
+    blcbp <- getCountsByPositions(PROseq, txs_pr, blacklist = bl)
+
+    test_bl <- countsmat
+    test_bl[2,] <- 0
+    expect_equivalent(blcbp, test_bl)
+
+    blcbpna <- getCountsByPositions(PROseq, txs_pr, blacklist = bl,
+                                    NA_blacklisted = TRUE)
+    expect_true(all(is.na(blcbpna[2,])))
+})
+
+
+test_that("multiwidth, blacklisting over list works", {
+    blcl <- getCountsByPositions(PROseq, txs_dm6_chr4, blacklist = bl,
+                                 simplify.multi.widths = "list")
+    expect_is(blcl, "list")
+    expect_true(all(blcl[[2]] == 0))
+
+    blclna <- getCountsByPositions(PROseq, txs_dm6_chr4, blacklist = bl,
+                                   simplify.multi.widths = "list",
+                                   NA_blacklisted = TRUE)
+    expect_true(all(is.na(blclna[[2]])))
+    expect_equivalent(blcl[[1]], blclna[[1]])
+    expect_equivalent(blcl[[3]], blclna[[3]])
+})
+
+
 
 # Calculating pause indices -----------------------------------------------
 
@@ -245,6 +300,13 @@ test_that("remove.empty works", {
                  length( which(getCountsByRegions(PROseq, txs_pr) != 0) ))
 })
 
+test_that("melt option works for single dataset", {
+    mpidx <- getPausingIndices(PROseq, txs_pr, txs_gb, melt = TRUE)
+    expect_is(mpidx, "data.frame")
+    expect_equivalent(names(mpidx), c("region", "pauseIndex"))
+    expect_equivalent(mpidx$pauseIndex, pidx)
+})
+
 test_that("can get pause indices over multiple fields", {
     pidx_multi <- getPausingIndices(ps_rename, txs_pr, txs_gb,
                                     field = c("signal", "posnum"),
@@ -262,8 +324,9 @@ test_that("can get pause indices over multiple fields", {
     expect_equivalent(pidx_multi_re[, 1], pidx_re)
 })
 
+pidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, ncores = 2)
+
 test_that("can get pause indices for a list", {
-    pidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, ncores = 2)
     expect_is(pidxl, "data.frame")
     expect_equivalent(colnames(pidxl), names(ps_list))
     expect_equal(nrow(pidxl), length(txs_pr))
@@ -273,5 +336,27 @@ test_that("can get pause indices for a list", {
                                   ncores = 2)
     expect_equal(nrow(pidxl_re), 189)
 })
+
+test_that("melt option works for a list", {
+    mpidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, melt = TRUE,
+                                ncores = 2)
+    expect_is(mpidxl, "data.frame")
+    expect_equivalent(names(mpidxl), c("region", "pauseIndex", "sample"))
+    expect_equivalent(subset(mpidxl, sample == "B_rep1")$pauseIndex,
+                      pidxl[, "B_rep1"])
+})
+
+test_that("blacklisting works", {
+    blpidx <- getPausingIndices(PROseq, txs_pr, txs_gb, blacklist = bl)
+    expect_true(is.finite(pidx[2]))
+    expect_true(!is.finite(blpidx[2]))
+})
+
+
+
+
+
+
+
 
 
