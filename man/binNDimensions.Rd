@@ -33,9 +33,13 @@ for each dimension of input data given.}
 \item{ncores}{Number of cores to use for computations.}
 
 \item{x}{The name of the dimension in \code{dims.df} to aggregate, or a
-separate numerical vector of data to be aggregated. If a numerical vector
-is given, each value in \code{x} corresponds to a row of \code{dims.df},
-and so \code{length(x)} must be equal to \code{nrow(dims.df)},}
+separate numerical vector or dataframe of data to be aggregated. If
+\code{x} is a numerical vector, each value in \code{x} corresponds to a row
+of \code{dims.df}, and so \code{length(x)} must be equal to
+\code{nrow(dims.df)}. Likewise, if \code{x} is a dataframe, \code{nrow(x)}
+must equal \code{nrow(dims.df)}. Supplying a dataframe for \code{x} has the
+advantage of simultaneously aggregating different sets of data, and
+returning a single dataframe.}
 
 \item{FUN}{A function to use for aggregating data within each bin.}
 
@@ -76,8 +80,10 @@ These functions take in data along 1 or more dimensions, and for
   each combination of bins, i.e. in each n-dimensional bin. Each row of the
   output dataframe is a unique combination of the input bins (i.e. each
   n-dimensional bin), and the output columns are identical to those in
-  \code{dims.df}, with the addition of a "value" column containing the
-  aggregated \code{x} data in that n-dimensional bin.
+  \code{dims.df}, with the addition of one or more columns containing the
+  aggregated data in each n-dimensional bin. If the input \code{x} was a
+  vector, the column is named "value"; if the input \code{x} was a dataframe,
+  the column names from \code{x} are maintained.
 
   \code{densityInNdimensionalBins} returns a dataframe just like
   \code{aggregateByNdimensionalBins}, except the "value" column contains the
@@ -103,7 +109,7 @@ df <- data.frame(counts_pr = getCountsByRegions(PROseq, pr),
 # divide genes into 20 bins for each measurement
 #--------------------------------------------------#
 
-bin3d <- binNdimensions(df, nbins = 20)
+bin3d <- binNdimensions(df, nbins = 20, ncores = 2)
 
 length(txs_dm6_chr4)
 nrow(bin3d)
@@ -113,7 +119,8 @@ bin3d[1:6, ]
 # get number of genes in each bin
 #--------------------------------------------------#
 
-bin_counts <- densityInNdimensionalBins(df, nbins = 20)
+bin_counts <- densityInNdimensionalBins(df, nbins = 20,
+                                        ncores = 2)
 
 bin_counts[1:6, ]
 
@@ -121,7 +128,8 @@ bin_counts[1:6, ]
 # get mean cps reads in bins of promoter and genebody reads
 #--------------------------------------------------#
 
-bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20)
+bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df,
+                                         nbins = 20, ncores = 2)
 
 bin2d_cps[1:6, ]
 
@@ -132,7 +140,7 @@ subset(bin2d_cps, is.finite(value))[1:6, ]
 #--------------------------------------------------#
 
 bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
-                                             FUN = median)
+                                             FUN = median, ncores = 2)
 
 bin2d_cps_med[1:6, ]
 

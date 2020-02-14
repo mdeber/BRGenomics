@@ -17,7 +17,7 @@ counts_gb <- counts_gb[idx]
 df <- data.frame(pr = counts_pr, gb = counts_gb)
 
 test_that("names given in input are used in output", {
-    bin_deciles <- binNdimensions(df, nbins = 10)
+    bin_deciles <- binNdimensions(df, nbins = 10, ncores = 2)
     expect_equivalent(names(bin_deciles), c("bin.pr", "bin.gb"))
 })
 
@@ -26,9 +26,9 @@ pidx <- counts_pr / counts_gb
 test_that("can use different nbins for different dimensions", {
     df3 <- data.frame(counts_pr, counts_gb, pidx)
 
-    expect_is(binNdimensions(df3), "data.frame")
-    expect_error(binNdimensions(df3, nbins = c(10, 15)))
-    bin_3d <- binNdimensions(df3, nbins = c(10, 15, 20))
+    expect_is(binNdimensions(df3, ncores = 2), "data.frame")
+    expect_error(binNdimensions(df3, nbins = c(10, 15), ncores = 2))
+    bin_3d <- binNdimensions(df3, nbins = c(10, 15, 20), ncores = 2)
     expect_is(bin_3d, "data.frame")
     expect_equivalent(sapply(bin_3d, max), c(10, 15, 20))
 })
@@ -44,8 +44,13 @@ test_that("can aggregate in ndimensional bins", {
     expect_equal(names(mean_bins), c("bin.pr", "bin.gb", "value"))
     expect_equal(round(mean_bins$value[1]), 139)
     expect_equal(sum(is.na(mean_bins$value)), 21)
-})
 
+    # test using x = column name
+    dfplus <- df
+    dfplus$agvar <- seq_len(nrow(df))
+    mbinsp <- aggregateByNdimensionalBins("agvar", dfplus, ncores = 2)
+    expect_identical(mean_bins, mbinsp)
+})
 
 test_that("can modify function and default output values", {
     sum_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
@@ -59,6 +64,20 @@ test_that("can modify function and default output values", {
     expect_equal(sum_bins2$value[3], 0)
 })
 
+test_that("can separate 'empty NAs' from 'output NAs'", {
+    # the key here is not dropping empty bins; not setting empty bins to NA; and
+    # not ignoring NA values returned from FUN -> there's unique method dispatch
+    # here because we need to keep NAs returned by aggregate
+    sd_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sd,
+                                           ignore.na = FALSE, empty = 3.14159,
+                                           ncores = 1)
+    sd_bins2 <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sd,
+                                            ignore.na = FALSE, empty = 0,
+                                            ncores = 1)
+    idx_empty <- which(sd_bins$value == 3.14159)
+    expect_true(all(sd_bins2$value[idx_empty] == 0))
+    expect_equivalent(sd_bins$value[-idx_empty], sd_bins2$value[-idx_empty])
+})
 
 # Test density ------------------------------------------------------------
 

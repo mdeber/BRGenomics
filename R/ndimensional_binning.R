@@ -9,9 +9,13 @@
 #' summarize the datapoints that fall into any of these n-dimensional bins.
 #'
 #' @param x The name of the dimension in \code{dims.df} to aggregate, or a
-#'   separate numerical vector of data to be aggregated. If a numerical vector
-#'   is given, each value in \code{x} corresponds to a row of \code{dims.df},
-#'   and so \code{length(x)} must be equal to \code{nrow(dims.df)},
+#'   separate numerical vector or dataframe of data to be aggregated. If
+#'   \code{x} is a numerical vector, each value in \code{x} corresponds to a row
+#'   of \code{dims.df}, and so \code{length(x)} must be equal to
+#'   \code{nrow(dims.df)}. Likewise, if \code{x} is a dataframe, \code{nrow(x)}
+#'   must equal \code{nrow(dims.df)}. Supplying a dataframe for \code{x} has the
+#'   advantage of simultaneously aggregating different sets of data, and
+#'   returning a single dataframe.
 #' @param dims.df A dataframe containing one or more columns of numerical data
 #'   for which bins will be generated.
 #' @param nbins Either a number giving the number of bins to use for all
@@ -47,8 +51,10 @@
 #'   each combination of bins, i.e. in each n-dimensional bin. Each row of the
 #'   output dataframe is a unique combination of the input bins (i.e. each
 #'   n-dimensional bin), and the output columns are identical to those in
-#'   \code{dims.df}, with the addition of a "value" column containing the
-#'   aggregated \code{x} data in that n-dimensional bin.
+#'   \code{dims.df}, with the addition of one or more columns containing the
+#'   aggregated data in each n-dimensional bin. If the input \code{x} was a
+#'   vector, the column is named "value"; if the input \code{x} was a dataframe,
+#'   the column names from \code{x} are maintained.
 #'
 #'   \code{densityInNdimensionalBins} returns a dataframe just like
 #'   \code{aggregateByNdimensionalBins}, except the "value" column contains the
@@ -77,7 +83,7 @@
 #' # divide genes into 20 bins for each measurement
 #' #--------------------------------------------------#
 #'
-#' bin3d <- binNdimensions(df, nbins = 20)
+#' bin3d <- binNdimensions(df, nbins = 20, ncores = 2)
 #'
 #' length(txs_dm6_chr4)
 #' nrow(bin3d)
@@ -87,7 +93,8 @@
 #' # get number of genes in each bin
 #' #--------------------------------------------------#
 #'
-#' bin_counts <- densityInNdimensionalBins(df, nbins = 20)
+#' bin_counts <- densityInNdimensionalBins(df, nbins = 20,
+#'                                         ncores = 2)
 #'
 #' bin_counts[1:6, ]
 #'
@@ -95,7 +102,8 @@
 #' # get mean cps reads in bins of promoter and genebody reads
 #' #--------------------------------------------------#
 #'
-#' bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20)
+#' bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df,
+#'                                          nbins = 20, ncores = 2)
 #'
 #' bin2d_cps[1:6, ]
 #'
@@ -106,7 +114,7 @@
 #' #--------------------------------------------------#
 #'
 #' bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
-#'                                              FUN = median)
+#'                                              FUN = median, ncores = 2)
 #'
 #' bin2d_cps_med[1:6, ]
 #'
@@ -158,20 +166,25 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
         dims.df <- dims.df[idx, ]
     }
 
+    if (is.vector(x)) {
+        valdf <- data.frame(value = x)
+    } else {
+        valdf <- x # if x is a dataframe, keep the original names
+    }
+
     # get bins for data
     bins.df <- binNdimensions(dims.df, nbins, ncores)
 
     if (!drop && !is.na(empty) && !ignore.na) {
         # only for this combination of arguments do we need to differentiate the
         # NAs that are returned by FUN from the NAs that result from empty bins
-        .aggbins_sep_inout_na(x, bins.df, FUN, ..., empty)
+        .aggbins_sep_inout_na(x, bins.df, FUN, ..., empty = empty)
 
     } else {
         ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = FUN,
                              ..., drop = drop)
         if (!is.na(empty))  ag.bins$value[is.na(ag.bins$value)] <- empty
         return(ag.bins)
-
     }
 }
 
@@ -183,6 +196,12 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
 
 #' @importFrom S4Vectors pc
 .aggbins_sep_inout_na <- function(x, bins.df, FUN, ..., empty) {
+    # aggregate returns NA for empty bins; but FUN can also return NAs;
+    # if we're not ignoring NA values returned by FUN, AND we're not dropping
+    # empty bins, AND we're not setting empty bins to NA, we need to
+    # independently identify which bins are empty, and set them to the value
+    # given by 'empty' (because is.na() will identify bins which are empty,
+    # as well as bins for which FUN returned NA)
 
     # get all combinations of bins
     bin_comb <- lapply(bins.df, function(x) sort(unique(x)))
