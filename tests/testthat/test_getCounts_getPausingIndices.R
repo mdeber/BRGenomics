@@ -347,7 +347,8 @@ test_that("melt option works for a list", {
 })
 
 test_that("blacklisting works", {
-    blpidx <- getPausingIndices(PROseq, txs_pr, txs_gb, blacklist = bl)
+    blpidx <- getPausingIndices(PROseq, txs_pr, txs_gb, blacklist = bl,
+                                ncores = 2)
     expect_true(is.finite(pidx[2]))
     expect_true(!is.finite(blpidx[2]))
 
