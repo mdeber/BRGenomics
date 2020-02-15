@@ -350,9 +350,13 @@ test_that("blacklisting works", {
     blpidx <- getPausingIndices(PROseq, txs_pr, txs_gb, blacklist = bl)
     expect_true(is.finite(pidx[2]))
     expect_true(!is.finite(blpidx[2]))
+
+    # with a list
+    blpidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, blacklist = bl,
+                                 ncores = 2)
+    expect_true(identical(blpidxl[1,], pidxl[1,]))
+    expect_true(!identical(blpidxl[2,], pidxl[2,]))
 })
-
-
 
 
 

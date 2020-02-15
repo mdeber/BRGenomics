@@ -45,7 +45,10 @@ is recommended, especially if input regions don't all have the same width.}
 regions are filtered unless they have promoter signal in all datasets.}
 
 \item{blacklist}{An optional GRanges object containing regions that should be
-excluded from signal counting.}
+excluded from signal counting. If \code{length.normalize = TRUE},
+blacklisted positions will be excluded from length calculations. Users
+should take care to note if regions of interest substantially overlap
+blacklisted positions.}
 
 \item{melt}{If \code{melt = TRUE}, a dataframe is returned containing a
 column for regions and another column for pausing indices. If multiple

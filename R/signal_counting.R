@@ -522,7 +522,10 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #'   \code{dataset.gr} is a list of datasets, or if \code{length(field) > 1},
 #'   regions are filtered unless they have promoter signal in all datasets.
 #' @param blacklist An optional GRanges object containing regions that should be
-#'   excluded from signal counting.
+#'   excluded from signal counting. If \code{length.normalize = TRUE},
+#'   blacklisted positions will be excluded from length calculations. Users
+#'   should take care to note if regions of interest substantially overlap
+#'   blacklisted positions.
 #' @param melt If \code{melt = TRUE}, a dataframe is returned containing a
 #'   column for regions and another column for pausing indices. If multiple
 #'   datasets are given (if \code{dataset.gr} is a list or if
@@ -601,8 +604,15 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         return(geterrmessage())
     }
 
-    if (!is.null(blacklist))
+    dwidth <- NULL
+    if (!is.null(blacklist)) {
         dataset.gr <- .blacklist(dataset.gr, blacklist, ncores)
+        if (length.normalize) {
+            # count blacklisted bases in each region
+            dwidth <- mclapply(list(promoters.gr, genebodies.gr),
+                               .get_dwidth, blacklist, mc.cores = ncores)
+        }
+    }
 
     # vectors for single dataset; dataframes for lists or multiple fields
     counts_pr <- getCountsByRegions(dataset.gr, promoters.gr, field = field,
@@ -613,25 +623,41 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
     if (is.list(dataset.gr)) {
         .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
                     names(dataset.gr), length.normalize, remove.empty, melt,
-                    region_names)
+                    region_names, dwidth)
 
     } else if (length(field) > 1) {
         .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                    field, length.normalize, remove.empty, melt, region_names)
+                    field, length.normalize, remove.empty, melt, region_names,
+                    dwidth)
 
     } else {
         .pidx_single(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                     length.normalize, remove.empty, melt, region_names)
+                     length.normalize, remove.empty, melt, region_names, dwidth)
     }
 }
 
 
+.get_dwidth <- function(regions, blacklist) {
+    dwidth <- rep(0L, length(regions))
+    hits <- findOverlaps(regions, blacklist)
+    bloverlap <- pintersect(regions[hits@from], blacklist[hits@to])
+    dwidth[hits@from] <- width(bloverlap)
+    dwidth
+}
+
 .pidx_single <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
-                         length.normalize, remove.empty, melt, region_names) {
+                         length.normalize, remove.empty, melt, region_names,
+                         dwidth) {
 
     if (length.normalize) {
-        counts_pr <- counts_pr / GenomicRanges::width(promoters.gr)
-        counts_gb <- counts_gb / GenomicRanges::width(genebodies.gr)
+        pwidths <- GenomicRanges::width(promoters.gr)
+        gwidths <- GenomicRanges::width(genebodies.gr)
+        if (!is.null(dwidth)) {
+            pwidths <- pwidths - dwidth[[1]]
+            gwidths <- gwidths - dwidth[[2]]
+        }
+        counts_pr <- counts_pr / pwidths
+        counts_gb <- counts_gb / gwidths
     }
 
     if (remove.empty) {
@@ -656,14 +682,14 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
     return(pidx)
 }
 
-
 .pidx_multi <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
                         dnames, length.normalize, remove.empty, melt,
-                        region_names) {
+                        region_names, dwidth) {
 
     if (length.normalize) {
-        counts_pr <- .lnorm_multi(counts_pr, promoters.gr, dnames)
-        counts_gb <- .lnorm_multi(counts_gb, genebodies.gr, dnames)
+        if (is.null(dwidth)) dwidth <- list(NULL, NULL)
+        counts_pr <- .lnorm_multi(counts_pr, promoters.gr, dnames, dwidth[[1]])
+        counts_gb <- .lnorm_multi(counts_gb, genebodies.gr, dnames, dwidth[[2]])
     }
 
     if (remove.empty) {
@@ -691,8 +717,10 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
 }
 
 
-.lnorm_multi <- function(counts, regions, dnames) {
-    counts <- lapply(counts, "/", GenomicRanges::width(regions))
+.lnorm_multi <- function(counts, regions, dnames, dwidth.i) {
+    widths.i <- GenomicRanges::width(regions)
+    if (!is.null(dwidth.i))  widths.i <- widths.i - dwidth.i
+    counts <- lapply(counts, "/", widths.i)
     counts <- as.data.frame(counts)
     names(counts) <- dnames
     return(counts)
