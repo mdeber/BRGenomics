@@ -20,7 +20,7 @@ vignette: |
 
 This package is designed to:
 
-* Replace the use of command-line utilities for typical post-alignment processing, e.g. `bedtools` and `deeptools`
+* Replace the use of command-line utilities for most post-alignment processing, e.g. `bedtools` and `deeptools`
 * Be easy-to-use and easy-to-install, without requiring external dependencies, e.g. `hitslib` or the kent source utilities from the UCSC genome browser
 * Allow users to string together common analysis pipelines with simple, fast-running one-liners
 * Avoid code repetition by providing tested and validated code
@@ -31,30 +31,29 @@ This package is designed to:
 
 # Features
 
-* Process and import bam files quickly and easily; or import existing bedGraph or bigWig files
+* Process and import bedGraoh, bigWig, and bam files quickly and easily, with several pre-configured defaults for typical uses
+* Count and filter spike-in reads
+* Calculate spike-in normalization factors using several methods and options, including options for batch normalization
 * Count reads by regions of interest
-* Counts reads at positions within regions of interest, at single-base resolution or in larger bins, and generate count matrices for heatmapping
+* Count reads at positions within regions of interest, at single-base resolution or in larger bins, and generate count matrices for heatmapping
 * Calculate bootstrapped signal (e.g. readcount) profiles with confidence intervals (i.e. meta-profiles)
 * Modify gene regions (e.g. extract promoters or genebody regions) using a single simple and straightforward function
 * Conveniently, efficiently, and _correctly_ call `DESeq2` to calculate differential expression between numerous _pairs_ of samples^[By avoiding the default behavior of calculating genewise dispersion across all samples present, which is invalid if any experimental condition causes broad changes]
   + Use non-contiguous genes in `DESeq2` analysis, e.g. to exclude of specific sites/peaks from the analysis (not usually supported by DESeq2)
   + Efficiently generate results across a list of comparisons
+* Support for blacklisting throughout, and proper accounting of blacklisted sites in relevant calculations
 * Users interact with an intuitive and computationally efficient data structure (the "basepair resolution `GRanges`" object), which is already supported by a rich, user-friendly suite of tools that greatly simplify working with datasets and annotations
 
 ### Coming Soon
 
 Data processing:
 
-* UMI deduplification
-* Separating and counting spike-in reads
-* Generating normalization factors, including several distinct and meaningful methods for calculating spike-in normalization factors
 * Summarizing and plotting replicate correlations
 * Function to use random read sampling to assess if sequencing depth sufficient to stabilize arbitrary calculations (so a user can supply anonymous function to calculate things like RMP-normalized gene expression, or DESeq2 differential expression, pausing indices, etc.)
 
 Signal counting and analysis:
 
 * Two-stranded meta-profile calculations
-* Support for region black-listing in generating signal matrices and in meta-profiling, and increased support in DESeq2 functions
 * Automated generation of a list of DESeq2 comparisons using all possible combinations; all possible permutations; or by defining a simple hierarchy of each-vs-one comparisons
 
 # Installation

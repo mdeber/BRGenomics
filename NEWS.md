@@ -1,3 +1,30 @@
+## BRGenomics 0.7.5
+
+* Update bootstrapping functions
+    + Add blacklisting support for `metaSubsample`
+    + Related to blacklisting, NA values now ignored in bootstrapping
+* Add additional `melt` options for signal counting functions
+* Further expanded support for list inputs (lists of GRanges datasets), including in `getStrandedCoverage`
+* Add explicit support for blacklisting in `getDESeqDataSet`
+* Rewrite n-dimensional binning functions, and add function for aggregating data within n-dimensional bins
+    + Changed arguments in `binNdimensions` to only accept dataframe inputs
+    + Add `densityInNdimensionalBins` function to count points in each bin
+    + Add `aggregateByNdimensionalBins` function to aggregate data within bins using arbitrary functions
+* Added arguments for setting sample names in spike-in/normalization functions
+* Various improvements and streamlining for method dispatch and flexibility
+
+## BRGenomics 0.7.0
+
+* Added functions for counting and filtering spike-in reads
+* Added functions for generating spike-in normalization factors
+* Added support for lists of GRanges datasets throughout, including all signal counting functions
+* Updating signal counting functions with a `blacklist` argument, for ignoring reads from user-supplied regions
+* Added wrappers for `import_bam` for several common use cases
+* Update `getCountsByPositions`: 
+    + Added a `melt` option for returning melted dataframes
+    + Now returns an error by default if multi-width regions are given (must be explicit) 
+* Changed argument order in `getMaxPositionsBySignal`
+
 ## BRGenomics 0.5.6
 
 * Update `import_bam` function
@@ -5,7 +32,7 @@
     + Added the `shift` argument
 * Made `metaSubsample` functions robust to unevaluated inputs 
 * Small performance improvement to `genebodies` function
-* Return multicore as default for `getDESeqResults`
+* Multicore usage is again the default for `getDESeqResults`
 
 ## BRGenomics 0.5.3
 
