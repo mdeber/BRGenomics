@@ -379,8 +379,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     } else {
         # check is necessary because NA_blacklisting would fail otherwise, but
-        # will give error in every case to not confuse users if they discover other
-        # conditions when the error isn't returned
+        # will give error in every case to not confuse users if they discover
+        # other conditions when the error isn't returned
         if (smw != "error") {
             stop(message = .nicemsg("simplify.multi.widths changed from default,
                                     but regions.gr is not multiwidth"))
