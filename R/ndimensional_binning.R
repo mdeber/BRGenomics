@@ -153,23 +153,22 @@ binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
 aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
                                         ignore.na = TRUE, drop = FALSE,
                                         empty = NA, ncores = detectCores()) {
-
     if (is.character(x))  {
         colx <- which(names(dims.df) == x)
         x <- dims.df[, colx]
         dims.df <- dims.df[, -colx]
     }
-
     if (ignore.na) {
         idx <- !is.na(x)
         x <- x[idx]
         dims.df <- dims.df[idx, ]
     }
 
+    # if x is a dataframe, keep the original names
     if (is.vector(x)) {
-        valdf <- data.frame(value = x)
+        x.df <- data.frame(value = x)
     } else {
-        valdf <- x # if x is a dataframe, keep the original names
+        x.df <- x
     }
 
     # get bins for data
@@ -178,24 +177,22 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     if (!drop && !is.na(empty) && !ignore.na) {
         # only for this combination of arguments do we need to differentiate the
         # NAs that are returned by FUN from the NAs that result from empty bins
-        .aggbins_sep_inout_na(x, bins.df, FUN, ..., empty = empty)
+        .aggbins_sep_inout_na(x.df, bins.df, FUN, ..., empty = empty)
 
     } else {
-        ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = FUN,
-                             ..., drop = drop)
-        if (!is.na(empty))  ag.bins$value[is.na(ag.bins$value)] <- empty
-        return(ag.bins)
+        ag.bins <- aggregate(x.df, by = bins.df, FUN = FUN, ..., drop = drop)
+        if (!is.na(empty)) {
+            dnames <- names(x.df)
+            e.idx <- which(is.na(ag.bins[, dnames]), arr.ind = TRUE)
+            ag.bins[, dnames][e.idx] <- empty
+        }
+        ag.bins
     }
 }
 
-# make list of vectors of dimension values for used bins and all possible
-# .col_comb <- function(df) lapply(seq_len(nrow(df)),
-#                                  function(x) as.matrix(df)[x, ])
-# usedbins <- .col_comb(ag.bins[, -ncol(ag.bins)])
-# allbins <- .col_comb(df)
 
 #' @importFrom S4Vectors pc
-.aggbins_sep_inout_na <- function(x, bins.df, FUN, ..., empty) {
+.aggbins_sep_inout_na <- function(x.df, bins.df, FUN, ..., empty) {
     # aggregate returns NA for empty bins; but FUN can also return NAs;
     # if we're not ignoring NA values returned by FUN, AND we're not dropping
     # empty bins, AND we're not setting empty bins to NA, we need to
@@ -203,24 +200,25 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     # given by 'empty' (because is.na() will identify bins which are empty,
     # as well as bins for which FUN returned NA)
 
-    # get all combinations of bins
+    # aggregate in non-empty bins
+    ag.bins <- aggregate(x.df, by = bins.df, FUN = FUN, ..., drop = TRUE)
+
+    # get all possible combinations of bins
     bin_comb <- lapply(bins.df, function(x) sort(unique(x)))
     df <- expand.grid(bin_comb)
 
-    # aggregate in non-empty bins
-    ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = FUN, ...,
-                         drop = TRUE)
-
-    # make list of vectors of dimension values for used bins
-    usedbins <- do.call(pc, as.list(ag.bins[-ncol(ag.bins)]))
-    allbins <- do.call(pc, as.list(df)) # and for all possible bins
+    # make list of vectors of dimension values for...
+    ndim <- ncol(bins.df)
+    usedbins <- do.call(pc, as.list(ag.bins[seq_len(ndim)])) # ...used bins
+    allbins <- do.call(pc, as.list(df)) # ...all possible bins
 
     # get indices of non-empty bins (expand.grid and aggregate order the same)
     idx <- which(allbins %in% usedbins)
 
     # fill values
-    df$value <- empty
-    df$value[idx] <- ag.bins$value
+    datnames <- names(x.df)
+    df[, datnames] <- empty
+    df[idx, datnames] <- ag.bins[, datnames]
     return(df)
 }
 
