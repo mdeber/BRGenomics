@@ -257,7 +257,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #'   is used for independent filtering of results. See DESeq2 documentation.
 #' @param args.DESeq Additional arguments passed to
 #'   \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
-#'   e.g. \code{list(test = "LRT", fitType = "local")}. All arguments given here
+#'   e.g. \code{list(fitType = "local", useT = TRUE)}. All arguments given here
 #'   will be passed to \code{DESeq} except for \code{object} and
 #'   \code{parallel}. If no arguments are given, all defaults will be used.
 #' @param args.results Additional arguments passed to
