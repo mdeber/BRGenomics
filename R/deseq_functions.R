@@ -253,9 +253,8 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #'   DESeq2 \code{sizeFactor}. A warning will be generated if the
 #'   \code{DESeqDataSet} already contains \code{sizeFactors}, and the previous
 #'   \code{sizeFactors} will be over-written.
-#' @param alpha The significance threshold passed to \code{DESeqResults}. This
-#'   won't affect the output results, but is used as a performance optimization
-#'   by DESeq2.
+#' @param alpha The significance threshold passed to \code{DESeqResults}, which
+#'   is used for independent filtering of results. See DESeq2 documentation.
 #' @param args.DESeq Additional arguments passed to
 #'   \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
 #'   e.g. \code{list(test = "LRT", fitType = "local")}. All arguments given here
