@@ -1,3 +1,9 @@
+## BRGenomics 0.7.7
+
+* Bug fix in `aggregateByNdimensionalBins` affecting simultaneous aggregation of multiple data
+* Minor updates to documentation, including an error in `getDESeqResults`
+* Slightly expanded vignette
+
 ## BRGenomics 0.7.5
 
 * Update bootstrapping functions

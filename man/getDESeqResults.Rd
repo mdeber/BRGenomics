@@ -44,13 +44,12 @@ DESeq2 \code{sizeFactor}. A warning will be generated if the
 \code{DESeqDataSet} already contains \code{sizeFactors}, and the previous
 \code{sizeFactors} will be over-written.}
 
-\item{alpha}{The significance threshold passed to \code{DESeqResults}. This
-won't affect the output results, but is used as a performance optimization
-by DESeq2.}
+\item{alpha}{The significance threshold passed to \code{DESeqResults}, which
+is used for independent filtering of results (see DESeq2 documentation).}
 
 \item{args.DESeq}{Additional arguments passed to
 \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
-e.g. \code{list(test = "LRT", fitType = "local")}. All arguments given here
+e.g. \code{list(fitType = "local", useT = TRUE)}. All arguments given here
 will be passed to \code{DESeq} except for \code{object} and
 \code{parallel}. If no arguments are given, all defaults will be used.}
 
