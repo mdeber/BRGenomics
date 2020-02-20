@@ -296,6 +296,9 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                         ctrl_pattern, ctrl_names, field, sample_names = NULL,
                         ncores)
 
+    dataset.gr <- removeSpikeInReads(dataset.gr, si_pattern, si_names, field,
+                                     ncores)
+
     if (is.null(field)) {
         message(.nicemsg("With field = NULL, will calculate stranded coverage
                          and make GRanges basepair-resolution before returning
@@ -314,7 +317,6 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 }
 
 .norm_gr <- function(gr, field, nf, ncores) {
-    # mcols(gr)[field] <- mcols(gr)[[field]] * nf
     # (below supports for multiplexed GRanges)
     mcols(gr)[field] <- mcmapply("*", mcols(gr)[field], nf, mc.cores = ncores)
     gr
