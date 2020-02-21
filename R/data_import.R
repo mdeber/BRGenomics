@@ -142,6 +142,7 @@ NULL
 
 #' @rdname import-functions
 #' @export
+#' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
 import_bigWig <- function(plus_file, minus_file, genome = NULL,
@@ -151,8 +152,8 @@ import_bigWig <- function(plus_file, minus_file, genome = NULL,
     # make possible to import only plus or minus
 
     # import bw as GRanges objects
-    p_gr <- rtracklayer::import.bw(plus_file)
-    m_gr <- rtracklayer::import.bw(minus_file)
+    p_gr <- import.bw(plus_file)
+    m_gr <- import.bw(minus_file)
     score(m_gr) <- abs(score(m_gr)) # scores = reads; make all positive
 
     strand(p_gr) <- "+"
@@ -178,14 +179,15 @@ import_bigWig <- function(plus_file, minus_file, genome = NULL,
 
 #' @rdname import-functions
 #' @export
+#' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
 import_bedGraph <- function(plus_file, minus_file, genome = NULL,
                             keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                             keep.nonstandard = FALSE) {
     # import bedgraph as GRanges objects
-    p_bg <- rtracklayer::import.bedGraph(plus_file)
-    m_bg <- rtracklayer::import.bedGraph(minus_file)
+    p_bg <- import.bedGraph(plus_file)
+    m_bg <- import.bedGraph(minus_file)
     score(m_bg) <- abs(score(m_bg)) # scores = reads; make all positive
 
     strand(p_bg) <- "+"
