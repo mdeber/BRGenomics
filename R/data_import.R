@@ -246,6 +246,17 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #' @details If function produces an error, make the \code{paired_end} parameter
 #'   explicit, i.e. \code{TRUE} or \code{FALSE}.
 #'
+#' @references Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis
+#'   (2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct
+#'   Initiation and Pausing. \emph{Science} 339(6122): 950–953.
+#'   \url{https://doi.org/10.1126/science.1229386}
+#'
+#'   Jason D. Buenrostro, Paul G. Giresi, Lisa C. Zaba, Howard Y. Chang, William
+#'   J. Greenleaf (2013). Transposition of native chromatin for fast and
+#'   sensitive epigenomic profiling of open chromatin, dna-binding proteins and
+#'   nucleosome position. \emph{Nature Methods} 10: 1213–1218.
+#'   \url{https://doi.org/10.1038/nmeth.2688}
+#'
 #' @return A GRanges object.
 #' @author Mike DeBerardine & Nate Tippens
 #' @export
@@ -344,14 +355,12 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 
 .shift_gr <- function(gr, is_plus, shift) {
     if (length(shift) == 1) {
-        shifts <- rep(-shift, length(is_plus)) # minus strand
-        shifts[is_plus] <- shift
-        return(shift(gr, shifts))
+        shift(gr, ifelse(is_plus, shift, -shift))
     } else if (length(shift) == 2) {
-        return(genebodies(gr, shift[1], shift[2], min.window = 0))
+        genebodies(gr, shift[1], shift[2], min.window = 0)
     } else {
-        stop(message = .nicemsg("shift argument must be a numeric, or a numeric
-                                vector of length 2"))
+        stop(message = .nicemsg("shift argument must be a single number, or a
+                                numeric vector of length 2"))
         return(geterrmessage())
     }
 }

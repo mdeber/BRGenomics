@@ -25,7 +25,7 @@ PRO-seq data from chromosome 4 of Drosophila S2 cells.
 \references{
 Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis
   (2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct
-  Initiation and Pausing. Science, 339(6122), 950–953.
+  Initiation and Pausing. \emph{Science} 339(6122): 950–953.
   \url{https://doi.org/10.1126/science.1229386}
 }
 \keyword{datasets}

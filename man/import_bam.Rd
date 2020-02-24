@@ -150,6 +150,18 @@ import_bam(ps.bam, revcomp = TRUE, trim.to = "3p",
 import_bam(ps.bam, revcomp = TRUE, trim.to = "5p",
            paired_end = FALSE)
 }
+\references{
+Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis
+  (2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct
+  Initiation and Pausing. \emph{Science} 339(6122): 950–953.
+  \url{https://doi.org/10.1126/science.1229386}
+
+  Jason D. Buenrostro, Paul G. Giresi, Lisa C. Zaba, Howard Y. Chang, William
+  J. Greenleaf (2013). Transposition of native chromatin for fast and
+  sensitive epigenomic profiling of open chromatin, dna-binding proteins and
+  nucleosome position. \emph{Nature Methods} 10: 1213–1218.
+  \url{https://doi.org/10.1038/nmeth.2688}
+}
 \author{
 Mike DeBerardine & Nate Tippens
 }
