@@ -170,7 +170,7 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
         .fixbins(cl[[1]], binsize, first.output.xval)
     } else {
         cl <- lapply(cl, .fixbins, binsize, first.output.xval)
-        do.call(rbind, cl)
+        do.call(rbind, c(cl, make.row.names = FALSE))
     }
 }
 
