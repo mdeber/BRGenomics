@@ -1,3 +1,11 @@
+## BRGenomics 0.7.8
+
+* Substantially updated vignette
+* Fully load `rtracklayer` (so completely exported to users)
+* Add `isBRG` function
+* Fixed bug in `spikeInNormGRanges` that failed to remove spike-in reads (aside from maintaining those reads, normalization was otherwise correct)
+* Fixed minor bug in which `metaSubsample` automatically added rownames with list input
+
 ## BRGenomics 0.7.7
 
 * Bug fix in `aggregateByNdimensionalBins` affecting simultaneous aggregation of multiple data

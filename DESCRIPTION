@@ -1,7 +1,7 @@
 Package: BRGenomics
 Type: Package
 Title: Tools for the Efficient Analysis of High-Resolution Genomics Data
-Version: 0.7.7
+Version: 0.7.8
 Authors@R: person("Mike", "DeBerardine", email = "mike.deberardine@gmail.com", 
     role = c("aut", "cre"))
 Description: This package provides useful and efficient utilites for the 
@@ -13,11 +13,11 @@ LazyData: FALSE
 RoxygenNote: 7.0.2
 Depends:
     R (>= 3.5.0),
-    GenomicRanges,
+    rtracklayer,
     GenomeInfoDb,
     S4Vectors
 Imports:
-    rtracklayer,
+    GenomicRanges,
     parallel,
     IRanges,
     stats,
@@ -32,7 +32,8 @@ Suggests:
     BiocStyle,
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    ggplot2
 biocViews:
     Software,
     DataImport,
