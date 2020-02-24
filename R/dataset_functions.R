@@ -3,25 +3,33 @@
 # ------------------------------------------------------------------------- #
 
 
-#' Make base-pair resolution GRanges object
+
+
+#' Constructing and checking for base-pair resolution GRanges objects
 #'
-#' Splits up all ranges in \code{dataset.gr} to be each 1 basepair wide. For any
-#' range that is split up, all metadata information belonging to that range is
-#' inherited by its daughter ranges, and therefore the transformation is
-#' non-destructive.
+#' \code{makeGRangesBRG} splits up all ranges in \code{dataset.gr} to be each 1
+#' basepair wide. For any range that is split up, all metadata information
+#' belonging to that range is inherited by its daughter ranges, and therefore
+#' the transformation is non-destructive. \code{isBRG} checks whether an object
+#' is a basepair resolution GRanges object.
 #'
 #' @param dataset.gr A disjoint GRanges object, or a list of such objects.
 #' @param ncores If \code{dataset.gr} is a list, the number of cores to use for
 #'   computations.
 #'
-#' @return A GRanges object for which \code{length(output) ==
-#'   sum(width(dataset.gr))}, and for which \code{all(width(output) == 1)}.
+#' @return \code{makeGRangesBRG} returns a GRanges object for which
+#'   \code{length(output) == sum(width(dataset.gr))}, and for which
+#'   \code{all(width(output) == 1)}.
 #'
-#' @details Note that this function doesn't perform any transformation on the
-#'   metadata in the input. This function assumes that for an input GRanges
-#'   object, any metadata for each range is equally correct when inherited by
-#'   each individual base in that range. In other words, the dataset's "signal"
-#'   (usually readcounts) fundamentally belongs to a single basepair position.
+#'   \code{isBRG(x)} returns \code{TRUE} if \code{x} is a GRanges object with
+#'    the above characteristics.
+#'
+#' @details Note that \code{makeGRangesBRG} doesn't perform any transformation
+#'   on the metadata in the input. This function assumes that for an input
+#'   GRanges object, any metadata for each range is equally correct when
+#'   inherited by each individual base in that range. In other words, the
+#'   dataset's "signal" (usually readcounts) fundamentally belongs to a single
+#'   basepair position.
 #'
 #' @section Motivation: The motivating case for this function is a bigWig file
 #'   (e.g. one imported by \code{rtracklayer}), as bigWig files typically use
@@ -75,6 +83,7 @@
 #' # make basepair-resolution (single-width)
 #' gr <- makeGRangesBRG(bw)
 #'
+#' isBRG(gr)
 #' range(width(gr))
 #' length(gr)
 #' length(gr) == sum(width(bw))
@@ -87,6 +96,7 @@
 #'
 #' undo <- getStrandedCoverage(gr, ncores = 2)
 #'
+#' isBRG(undo)
 #' range(width(undo))
 #' length(undo) == length(bw)
 #' all(score(undo) == score(bw))
@@ -112,6 +122,14 @@ makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
     return(sort(gr_bp))
 }
 
+#' @rdname makeGRangesBRG
+#' @param x Object to be tested.
+#' @importFrom methods is
+#' @importFrom GenomicRanges isDisjoint
+#' @export
+isBRG <- function(x) {
+    is(x, "GRanges") && all(width(x) == 1) && isDisjoint(x)
+}
 
 
 #' Get strand-specific coverage
