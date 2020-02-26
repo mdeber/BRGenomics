@@ -10,6 +10,8 @@ output:
     toc: true
     toc_float: true
     toc_depth: 1
+  BiocStyle::pdf_document:
+    toc: true
 abstract: |
   BRGenomics is designed to help users avoid code repetition by providing efficient and tested functions to accomplish common, discrete tasks in the analysis of high-throughput sequencing data. The included functions are geared toward analyzing basepair-resolution sequencing data, the properties of which are exploited to increase performance and user-friendliness. We leverage standard Bioconductor methods and classes to maximize compatability with its rich ecoystem of bioinformatics tools, and we aim to make BRGenomics sufficient for most post-alignment data processing. Common data processing and analytical steps are turned into fast-running one-liners that can be simultaneously applied across numerous datasets. BRGenomics is fully-documented, and we aim it to be beginner-friendly.
   
@@ -18,10 +20,6 @@ vignette: |
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---
-
-```{r, echo = FALSE}
-library(BiocStyle)
-```
 
 # Overview
 
@@ -78,6 +76,12 @@ devtools::install_github("mdeber/BRGenomics")
 ```
 
 If you're using Windows, [Rtools for Windows](https://cran.rstudio.com/bin/windows/Rtools/) is required.
+
+## Parallel Processing
+
+By default, many BRGenomics functions will use multicore processing, as implemented in the `parallel` package, and the default is to use all available cores, as found using `detectCores()`. To meet the hosting requirements for Bioconductor, all code in the vignette and documentation is set to use no more than 2 cores, i.e. `ncores = 2`.
+
+There is no support for parallel processing on Windows.
 
 ## Included Datasets
 
@@ -490,11 +494,7 @@ import_bigWig(bw.p, bw.m, genome = "dm6")
 
 # Signal Counting
 
-## Signal by Region (Gene)
-
-```{r}
-data(PROseq) # load included PRO-seq data
-```
+## Signal by Region
 
 The `getCountsByRegion` function counts signal within regions of interest, and returns a simple vector. For instance, we can count PROseq signal within our transcripts:
 
@@ -675,8 +675,10 @@ This data structure can be passed to most functions in BRGenomics. To be explici
 # for all datasets (all fields), get counts in the first 5 transcripts
 getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], field = names(mcols(ps_multi)),
                    ncores = 2)
+
 # get counts for ps2 dataset only
 getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], field = "ps2", ncores = 2)
+
 # if no field is given, most functions will default to using all fields
 getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], ncores = 2)
 ```
@@ -834,7 +836,7 @@ ggplot(bm_list.df, aes(x, mean, color = sample.name)) +
   theme_bw()
 ```
 
-_Bear in mind that the above confidence intervals are ignoring 70% of the data, which is very atypical. More reasonable parameters would reveal how lacking this data is._ 
+_Bear in mind that the above confidence intervals are ignoring 70% of the subsampling experiments, which is excessive. More reasonable parameters would reveal how lacking this data is, i.e. how un-confident we are that there is a robust difference in the mean signal at various positions._ 
 
 # Spike-in Normalization
 
@@ -1027,11 +1029,11 @@ Below, we use many of the functions described above to generate several sets of 
 _[Coming soon]_
 
 
-# Interfacing with DESeq2
+# Using DESeq2 for Pairwise Differential Expression
 
 ## Rationale 
 
-DESeq2's default treatment of data relies on the assumption that genewise estimates of dispersion are largely unchanged across samples. While this assumption holds for a typical RNA-seq data, it can be violated if there exist _any_ conditions represented in the `DESeqDataSet` object that caused meaningful signal changes across a majority of regions of interest. 
+DESeq2's default treatment of data relies on the assumption that genewise estimates of dispersion are largely unchanged across samples. While this assumption holds for a typical RNA-seq data, it can be violated if there are samples within the `DESeqDataSet` object for which there are meaningful signal changes across a majority of regions of interest. 
 
 The BRGenomics functions `getDESeqDataSet` and `getDESeqResults` are simple and flexible wrappers for making pairwise comparisons between individual samples, without relying on the assumption of globally-similar dispersion estimates. In particular, `getDESeqResults` follows the logic that the presence of a dataset $X$ within the `DESeqDataSet` object will not affect the comparison of datasets $Y$ and $Z$.
 
