@@ -366,7 +366,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 
 .check_mw_arg <- function(smw, melt, mw) {
-    if (mw) { # if dispatched from .get_cbp_bw
+    if (mw) { # if dispatched from .get_cbp_mw
         if (smw == "error") {
             stop(message = .nicemsg("regions.gr contains ranges with multiple
                                     widths, but simplify.multi.widths is set to
