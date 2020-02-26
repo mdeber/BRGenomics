@@ -1,3 +1,8 @@
+## BRGenomics 0.7.10
+
+* Add `intersectByGene` and `reduceByGene` functions
+* Minor vignette updates
+
 ## BRGenomics 0.7.8
 
 * Substantially updated vignette
