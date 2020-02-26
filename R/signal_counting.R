@@ -604,11 +604,10 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         return(geterrmessage())
     }
 
-    dwidth <- NULL
+    dwidth <- NULL # differences in width caused by blacklisting
     if (!is.null(blacklist)) {
         dataset.gr <- .blacklist(dataset.gr, blacklist, ncores)
         if (length.normalize) {
-            # count blacklisted bases in each region
             dwidth <- mclapply(list(promoters.gr, genebodies.gr),
                                .get_dwidth, blacklist, mc.cores = ncores)
         }
