@@ -54,7 +54,7 @@ These functions modify regions of interest that have associated
   \strong{reduceByGene}
 
   \emph{For each unique gene}, the associated ranges are
-  \code{\link[GenomicRanges:intra-range-methods]{reduced}} to produce one or
+  \code{\link[IRanges:inter-range-methods]{reduced}} to produce one or
   more non-overlapping ranges. The output range(s) are effectively a
   \code{union} of the input ranges, and cover every input base.
 

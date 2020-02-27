@@ -16,7 +16,7 @@ tidyChromosomes(
 \item{gr}{Any GRanges object, or any another object with associated
 \code{seqinfo} (or a \code{Seqinfo} object itself). The object should
 typically have a standard genome associated with it, e.g. \code{genome(gr)
-<- "hg38"}.}
+<- "hg38"}. \code{gr} can also be a list of such GRanges objects.}
 
 \item{keep.X, keep.Y, keep.M, keep.nonstandard}{Logicals indicating which
 non-autosomes should be kept. By default, sex chromosomes are kept, but

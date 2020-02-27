@@ -240,7 +240,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 
 #' @import GenomicRanges
 .get_stranded_cvg <- function(strand.i, dataset.gr, field) {
-    gr <- subset(dataset.gr, strand == strand.i)
+    gr <- dataset.gr[strand(dataset.gr) == strand.i]
     if (is.null(field)) {
         cvg <- coverage(gr)
     } else {
@@ -249,7 +249,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 
     cvg_gr <- GRanges(cvg, seqinfo = seqinfo(dataset.gr))
     strand(cvg_gr) <- strand.i
-    subset(cvg_gr, score != 0)
+    cvg_gr[score(cvg_gr) != 0]
 }
 
 
