@@ -20,7 +20,7 @@
 #' @param gr Any GRanges object, or any another object with associated
 #'   \code{seqinfo} (or a \code{Seqinfo} object itself). The object should
 #'   typically have a standard genome associated with it, e.g. \code{genome(gr)
-#'   <- "hg38"}.
+#'   <- "hg38"}. \code{gr} can also be a list of such GRanges objects.
 #' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
@@ -61,6 +61,11 @@
 tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                             keep.nonstandard = FALSE) {
 
+    if (is.list(gr) | is(gr, "GRangesList")) {
+        return(lapply(gr, tidyChromosomes, keep.X, keep.Y, keep.M,
+                      keep.nonstandard))
+    }
+
     chrom <- standardChromosomes(gr)
 
     if (keep.nonstandard) chrom <- seqlevels(gr)
@@ -83,13 +88,17 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #' Import functions for plus/minus pairs of \code{bigWig} or \code{bedGraph}
 #' files.
 #'
-#' @param plus_file,minus_file Paths for strand-specific input files.
+#' @param plus_file,minus_file Paths for strand-specific input files, or a
+#'   vector of such paths. If vectors are given, the user should take care that
+#'   the orders match!
 #' @param genome Optional string for UCSC reference genome, e.g. "hg38". If
 #'   given, non-standard chromosomes are trimmed, and options for sex and
 #'   mitochondrial chromosomes are applied.
 #' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
+#' @param ncores Number of cores to use, if importing multiple objects
+#'   simultaneously.
 #'
 #' @return Imports a GRanges object containing base-pair resolution data, with
 #'   the \code{score} metadata column indicating the number of reads represented
@@ -145,19 +154,34 @@ NULL
 #' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
-import_bigWig <- function(plus_file, minus_file, genome = NULL,
+#' @importFrom parallel detectCores mcMap
+import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                           keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
-                          keep.nonstandard = FALSE) {
+                          keep.nonstandard = FALSE, ncores = detectCores()) {
 
-    # make possible to import only plus or minus
+    if (length(plus_file) > 1 || length(minus_file) > 1) {
+        if (is.null(plus_file))  plus_file <- list(NULL)
+        if (is.null(minus_file))  minus_file <- list(NULL)
+        if (is.null(genome))  genome <- list(NULL)
+        return(mcMap(import_bigWig, plus_file, minus_file, genome, keep.X,
+                     keep.Y, keep.M, keep.nonstandard, ncores = 1,
+                     mc.cores = ncores))
+    }
 
-    # import bw as GRanges objects
-    p_gr <- import.bw(plus_file)
-    m_gr <- import.bw(minus_file)
-    score(m_gr) <- abs(score(m_gr)) # scores = reads; make all positive
+    p_gr <- GRanges() # initialize
+    m_gr <- GRanges()
 
-    strand(p_gr) <- "+"
-    strand(m_gr) <- "-"
+    if (!is.null(plus_file)) {
+        p_gr <- import.bw(plus_file)
+        strand(p_gr) <- "+"
+    }
+
+    if (!is.null(minus_file)) {
+        m_gr <- import.bw(minus_file)
+        score(m_gr) <- abs(score(m_gr)) # make scores positive
+        strand(m_gr) <- "-"
+    }
+
     suppressWarnings( gr <- c(p_gr, m_gr) )
 
     # scores are imported as doubles by default; if whole numbers, make integers
@@ -182,17 +206,35 @@ import_bigWig <- function(plus_file, minus_file, genome = NULL,
 #' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
-import_bedGraph <- function(plus_file, minus_file, genome = NULL,
+#' @importFrom parallel detectCores mcMap
+import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                             keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
-                            keep.nonstandard = FALSE) {
-    # import bedgraph as GRanges objects
-    p_bg <- import.bedGraph(plus_file)
-    m_bg <- import.bedGraph(minus_file)
-    score(m_bg) <- abs(score(m_bg)) # scores = reads; make all positive
+                            keep.nonstandard = FALSE, ncores = detectCores()) {
 
-    strand(p_bg) <- "+"
-    strand(m_bg) <- "-"
-    suppressWarnings(gr <- c(p_bg, m_bg)) # combine into 1 GRanges object
+    if (length(plus_file) > 1 || length(minus_file) > 1) {
+        if (is.null(plus_file))  plus_file <- list(NULL)
+        if (is.null(minus_file))  minus_file <- list(NULL)
+        if (is.null(genome))  genome <- list(NULL)
+        return(mcMap(import_bedGraph, plus_file, minus_file, genome, keep.X,
+                     keep.Y, keep.M, keep.nonstandard, ncores = 1,
+                     mc.cores = ncores))
+    }
+
+    p_gr <- GRanges() # initialize
+    m_gr <- GRanges()
+
+    if (!is.null(plus_file)) {
+        p_gr <- import.bedGraph(plus_file)
+        strand(p_gr) <- "+"
+    }
+
+    if (!is.null(minus_file)) {
+        m_gr <- import.bedGraph(minus_file)
+        score(m_gr) <- abs(score(m_gr)) # make scores positive
+        strand(m_gr) <- "-"
+    }
+
+    suppressWarnings( gr <- c(p_gr, m_gr) )
 
     # scores are imported as doubles by default; if whole numbers, make integers
     gr <- .try_int_score(gr)
@@ -212,7 +254,7 @@ import_bedGraph <- function(plus_file, minus_file, genome = NULL,
 #' Import single-end or paired-end bam files as GRanges objects, with various
 #' processing options.
 #'
-#' @param file Path of a bam file.
+#' @param file Path of a bam file, or a vector of paths.
 #' @param mapq Filter reads by a minimum MAPQ score. This is the correct way to
 #'   filter multi-aligners.
 #' @param revcomp Logical indicating if aligned reads should be
@@ -312,7 +354,14 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
                        trim.to = c("whole", "5p", "3p", "center"),
                        ignore.strand = FALSE, field = "score",
                        paired_end = NULL, yieldSize = 2.5e5) {
+
     trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
+
+    if (length(file) > 1) {
+        if (is.null(paired_end))  paired_end <- list(NULL)
+        return(lapply(file, import_bam, mapq, revcomp, shift, trim.to,
+                      ignore.strand, field, paired_end, yieldSize))
+    }
 
     # Load bam file
     bf <- BamFile(file, yieldSize = yieldSize)

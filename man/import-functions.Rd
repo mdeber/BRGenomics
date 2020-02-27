@@ -7,27 +7,31 @@
 \title{Import basepair-resolution files}
 \usage{
 import_bigWig(
-  plus_file,
-  minus_file,
+  plus_file = NULL,
+  minus_file = NULL,
   genome = NULL,
   keep.X = TRUE,
   keep.Y = TRUE,
   keep.M = FALSE,
-  keep.nonstandard = FALSE
+  keep.nonstandard = FALSE,
+  ncores = detectCores()
 )
 
 import_bedGraph(
-  plus_file,
-  minus_file,
+  plus_file = NULL,
+  minus_file = NULL,
   genome = NULL,
   keep.X = TRUE,
   keep.Y = TRUE,
   keep.M = FALSE,
-  keep.nonstandard = FALSE
+  keep.nonstandard = FALSE,
+  ncores = detectCores()
 )
 }
 \arguments{
-\item{plus_file, minus_file}{Paths for strand-specific input files.}
+\item{plus_file, minus_file}{Paths for strand-specific input files, or a
+vector of such paths. If vectors are given, the user should take care that
+the orders match!}
 
 \item{genome}{Optional string for UCSC reference genome, e.g. "hg38". If
 given, non-standard chromosomes are trimmed, and options for sex and
@@ -36,6 +40,9 @@ mitochondrial chromosomes are applied.}
 \item{keep.X, keep.Y, keep.M, keep.nonstandard}{Logicals indicating which
 non-autosomes should be kept. By default, sex chromosomes are kept, but
 mitochondrial and non-standard chromosomes are removed.}
+
+\item{ncores}{Number of cores to use, if importing multiple objects
+simultaneously.}
 }
 \value{
 Imports a GRanges object containing base-pair resolution data, with

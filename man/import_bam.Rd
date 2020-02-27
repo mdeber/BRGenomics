@@ -56,7 +56,7 @@ import_bam_ATACseq(
 )
 }
 \arguments{
-\item{file}{Path of a bam file.}
+\item{file}{Path of a bam file, or a vector of paths.}
 
 \item{mapq}{Filter reads by a minimum MAPQ score. This is the correct way to
 filter multi-aligners.}
