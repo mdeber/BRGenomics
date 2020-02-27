@@ -43,7 +43,7 @@ ranges(gr2) <- IRanges(4:6, 5:7)
 grl <- list(gr, gr2)
 grl
 
-applyNFsGRanges(grl, NF = c(0.5, 0.75))
+applyNFsGRanges(grl, NF = c(0.5, 0.75), ncores = 1)
 
 # Apply NFs to a multiplexed GRanges
 gr_multi <- gr
@@ -51,7 +51,8 @@ names(mcols(gr_multi)) <- "gr1"
 gr_multi$gr2 <- c(3, 5, 7)
 gr_multi
 
-applyNFsGRanges(gr_multi, NF = c(2, 3), field = c("gr1", "gr2"))
+applyNFsGRanges(gr_multi, NF = c(2, 3), field = c("gr1", "gr2"),
+                ncores = 1)
 }
 \seealso{
 \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}
