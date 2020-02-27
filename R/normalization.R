@@ -280,7 +280,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 }
 
 
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel detectCores
 #' @rdname getSpikeInNFs
 #' @export
 spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
@@ -292,12 +292,69 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
     if (!is.null(sample_names))  names(dataset.gr) <- sample_names
 
-    nf <- getSpikeInNFs(dataset.gr, si_pattern, si_names, method, batch_norm,
+    NF <- getSpikeInNFs(dataset.gr, si_pattern, si_names, method, batch_norm,
                         ctrl_pattern, ctrl_names, field, sample_names = NULL,
                         ncores)
 
     dataset.gr <- removeSpikeInReads(dataset.gr, si_pattern, si_names, field,
                                      ncores)
+
+    applyNFsGRanges(dataset.gr, NF = NF, field = field, ncores = ncores)
+}
+
+
+
+#' Apply normalization factors to GRanges object
+#'
+#' Convenience function for multiplying signal counts in one or more GRanges
+#' object by their normalization factors.
+#'
+#' @param dataset.gr A GRanges object with signal data in one or more metadata
+#'   fields, or a list of such GRanges objects.
+#' @param NF One or more normalization factors to apply by multiplication. The
+#'   number of normalization factors should match the number of datasets in
+#'   \code{dataset.gr}.
+#' @param field The metadata field(s) in \code{dataset.gr} that contain signal
+#'   to be normalized.
+#' @param ncores The number of cores to use for computations. Multicore only
+#'   used if there are multiple datasets present.
+#'
+#' @return A GRanges object, or a list of GRanges objects.
+#' @author Mike DeBerardine
+#' @seealso \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}
+#' @importFrom parallel detectCores mcMap
+#' @export
+#'
+#' @examples
+#' # Apply NFs to a single GRanges
+#' gr <- GRanges(seqnames = "chr1",
+#'               ranges = IRanges(1:3, 3:5),
+#'               strand = c("+", "+", "-"),
+#'               score = c(2, 3, 4))
+#' gr
+#'
+#' applyNFsGRanges(gr, NF = 0.5, ncores = 1)
+#'
+#' # Apply NFs to a list of GRanges
+#' gr2 <- gr
+#' ranges(gr2) <- IRanges(4:6, 5:7)
+#' grl <- list(gr, gr2)
+#' grl
+#'
+#' applyNFsGRanges(grl, NF = c(0.5, 0.75), ncores = 1)
+#'
+#' # Apply NFs to a multiplexed GRanges
+#' gr_multi <- gr
+#' names(mcols(gr_multi)) <- "gr1"
+#' gr_multi$gr2 <- c(3, 5, 7)
+#' gr_multi
+#'
+#' applyNFsGRanges(gr_multi, NF = c(2, 3), field = c("gr1", "gr2"),
+#'                 ncores = 1)
+applyNFsGRanges <- function(dataset.gr, NF, field = "score",
+                            ncores = detectCores()) {
+
+    if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
 
     if (is.null(field)) {
         message(.nicemsg("With field = NULL, will calculate stranded coverage
@@ -311,16 +368,19 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     }
 
     if (length(dataset.gr) == 1)
-        return(.norm_gr(dataset.gr[[1]], field, nf, ncores))
+        return(.norm_gr(dataset.gr[[1]], field, NF, ncores))
 
-    mcMap(.norm_gr, dataset.gr, field, nf, ncores = 1, mc.cores = ncores)
+    mcMap(.norm_gr, dataset.gr, field, NF, ncores = 1, mc.cores = ncores)
 }
 
+#' @importFrom parallel mcmapply
+#' @importFrom GenomicRanges mcols<-
 .norm_gr <- function(gr, field, nf, ncores) {
     # (below supports for multiplexed GRanges)
     mcols(gr)[field] <- mcmapply("*", mcols(gr)[field], nf, mc.cores = ncores)
     gr
 }
+
 
 
 # goal of SNR (spike-in normalized reads) is to downward adjust readcounts to be
@@ -338,6 +398,7 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #   of adjusted readcounts, and that number is used;
 #   if batch_norm = FALSE, the average number of reads across all negative
 #   controls is used
+
 
 
 #' Randomly subsample reads according to spike-in normalization
