@@ -16,7 +16,8 @@ import_bam(
   ignore.strand = FALSE,
   field = "score",
   paired_end = NULL,
-  yieldSize = 250000
+  yieldSize = NA,
+  ncores = 1
 )
 
 import_bam_PROseq(
@@ -28,7 +29,8 @@ import_bam_PROseq(
   ignore.strand = FALSE,
   field = "score",
   paired_end = NULL,
-  yieldSize = 250000
+  yieldSize = NA,
+  ncores = 1
 )
 
 import_bam_PROcap(
@@ -40,7 +42,8 @@ import_bam_PROcap(
   ignore.strand = FALSE,
   field = "score",
   paired_end = NULL,
-  yieldSize = 250000
+  yieldSize = NA,
+  ncores = 1
 )
 
 import_bam_ATACseq(
@@ -52,7 +55,8 @@ import_bam_ATACseq(
   ignore.strand = TRUE,
   field = "score",
   paired_end = TRUE,
-  yieldSize = 250000
+  yieldSize = NA,
+  ncores = 1
 )
 }
 \arguments{
@@ -87,24 +91,26 @@ set to \code{NULL}, identical reads (or identical positions if
 output GRanges will be equal to the number of input reads.}
 
 \item{paired_end}{Logical indicating if reads should be treated as paired end
-reads. When set to \code{NULL} (the default), a test is performed to
-determine if the bam file contains any paired-end reads.}
+reads. When set to \code{NULL} (the default), the first 100k reads are
+checked.}
 
 \item{yieldSize}{The number of bam file records to process simultaneously,
 e.g. the "chunk size". Setting a higher chunk size will use more memory,
 which can increase speed if there is enough memory available. If chunking
 is not necessary, set to \code{NA}.}
+
+\item{ncores}{Number of cores to use for importing bam files. Currently,
+multicore is only implemented for simultaneously importing multiple bam
+files. For smaller datasets or machines with higher memory, this can
+increase performance, but can otherwise lead to substantial performance
+penalties.}
 }
 \value{
 A GRanges object.
 }
 \description{
 Import single-end or paired-end bam files as GRanges objects, with various
-processing options.
-}
-\details{
-If function produces an error, make the \code{paired_end} parameter
-  explicit, i.e. \code{TRUE} or \code{FALSE}.
+processing options. It is highly recommend to index the BAM file first.
 }
 \examples{
 # get local address for included bam file
@@ -163,5 +169,5 @@ Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis
   \url{https://doi.org/10.1038/nmeth.2688}
 }
 \author{
-Mike DeBerardine & Nate Tippens
+Mike DeBerardine
 }

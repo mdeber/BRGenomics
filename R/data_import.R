@@ -252,7 +252,7 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 #' Import bam files
 #'
 #' Import single-end or paired-end bam files as GRanges objects, with various
-#' processing options.
+#' processing options. It is highly recommend to index the BAM file first.
 #'
 #' @param file Path of a bam file, or a vector of paths.
 #' @param mapq Filter reads by a minimum MAPQ score. This is the correct way to
@@ -278,15 +278,17 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 #'   \code{trim.to} options applied) are not combined, and the length of the
 #'   output GRanges will be equal to the number of input reads.
 #' @param paired_end Logical indicating if reads should be treated as paired end
-#'   reads. When set to \code{NULL} (the default), a test is performed to
-#'   determine if the bam file contains any paired-end reads.
+#'   reads. When set to \code{NULL} (the default), the first 100k reads are
+#'   checked.
 #' @param yieldSize The number of bam file records to process simultaneously,
 #'   e.g. the "chunk size". Setting a higher chunk size will use more memory,
 #'   which can increase speed if there is enough memory available. If chunking
 #'   is not necessary, set to \code{NA}.
-#'
-#' @details If function produces an error, make the \code{paired_end} parameter
-#'   explicit, i.e. \code{TRUE} or \code{FALSE}.
+#' @param ncores Number of cores to use for importing bam files. Currently,
+#'   multicore is only implemented for simultaneously importing multiple bam
+#'   files. For smaller datasets or machines with higher memory, this can
+#'   increase performance, but can otherwise lead to substantial performance
+#'   penalties.
 #'
 #' @references Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis
 #'   (2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct
@@ -300,12 +302,9 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 #'   \url{https://doi.org/10.1038/nmeth.2688}
 #'
 #' @return A GRanges object.
-#' @author Mike DeBerardine & Nate Tippens
+#' @author Mike DeBerardine
 #' @export
-#' @importFrom Rsamtools BamFile testPairedEndBam ScanBamParam
-#' @importFrom GenomicAlignments readGAlignments readGAlignmentPairs
-#' @importFrom GenomicFiles reduceByYield
-#' @importFrom GenomicRanges GRanges strand resize shift
+#' @importFrom GenomicRanges GRanges strand strand<- resize
 #'
 #' @examples
 #' # get local address for included bam file
@@ -353,24 +352,19 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
                        trim.to = c("whole", "5p", "3p", "center"),
                        ignore.strand = FALSE, field = "score",
-                       paired_end = NULL, yieldSize = 2.5e5) {
+                       paired_end = NULL, yieldSize = NA,
+                       ncores = 1) {
 
     trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
 
     if (length(file) > 1) {
         if (is.null(paired_end))  paired_end <- list(NULL)
-        return(lapply(file, import_bam, mapq, revcomp, shift, trim.to,
-                      ignore.strand, field, paired_end, yieldSize))
+        return(mclapply(file, import_bam, mapq, revcomp, shift, trim.to,
+                        ignore.strand, field, paired_end, yieldSize,
+                        ncores = 1, mc.cores = ncores))
     }
 
-    # Load bam file
-    bf <- BamFile(file, yieldSize = yieldSize)
-    if (is.null(paired_end)) paired_end <- testPairedEndBam(bf)
-    param <- ScanBamParam(mapqFilter = mapq)
-
-    yield_fun <- .get_yield_fun(paired_end, param)
-
-    gr <- GenomicFiles::reduceByYield(X = bf, YIELD = yield_fun, REDUCE = c)
+    gr <- .import_bam(file, paired_end, yieldSize, mapq)
 
     # Apply Options
     if (revcomp | shift != 0)  is_plus <- as.character(strand(gr)) == "+"
@@ -379,7 +373,7 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
         strand(gr)[is_plus] <- "-"
         is_plus <- !is_plus
     }
-    if (shift != 0)  gr <- .shift_gr(gr, is_plus, shift)
+    if (shift != 0)  suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
     if (trim.to != "whole") {
         opt <- paste0("opt.", trim.to)
         opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
@@ -392,16 +386,55 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     return(gr)
 }
 
-.get_yield_fun <- function(paired, param) {
-    if (paired) {
-        function(x) GRanges(readGAlignmentPairs(x, use.names = FALSE,
-                                                param = param))
+#' @import Rsamtools
+#' @importFrom GenomicAlignments readGAlignmentPairs readGAlignments
+#' @importFrom GenomicRanges GRanges
+.import_bam <- function(file, paired_end, yield_size, mapq) {
+    ## This function avoids any use of bpiterate(), as we've had problems;
+    ## this also affects other functions like GenomicFiles::reduceByYield
+
+    # Get parameters
+    bf <- BamFile(file, yieldSize = yield_size)
+    param <- ScanBamParam(mapqFilter = mapq)
+    if (is.null(paired_end))  paired_end <- .quick_check_paired(file)
+    if (paired_end) {
+        yfun <- function(x) readGAlignmentPairs(x, param = param)
     } else {
-        function(x) GRanges(readGAlignments(x, use.names = FALSE,
-                                            param = param))
+        yfun <- function(x) readGAlignments(x, param = param)
     }
+
+    # If no chunking
+    if (is.na(yield_size))  return(sort(GRanges(yfun(bf))))
+
+    # With chunking
+    open(bf)
+    on.exit(close(bf))
+    finished <- function(x) length(x) == 0L || is.null(x)
+
+    reads <- yfun(bf)
+    if (finished(reads))  return(GRanges())
+    reads <- list(reads)
+
+    repeat {
+        reads.i <- yfun(bf)
+        if (finished(reads.i))  break
+        reads <- append(reads, reads.i)
+    }
+    sort(GRanges(do.call(c, reads)))
 }
 
+#' @import Rsamtools
+.quick_check_paired <- function(file) {
+    # check the first 100k reads
+    bfq <- BamFile(file, yieldSize = 1e5)
+    open(bfq)
+    on.exit(close(bfq))
+    param <- ScanBamParam(what = "flag")
+    flag <- scanBam(bfq, param = param)[[1]]$flag
+    any(bamFlagTest(flag, "isPaired"))
+}
+
+#' @importFrom GenomicRanges shift
 .shift_gr <- function(gr, is_plus, shift) {
     if (length(shift) == 1) {
         shift(gr, ifelse(is_plus, shift, -shift))
@@ -414,7 +447,7 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     }
 }
 
-#' @importFrom GenomicRanges countOverlaps mcols
+#' @importFrom GenomicRanges countOverlaps mcols<-
 .collapse_reads <- function(gr, field) {
     gr.out <- unique(gr)
     mcols(gr.out)[field] <- countOverlaps(gr.out, gr, type = "equal")
@@ -428,11 +461,11 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 import_bam_PROseq <- function(file, mapq = 20, revcomp = TRUE, shift = -1L,
                               trim.to = "3p", ignore.strand = FALSE,
                               field = "score", paired_end = NULL,
-                              yieldSize = 2.5e5) {
+                              yieldSize = NA, ncores = 1) {
 
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
-               paired_end = paired_end, yieldSize = yieldSize)
+               paired_end = paired_end, yieldSize = yieldSize, ncores = ncores)
 }
 
 #' @rdname import_bam
@@ -440,11 +473,11 @@ import_bam_PROseq <- function(file, mapq = 20, revcomp = TRUE, shift = -1L,
 import_bam_PROcap <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
                               trim.to = "5p", ignore.strand = FALSE,
                               field = "score", paired_end = NULL,
-                              yieldSize = 2.5e5) {
+                              yieldSize = NA, ncores = 1) {
 
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
-               paired_end = paired_end, yieldSize = yieldSize)
+               paired_end = paired_end, yieldSize = yieldSize, ncores = ncores)
 }
 
 # must also mention that people should not use these options if their ATAC-seq
@@ -455,11 +488,12 @@ import_bam_PROcap <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 import_bam_ATACseq <- function(file, mapq = 20, revcomp = FALSE,
                                shift = c(4, -5), trim.to = "whole",
                                ignore.strand = TRUE, field = "score",
-                               paired_end = TRUE, yieldSize = 2.5e5) {
+                               paired_end = TRUE, yieldSize = NA,
+                               ncores = 1) {
 
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
-               paired_end = paired_end, yieldSize = yieldSize)
+               paired_end = paired_end, yieldSize = yieldSize, ncores = ncores)
 }
 
 
