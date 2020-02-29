@@ -1,3 +1,12 @@
+## BRGenomics 0.8.0
+
+* Add support for lists in data import functions
+* Add the convenience function `applyNFsGRanges()`
+* Significant internal changes to `import_bam()`
+    + New test for paired-end reads (deprecated use of `Rsamtools::testPairedEndBam()`)
+    + Avoids any internal use of `bpiterate()`
+    + Dropped dependency on `GenomicFiles` package
+
 ## BRGenomics 0.7.10
 
 * Add `intersectByGene` and `reduceByGene` functions

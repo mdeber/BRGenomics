@@ -34,9 +34,6 @@ PRO-seq data<sup>\[1\]</sup>.
 
 ## Known issues and limitations
 
-  - `import_bam` can sometimes return an error when `paired_end = NULL`.
-    If this occurs, make `paired_end` argument explicit by setting to
-    `TRUE` or `FALSE`
   - Currently no support for multicore processing on Windows
   - No support for importing bigWig files on Windows
   - Certain gene names can cause `getDESeqDataSet` to return an error

@@ -618,7 +618,6 @@ body {
 <p>See the <a href="https://mdeber.github.io/">documentation website</a>, which includes a draft version of the introductory vignette, as well as the documentation for currently implemented functions, complete with demonstrative example code. The package currently includes example PRO-seq data<sup>[1]</sup>.</p>
 <h2 id="known-issues-and-limitations">Known issues and limitations</h2>
 <ul>
-<li><code>import_bam</code> can sometimes return an error when <code>paired_end = NULL</code>. If this occurs, make <code>paired_end</code> argument explicit by setting to <code>TRUE</code> or <code>FALSE</code></li>
 <li>Currently no support for multicore processing on Windows</li>
 <li>No support for importing bigWig files on Windows</li>
 <li>Certain gene names can cause <code>getDESeqDataSet</code> to return an error
