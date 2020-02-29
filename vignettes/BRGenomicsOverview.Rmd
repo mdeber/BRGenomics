@@ -758,7 +758,7 @@ for (i in c(0, 30*2^(0:4))) {
 }
 ```
 
-The paucity of transcription on Drosophila chromosome 4 makes this a somewhat extreme example, but the above plots demonstrate the potential fragility of medians. A common rule of thumb is that a given cell is only apt to express around half of its genes; if that holds true, the median of an unfiltered genelist will be close to zero, and likely insensitive to any changes occuring at expressed genes. 
+The paucity of transcription on Drosophila chromosome 4 makes this a somewhat extreme example, and you might find that the above situation is a non-issue for your data. However, it's important to keep in mind how unexpressed genes can affect the median. A common rule of thumb is that a given cell is only apt to express around half of its genes; if that holds true, the median of an unfiltered genelist will be close to zero, and could be insensitive to changes occuring at expressed genes. 
 
 ## The Rationale for Bootstrapping 
 
