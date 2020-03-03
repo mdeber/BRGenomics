@@ -81,7 +81,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     NF <- .check_nfs(dataset.gr, NF, field)
 
     if (length(field) > 1) {
-        cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF)
+        cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF,
+                    mc.cores = ncores)
         names(cl) <- field
         cl <- as.data.frame(cl)
         if (melt) return(.melt_counts(cl, field, region_names))
