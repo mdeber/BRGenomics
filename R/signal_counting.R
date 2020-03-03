@@ -44,7 +44,7 @@
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
 #' @importFrom GenomicRanges findOverlaps mcols
-#' @importFrom parallel detectCores mclapply
+#' @importFrom parallel detectCores mcMap
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -117,6 +117,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 
 
 #' @importFrom parallel mclapply
+#' @importFrom IRanges subsetByOverlaps
 .blacklist <- function(dataset.gr, blacklist, ncores) {
     if (is.list(dataset.gr)) {
         mclapply(dataset.gr, subsetByOverlaps, blacklist, invert = TRUE,
