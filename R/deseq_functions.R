@@ -122,15 +122,14 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
                                     blacklist = blacklist, ncores = ncores)
 
     # check for valid sample_names
-    if (is.null(sample_names))  sample_names <- names(counts.df)
-    .check_snames(ncol(counts.df), sample_names = sample_names)
+    if (is.null(sample_names))
+        sample_names <- names(counts.df)
+    .checkdsnames(ncol(counts.df), sample_names, length(regions.gr), gene_names)
 
     # if given, check gene_names match regions.gr, and if they match multiple
     discont.genes <- FALSE
-    if (!is.null(gene_names)) {
-        .check_gnames(length(regions.gr), gene_names)
+    if (!is.null(gene_names))
         discont.genes <- length(unique(gene_names)) != length(gene_names)
-    }
 
     # Make column data (colData) for SummarizedExperiment
     coldat <- .get_coldat(sample_names)
@@ -144,35 +143,26 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
         dds <- DESeqDataSet(se, design = ~condition)
     }
 
-    if (!is.null(sizeFactors))  sizeFactors(dds) <- sizeFactors
+    if (!is.null(sizeFactors))
+        sizeFactors(dds) <- sizeFactors
     return(dds)
 }
 
 
-.check_snames <- function(n, sample_names) {
-    if (length(sample_names) != n) {
-        stop(message = .nicemsg("sample_names are required, and a name is
-                                required for each element of dataset.list"))
-        return(geterrmessage())
-    }
+.checkdsnames <- function(ns, sample_names, nr, gene_names) {
+    if (length(sample_names) != ns)
+        stop(.nicemsg("sample_names are required, and a name is required for
+                      each element of dataset.list"))
 
-    if (any(!grepl("_rep.", sample_names))) {
-        stop(message = .nicemsg("all sample_names must contain strings naming
-                                replicates as such: 'rep1', 'rep2', etc."))
-        return(geterrmessage())
-    }
+    if (any(!grepl("_rep.", sample_names)))
+        stop(.nicemsg("all sample_names must contain strings naming replicates
+                      as such: 'rep1', 'rep2', etc."))
+
+    if (!is.null(gene_names) && length(gene_names) != nr)
+        stop(.nicemsg("gene_names given are not the same length as regions.gr;
+                      gene_names must correspond 1:1 with the ranges in
+                      regions.gr"))
 }
-
-
-.check_gnames <- function(n, gene_names) {
-    if (length(gene_names) != n) {
-        stop(message = .nicemsg("gene_names given are not the same length as
-                                regions.gr; gene_names must correspond 1:1 with
-                                the ranges in regions.gr"))
-        return(geterrmessage())
-    }
-}
-
 
 .get_coldat <- function(sample_names) {
     data.frame(condition = sub("_rep.", "", sample_names),
@@ -389,12 +379,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
     if (clist) comparisons <- .check_clist(comparisons)
 
-    if (!xor(clist, num & denom)) {
-        stop(message = .nicemsg("Either provide both contrast.numer and
-                                contrast.denom, or provide comparisons,
-                                but not both"))
-        return(geterrmessage())
-    }
+    if (!xor(clist, num & denom))
+        stop(.nicemsg("Either provide both contrast.numer and contrast.denom,
+                      or provide comparisons, but not both"))
     return(comparisons)
 }
 
@@ -406,20 +393,17 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     class_ok <- .class_check(comparisons)
     lengths_ok <- all(lengths(comparisons) == 2)
 
-    if (!(class_ok & lengths_ok)) {
-        stop(message = .nicemsg("comparisons provided as input, but it's not a
-                                list of length = 2 character vectors, or a
-                                dataframe of characters with 2 columns"))
-        return(geterrmessage())
-    }
+    if (!(class_ok & lengths_ok))
+        stop(.nicemsg("comparisons provided as input, but it's not a list of
+                      length = 2 character vectors, or a dataframe of characters
+                      with 2 columns"))
     return(comparisons)
 }
 
 .class_check <- function(comparisons) {
     if (!is.list(comparisons)) return(FALSE)
     classes <- vapply(comparisons, is.character, FUN.VALUE = logical(1))
-    if (all(classes)) return(TRUE)
-    return(FALSE)
+    all(classes)
 }
 
 
@@ -437,11 +421,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         warning("Overwriting previous sizeFactors", immediate. = TRUE)
     }
 
-    if (when_sf == "late" & length(comparisons) > 1)  {
+    if (when_sf == "late" & length(comparisons) > 1)
         stop(message = .nicemsg("Length of sizeFactors not equal to number of
                                 samples in dds"))
-        return(geterrmessage())
-    }
 }
 
 
@@ -462,7 +444,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                               usr = args.DESeq,
                               exclude = c("object", "parallel"))
 
-    if (!"quiet" %in% names(args.DESeq)) args.DESeq$quiet <- quiet
+    if (!"quiet" %in% names(args.DESeq))
+        args.DESeq$quiet <- quiet
+
     dds <- do.call(DESeq2::DESeq, args.DESeq)
 
     # ==== Call DESeq2::results()
@@ -488,134 +472,30 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     when_sf <- .when_sf(dds, sizeFactors)
     already_sf <- !is.null(sizeFactors(dds))
 
-    if (when_sf == "late") {
-        stop(message = .nicemsg("Length of sizeFactors not equal to number of
-                                samples in dds nor the number of samples in
-                                comparison group"))
-        return(geterrmessage())
-    }
+    if (when_sf == "late")
+        stop(.nicemsg("Length of sizeFactors not equal to number of samples in
+                      dds nor the number of samples in comparison group"))
 
     if (when_sf == "early") {
         if (already_sf & !quiet)
             warning("Overwriting previous sizeFactors", immediate. = TRUE)
         sizeFactors(dds) <- sizeFactors
     }
-
-    return(dds)
+    dds
 }
 
 
 .merge_args <- function(rqd, usr, exclude = NULL) {
     # function to combine required args with optional user args
     # exclude is an optional character vector of user args to remove
-    if (is.null(usr))  return(as.list(rqd))
+    if (is.null(usr))
+        return(as.list(rqd))
 
-    if (!class(usr) %in% c("list", "expression") | is.null(names(usr))) {
-        stop(message = .nicemsg("If given, args.DESeq and args.results must be
-                                named lists or R expressions containing argument
-                                names and values. See documentation"))
-        return(geterrmessage())
-    }
+    if (!class(usr) %in% c("list", "expression") | is.null(names(usr)))
+        stop(.nicemsg("If given, args.DESeq and args.results must be named lists
+                      or R expressions containing argument names and values.
+                      See documentation"))
     usr <- as.expression(usr)
     usr <- usr[!names(usr) %in% exclude]
-    return(as.list(c(rqd, usr)))
+    as.list(c(rqd, usr))
 }
-
-### ========================================================================= #
-### Get Batches of DESeq2 Results from DESeqDataSet
-### ------------------------------------------------------------------------- #
-###
-
-
-# #' Automate batch calls to getDESeqResults
-# #'
-# #' This function can automate the generation numerous pairwise DESeq2
-# #' comparisons using several logical schemes.
-# #'
-# #'
-# #' @param dds
-# #' @param sizeFactors
-# #' @param alpha
-# #' @param anchor
-# #' @param permutations
-# #' @param additional_comparisons
-# #' @param ncores
-# #'
-# #' @return
-# #' @export
-# #'
-# #' @examples
-# getDESeqResultsInBatch <- function(dds,
-#                                    sizeFactors = NULL,
-#                                    alpha = 0.05,
-#                                    anchor = NULL,
-#                                    permutations = FALSE,
-#                                    additional_comparisons = NULL,
-#                                    ncores = detectCores()) {
-#
-#     if (!is.null(sizeFactors))  sizeFactors(dds) <- sizeFactors
-#
-#     condition_names <- as.character(levels(dds$condition))
-#
-#     # If anchor is given, compare everything to every sample name that pattern
-#     # matches anchor
-#     if (!is.null(anchor)) {
-#         idx.anchor <- grep(anchor, condition_names)
-#         all_pairs <- data.frame(Var1 = rep(idx.anchor,
-#                                            each = length(condition_names)),
-#                                 Var2 = seq_along(condition_names))
-#         all_pairs <- subset(all_pairs, Var1 != Var2)
-#     }
-#
-#     # If no anchor given, do combinations of comparisons
-#     if (is.null(anchor)) {
-#         if (permutations) {
-#             # all pairwise comparisons, order matters
-#             #   (i.e. get 1-vs-2 and 2-vs-1)
-#             all_pairs <- expand.grid(rep(list(seq_along(condition_names)), 2))
-#             all_pairs <- subset(all_pairs, Var1 != Var2)
-#             all_pairs <- all_pairs[, 2:1]
-#         } else {
-#             # combinations, order doesn't matter
-#             #   (i.e. if get 1-vs-2, don't get 2-vs-1)
-#             all_pairs <- combn(seq_along(condition_names), 2)
-#             all_pairs <- t(all_pairs)
-#         }
-#     }
-#
-#     # if additional_comparisons given, add them to the end
-#     if (!is.null(additional_comparisons)) {
-#         add.numer <- vapply(additional_comparisons, "[[", 1, character(1))
-#         add.denom <- vapply(additional_comparisons, "[[", 2, character(1))
-#         idx.add <- data.frame(
-#             Var1 = vapply(add.denom,
-#                           function(i) which(condition_names == i),
-#                           FUN.VALUE = integer(1)),
-#             Var2 = vapply(add.numer,
-#                           function(i) which(condition_names == i),
-#                           FUN.VALUE = integer(1)),
-#             row.names = NULL
-#         )
-#         all_pairs <- rbind(all_pairs, idx.add)
-#     }
-#
-#     # call DESeq2::results for all comparisons
-#     comparisons <- mclapply(seq_len(nrow(all_pairs)), function(i) {
-#         numer_i <- all_pairs[i, 2]
-#         denom_i <- all_pairs[i, 1]
-#         md.getDESeqResults(dds = dds,
-#                            contrast.numer = condition_names[numer_i],
-#                            contrast.denom = condition_names[denom_i],
-#                            alpha = alpha)
-#     }, mc.cores = ncores)
-#
-#     names(comparisons) <- vapply(seq_along(comparisons), function(i) {
-#         numer_i <- all_pairs[i, 2]
-#         denom_i <- all_pairs[i, 1]
-#         paste0(condition_names[numer_i], "_vs_", condition_names[denom_i])
-#     }, FUN.VALUE = character(1))
-#
-#     return(comparisons)
-# }
-
-
