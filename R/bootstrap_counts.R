@@ -127,6 +127,7 @@ NULL
 #' @rdname bootstrap-signal-by-position
 #' @export
 #' @importFrom parallel detectCores mcMap
+#' @importFrom GenomicRanges width
 metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                           first.output.xval = 1,
                           sample.name = deparse(substitute(dataset.gr)),
@@ -135,7 +136,8 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                           remove.empty = FALSE, blacklist = NULL,
                           zero_blacklisted = FALSE, ncores = detectCores()) {
 
-    .check_regions(regions.gr) # check that all widths are the same
+    if (length(unique(width(regions.gr))) > 1) # check ranges all same width
+        stop(message = "Not all ranges in regions.gr are the same width")
 
     # Signal in each gene; matrix of dim = (ngenes, nbins), or list of matrices
     signal.bins <- getCountsByPositions(dataset.gr, regions.gr,
@@ -174,12 +176,6 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     }
 }
 
-
-#' @importFrom GenomicRanges width
-.check_regions <- function(regions.gr) {
-    if (length(unique(width(regions.gr))) > 1)
-        stop(message = "Not all ranges in regions.gr are the same width")
-}
 
 .fixbins <- function(df, binsize, first.output.xval) {
     nbins <- nrow(df)

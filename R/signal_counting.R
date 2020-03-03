@@ -72,7 +72,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         cl <- mcMap(.get_cbr, dataset.gr, list(regions.gr), field, NF,
                     mc.cores = ncores)
         cl <- as.data.frame(cl)
-        if (melt)  return(.melt_counts(cl, colnames(cl), region_names))
+        if (melt) return(.melt_counts(cl, colnames(cl), region_names))
         return(cl)
     }
 
@@ -84,7 +84,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF)
         names(cl) <- field
         cl <- as.data.frame(cl)
-        if (melt)  return(.melt_counts(cl, field, region_names))
+        if (melt) return(.melt_counts(cl, field, region_names))
         return(cl)
     } else {
         counts <- .get_cbr(dataset.gr, regions.gr, field, NF)
