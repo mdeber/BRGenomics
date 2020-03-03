@@ -78,7 +78,14 @@ genebodies <- function(genelist, start = 300, end = -300,
                        fix.start = "start", fix.end = "end",
                        min.window = 0) {
 
-    .check_args_genebodies(start, end, fix.start, fix.end)
+    if (!all(c(fix.start, fix.end) %in% c("start", "end")))
+        stop("fix.start and fix.end must be 'start' or 'end'")
+
+    if (fix.start == "end" & fix.end == "start")
+        stop("cannot have fix.end = start when fix.start = end")
+
+    if ((fix.start == fix.end) & (end <= start))
+        stop("If fix.end = fix.start, end must be greater than start")
 
     if (any(as.character(strand(genelist)) == "*")) {
         warning("Unstranded ranges were found and removed from genelist")
@@ -86,8 +93,9 @@ genebodies <- function(genelist, start = 300, end = -300,
     }
 
     # Filter genelist based on min.window
-    min_width <- .find_min_width(start, end, fix.start, fix.end, min.window)
-    genelist <- subset(genelist, width >= min_width)
+    if (fix.start == "start" & fix.end == "end")
+        min.window <- start - end + min.window
+    genelist <- subset(genelist, width >= min.window)
 
     # starts are at strand-specific beginnings of the genebodies
     sense_starts <- start(resize(genelist, 1, fix = fix.start))
@@ -101,37 +109,8 @@ genebodies <- function(genelist, start = 300, end = -300,
                                        end = sense_ends[idx.p] + end)
     ranges(genelist)[idx.m] <- IRanges(start = sense_ends[idx.m] - end,
                                        end = sense_starts[idx.m] - start)
-
-    return(genelist)
+    genelist
 }
-
-
-.check_args_genebodies <- function(start, end, fix.start, fix.end) {
-    if (!all(c(fix.start, fix.end) %in% c("start", "end"))) {
-        stop("fix.start and fix.end must be 'start' or 'end'")
-        return(geterrmessage())
-    }
-
-    if (fix.start == "end" & fix.end == "start") {
-        stop("cannot have fix.end = start when fix.start = end")
-        return(geterrmessage())
-    }
-
-    if ((fix.start == fix.end) & (end <= start)) {
-        stop("If fix.end = fix.start, end must be greater than start")
-        return(geterrmessage())
-    }
-}
-
-
-.find_min_width <- function(start, end, fix.start, fix.end, min.window) {
-    if (fix.start == "start" & fix.end == "end") {
-        return(start - end + min.window)
-    } else {
-        return(min.window)
-    }
-}
-
 
 
 
@@ -244,7 +223,7 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' gnames <- c("A", "B", "B", "B")
 #' reduceByGene(gr, gnames)
 #'
-#' # With disjoin = TRUE, segments overlapping multiple genes are removed as well
+#' # With disjoin = TRUE, segments overlapping >1 gene are removed as well
 #' reduceByGene(gr, gnames, disjoin = TRUE)
 #'
 #' # Will use one more example to demonstrate how all
@@ -305,7 +284,7 @@ intersectByGene <- function(regions.gr, gene_names) {
 
     ranges(gr) <- IRanges(max.starts, min.ends)
     names(gr) <- names(grl)
-    return(sort(gr))
+    sort(gr)
 }
 
 
@@ -337,8 +316,7 @@ reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
         regions.gr$revmap <- NULL
         names(regions.gr) <- unlist(gn[idx])
     }
-
-    return(regions.gr)
+    regions.gr
 }
 
 
@@ -442,7 +420,7 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
     regions.max.gr <- resize(regions.max.gr, size, fix = "end")
 
     if (keep.signal)  regions.max.gr$MaxSiteSignal <- maxsites$score
-    return(regions.max.gr)
+    regions.max.gr
 }
 
 
@@ -547,24 +525,23 @@ subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   field = "score", order.by.rank = FALSE,
                                   density = FALSE, keep.signal = FALSE) {
 
-    if (quantiles[1] == 1 | quantiles[2] == 0)  return(regions.gr[0])
+    if (quantiles[1] == 1 | quantiles[2] == 0)
+        return(regions.gr[0])
 
     signal_counts <- getCountsByRegions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
                                         field = field)
 
-    if (density)  signal_counts <- signal_counts / width(regions.gr)
-    if (keep.signal)  regions.gr$Signal <- signal_counts
+    if (density) signal_counts <- signal_counts / width(regions.gr)
+    if (keep.signal) regions.gr$Signal <- signal_counts
 
     idx_rank <- order(signal_counts) # increasing
     bounds <- quantile(seq_along(regions.gr), quantiles)
     idx <- window(idx_rank, bounds[1], bounds[2])
 
     if (order.by.rank) {
-        return(rev(regions.gr[idx]))
+        rev(regions.gr[idx])
     } else {
-        return(sort(regions.gr[idx]))
+        sort(regions.gr[idx])
     }
 }
-
-
