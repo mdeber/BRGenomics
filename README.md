@@ -18,7 +18,7 @@ Install development version from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("mdeber/BRGenomics")
+devtools::install_github("mdeber/BRGenomics@R3")
 ```
 
 If you’re using Windows, [Rtools for

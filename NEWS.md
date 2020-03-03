@@ -1,3 +1,9 @@
+## BRGenomics 0.99.4
+
+* For Bioconductor, made new branch `R3` to allow users to install under R version >=3.5
+    + Branch `master` now requires R version 4.0 (development version)
+* Updated readme to have users install from branch `R3`
+
 ## BRGenomics 0.99.1
 
 * Remove .Rproj file from git repository
