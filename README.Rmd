@@ -51,7 +51,3 @@ data^[1]^.
 1. Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis (2013). 
 Precise Maps of RNA Polymerase Reveal How Promoters Direct Initiation and 
 Pausing. *Science* __339__(6122): 950–953. https://doi.org/10.1126/science.1229386
-
-
-
-

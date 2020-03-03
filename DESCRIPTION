@@ -1,12 +1,20 @@
 Package: BRGenomics
 Type: Package
 Title: Tools for the Efficient Analysis of High-Resolution Genomics Data
-Version: 0.8.0
+Version: 0.99.0
 Authors@R: person("Mike", "DeBerardine", email = "mike.deberardine@gmail.com", 
     role = c("aut", "cre"))
 Description: This package provides useful and efficient utilites for the 
     analysis of high-resolution genomic data using standard Bioconductor 
-    methods and classes.
+    methods and classes. BRGenomics is feature-rich and simplifies a number of
+    post-alignment processing steps and data handling. Emphasis is on efficient
+    analysis of multiple datasets, with support for normalization and 
+    blacklisting. Included are functions for: spike-in normalizing data;
+    generating basepair-resolution readcounts and coverage data (e.g. for 
+    heatmaps); importing and processing bam files (e.g. for conversion to 
+    bigWig files); generating metaplots/metaprofiles (bootstrapped mean 
+    profiles) with confidence intervals; conveniently calling DESeq2 without 
+    using sample-blind estimates of genewise dispersion; among other features.
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: FALSE
@@ -32,7 +40,9 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
-    ggplot2
+    devtools,
+    ggplot2,
+    Biostrings
 biocViews:
     Software,
     DataImport,
