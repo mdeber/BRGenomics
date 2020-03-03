@@ -6,11 +6,12 @@
 \alias{PROseq}
 \alias{PROseq_paired}
 \title{PRO-seq data from Drosophila S2 cells}
-\format{A disjoint GRanges object with 47533 ranges with 1 metadata column:
-\describe{
-  \item{score}{coverage of PRO-seq read 3'-ends}
-  ...
-}}
+\format{\code{PROseq} is a disjoint GRanges object with 47380 ranges and 1
+  metadata column, "score", which contains coverage of PRO-seq read 3' ends.
+
+  \code{PROseq_paired} is a GRanges object containing 53179 ranges and 1
+  metadata column, "score", which indicates the number of identically-mapped
+  reads (i.e. they share the same 5' and 3' ends).}
 \source{
 GEO Accession GSM1032758, run SRR611828.
 }
