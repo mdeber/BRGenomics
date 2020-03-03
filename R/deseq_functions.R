@@ -390,20 +390,16 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         comparisons <- as.data.frame(t(comparisons), stringsAsFactors = FALSE)
         comparisons <- as.list(comparisons)
     }
-    class_ok <- .class_check(comparisons)
+    class_ok <- if (!is.list(comparisons)) FALSE else {
+        all(vapply(comparisons, is.character, logical(1)))
+    }
     lengths_ok <- all(lengths(comparisons) == 2)
 
     if (!(class_ok & lengths_ok))
         stop(.nicemsg("comparisons provided as input, but it's not a list of
                       length = 2 character vectors, or a dataframe of characters
                       with 2 columns"))
-    return(comparisons)
-}
-
-.class_check <- function(comparisons) {
-    if (!is.list(comparisons)) return(FALSE)
-    classes <- vapply(comparisons, is.character, FUN.VALUE = logical(1))
-    all(classes)
+    comparisons
 }
 
 

@@ -366,7 +366,7 @@ applyNFsGRanges <- function(dataset.gr, NF, field = "score",
 #' @importFrom parallel mcmapply
 #' @importFrom GenomicRanges mcols<-
 .norm_gr <- function(gr, field, nf, ncores) {
-    # (below supports for multiplexed GRanges)
+    # (supports multiplexed GRanges)
     mcols(gr)[field] <- mcmapply("*", mcols(gr)[field], nf, mc.cores = ncores)
     gr
 }

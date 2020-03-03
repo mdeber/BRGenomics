@@ -1,3 +1,7 @@
+## BRGenomics 0.99.1
+
+* Remove .Rproj file from git repository
+
 ## BRGenomics 0.99.0 (Bioconductor submission)
 
 * Update version for Bioconductor submission

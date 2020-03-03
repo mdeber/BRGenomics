@@ -171,20 +171,18 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     # get bins for data
     bins.df <- binNdimensions(dims.df, nbins, ncores)
 
-    if (!drop && !is.na(empty) && !ignore.na) {
-        # only for this combination of arguments do we need to differentiate the
-        # NAs that are returned by FUN from the NAs that result from empty bins
-        .aggbins_sep_inout_na(x.df, bins.df, FUN, ..., empty = empty)
+    # only for this combination of arguments do we need to differentiate the
+    # NAs that are returned by FUN from the NAs that result from empty bins
+    if (!drop && !is.na(empty) && !ignore.na)
+        return(.aggbins_sep_inout_na(x.df, bins.df, FUN, ..., empty = empty))
 
-    } else {
-        ag.bins <- aggregate(x.df, by = bins.df, FUN = FUN, ..., drop = drop)
-        if (!is.na(empty)) {
-            dnames <- names(x.df)
-            e.idx <- which(is.na(ag.bins[, dnames]), arr.ind = TRUE)
-            ag.bins[, dnames][e.idx] <- empty
-        }
-        ag.bins
+    ag.bins <- aggregate(x.df, by = bins.df, FUN = FUN, ..., drop = drop)
+    if (!is.na(empty)) {
+        dnames <- names(x.df)
+        e.idx <- which(is.na(ag.bins[, dnames]), arr.ind = TRUE)
+        ag.bins[, dnames][e.idx] <- empty
     }
+    ag.bins
 }
 
 
