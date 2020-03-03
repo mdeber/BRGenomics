@@ -20,7 +20,7 @@ test_counts <- getCountsByRegions(PROseq, txs_dm6_chr4)
 test_that("signal counts correct returns correct vector", {
     expect_is(test_counts, "integer")
     expect_equal(length(test_counts), length(txs_dm6_chr4))
-    expect_equivalent(test_counts[1:4], c(1, 58, 13, 125))
+    expect_equivalent(test_counts[1:4], c(1, 59, 13, 126))
 })
 
 test_that("melt option works for single sample", {

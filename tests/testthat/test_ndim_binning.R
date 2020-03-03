@@ -42,8 +42,8 @@ test_that("can aggregate in ndimensional bins", {
 
     expect_is(mean_bins, "data.frame")
     expect_equal(names(mean_bins), c("bin.pr", "bin.gb", "value"))
-    expect_equal(round(mean_bins$value[1]), 139)
-    expect_equal(sum(is.na(mean_bins$value)), 21)
+    expect_equal(round(mean_bins$value[1]), 142)
+    expect_equal(sum(is.na(mean_bins$value)), 15)
 
     # test using x = column name
     dfplus <- df
@@ -55,12 +55,12 @@ test_that("can aggregate in ndimensional bins", {
 test_that("can modify function and default output values", {
     sum_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
                                             ncores = 2)
-    expect_equal(sum_bins$value[1], 18540)
+    expect_equal(sum_bins$value[1], 19330)
     expect_true(is.na(sum_bins$value[3]))
 
     sum_bins2 <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
                                              empty = 0, ncores = 2)
-    expect_equal(sum_bins2$value[1], 18540)
+    expect_equal(sum_bins2$value[1], 19330)
     expect_equal(sum_bins2$value[3], 0)
 })
 
@@ -83,7 +83,7 @@ test_that("can separate 'empty NAs' from 'output NAs'", {
 
 test_that("can find density in ndimensional bins", {
     bin_density <- densityInNdimensionalBins(df, ncores = 2)
-    expect_equivalent(bin_density$value[1:3], c(133, 9, 0))
+    expect_equivalent(bin_density$value[1:3], c(136, 9, 0))
 })
 
 

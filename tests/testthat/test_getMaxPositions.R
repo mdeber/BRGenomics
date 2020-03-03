@@ -38,7 +38,7 @@ test_that("Max sites found for regions with signal", {
                                    regions.gr = test_regions_promoter)
     expect_equal(length(out), length(subsetByOverlaps(test_regions_promoter,
                                                       PROseq)))
-    expect_equivalent(start(out)[1:4], c(42799, 44801, 69402, 69402))
+    expect_equivalent(start(out)[1:4], c(42798, 44800, 69401, 69401))
     expect_true(all(width(out) == 1))
 })
 
@@ -47,7 +47,7 @@ test_that("Correct signal metadata added for regions with signal", {
                                    regions.gr = test_regions_promoter,
                                    keep.signal = TRUE)
     # two repeated tests
-    expect_equivalent(start(out)[1:4], c(42799, 44801, 69402, 69402))
+    expect_equivalent(start(out)[1:4], c(42798, 44800, 69401, 69401))
     expect_equal(ncol(mcols(out)), ncol(mcols(txs_dm6_chr4)) + 1)
 
     score_col <- which(!names(mcols(out)) %in% names(mcols(txs_dm6_chr4)))
@@ -59,7 +59,7 @@ test_that("Max sites found with multi-width input", {
                                    regions.gr = test_regions)
     expect_is(out, "GRanges")
     expect_equal(length(out), length(test_regions)) # all have signal
-    expect_equivalent(start(out)[1:4], c(1296, 42799, 45916, 60310))
+    expect_equivalent(start(out)[1:4], c(1295, 42798, 45915, 60309))
 })
 
 test_that("Max signals found in larger bins", {
@@ -79,7 +79,7 @@ test_that("Max signals found in larger bins, bin.centers = TRUE", {
     out2 <- getMaxPositionsBySignal(dataset.gr = PROseq,
                                     regions.gr = test_regions,
                                     binsize = 11, bin.centers = TRUE)
-    expect_equivalent(start(out2)[1:4], c(1291, 42801, 45912, 60913))
+    expect_equivalent(start(out2)[1:4], c(1291, 43285, 45912, 60913))
 })
 
 

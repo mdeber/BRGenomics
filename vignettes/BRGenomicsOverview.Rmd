@@ -357,7 +357,7 @@ BRGenomics provides several functions for conveniently importing and processing 
 
 ## Importing BAM Files
 
-The `import_bam` function provides a number of options for filtering and processing bam files. BRGenomics includes an example BAM file of the included PRO-seq data, whose local location can be found as follows:
+The `import_bam` function provides a number of options for filtering and processing bam files. BRGenomics includes an example BAM file with a small number of reads from the included PRO-seq data. The file's local location can be found (on your computer) as follows:
 
 ```{r}
 bfile <- system.file("extdata", "PROseq_dm6_chr4.bam", 

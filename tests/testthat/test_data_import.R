@@ -65,8 +65,8 @@ test_that("PROseq files import", {
 test_that("Imported PROseq formatted correctly", {
     expect_equal(c(genome(ps), use.names = FALSE), "dm6")
     expect_true(all(width(ps) == 1))
-    expect_equal(length(ps), 47380)
-    expect_equal(sum(score(ps)), 73887)
+    expect_equal(length(ps), 150)
+    expect_equal(sum(score(ps)), 190)
     expect_is(ps$score, "integer")
     expect_equal(as.character(unique(seqnames(ps))), "chr4")
     expect_true(all(as.character(strand(ps)) %in% c("+", "-")))
@@ -95,8 +95,8 @@ test_that("Paired PROseq files import", {
 
 test_that("Paired PROseq formatted correctly", {
     expect_equal(c(genome(ps_paired), use.names = FALSE), "dm6")
-    expect_equal(length(ps_paired), 53179)
-    expect_equal(sum(score(ps_paired)), 73887)
+    expect_equal(length(ps_paired), 164)
+    expect_equal(sum(score(ps_paired)), 190)
     expect_is(ps_paired$score, "integer")
     expect_equal(as.character(unique(seqnames(ps_paired))), "chr4")
     expect_true(all(as.character(strand(ps_paired)) %in% c("+", "-")))
@@ -131,11 +131,21 @@ test_that("Options applied", {
                  sum(as.character(strand(
                      import_bam(ps_bam, paired_end = FALSE))) == "-"))
     ps_nostrand <- import_bam(ps_bam, ignore.strand = TRUE, paired_end = FALSE)
-    expect_true(length(ps_nostrand) < length(ps_reads))
+    expect_true(length(ps_nostrand) <= length(ps_reads))
     expect_equal(unique(as.character(strand(ps_nostrand))), "*")
     expect_equal(sum(score(ps_nostrand)), sum(score(ps_reads)))
     expect_equal(sum(score(ps_reads)),
                  sum(score(import_bam(ps_bam, trim.to = "3p",
                                       paired_end = FALSE))))
+    # test shift fxn in more detail
+    ps_paired <- import_bam(ps_bam, revcomp = TRUE, paired_end = FALSE,
+                            shift = c(0, -1))
+    expect_identical(resize(ps_reads, 1, "start"),
+                     resize(ps_paired, 1, "start"))
+    reads.3p <- start(resize(ps_reads, 1, "end"))
+    paired.3p <- start(resize(ps_paired, 1, "end"))
+    pranges <- as.logical(strand(ps_reads) == "+")
+    expect_identical(reads.3p[pranges], paired.3p[pranges] + 1L)
+    expect_identical(reads.3p[!pranges], paired.3p[!pranges] - 1L)
 })
 

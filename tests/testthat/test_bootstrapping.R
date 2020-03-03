@@ -16,7 +16,7 @@ test_that("can get bootstrapped means from counts matrix", {
     expect_equivalent(names(df),
                       c("x", "mean", "lower", "upper", "sample.name"))
     expect_equivalent(df$x, seq_len(100) - 11)
-    expect_equivalent(round(df$mean*100)[1:5], c(3, 0, 6, 6, 0))
+    expect_equivalent(round(df$mean*100)[1:5], c(0, 6, 6, 0, 3))
 })
 
 test_that("sampling GRanges same as sampling matrix", {
