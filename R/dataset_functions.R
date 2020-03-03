@@ -2,9 +2,6 @@
 # Format GRanges datasets for base-pair resolution analysis
 # ------------------------------------------------------------------------- #
 
-
-
-
 #' Constructing and checking for base-pair resolution GRanges objects
 #'
 #' \code{makeGRangesBRG} splits up all ranges in \code{dataset.gr} to be each 1
@@ -102,14 +99,11 @@
 #' all(score(undo) == score(bw))
 makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr))
         return(mclapply(dataset.gr, makeGRangesBRG, mc.cores = ncores))
-    }
 
-    if (!isDisjoint(dataset.gr)) {
+    if (!isDisjoint(dataset.gr))
         stop("Input dataset.gr is not disjoint. See documentation")
-        return(geterrmessage())
-    }
 
     # Make all widths = 1
     gr_bp <- GRanges(GPos(dataset.gr))
@@ -119,13 +113,13 @@ makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
     mcols(gr_bp) <- mcols(dataset.gr)[hits@from, ]
     names(mcols(gr_bp)) <- names(mcols(dataset.gr))
 
-    return(sort(gr_bp))
+    sort(gr_bp)
 }
 
 #' @rdname makeGRangesBRG
 #' @param x Object to be tested.
 #' @importFrom methods is
-#' @importFrom GenomicRanges isDisjoint
+#' @importFrom GenomicRanges width isDisjoint
 #' @export
 isBRG <- function(x) {
     is(x, "GRanges") && all(width(x) == 1) && isDisjoint(x)
@@ -224,18 +218,14 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
                      mc.cores = ncores))
     }
 
-    if (!is.null(field) && !(field %in% names(mcols(dataset.gr)))) {
-        msg <- .nicemsg("The given value for 'field' is not found in
-                        mcols(dataset.gr). If no field contains signal counts
-                        for each range, set field = NULL")
-        stop(message = msg)
-        return(geterrmessage())
-    }
+    if (!is.null(field) && !(field %in% names(mcols(dataset.gr))))
+        stop(.nicemsg("The given value for 'field' is not found in
+                      mcols(dataset.gr). If no field contains signal counts for
+                      each range, set field = NULL"))
 
     cvg_ls <- mclapply(c("+", "-", "*"), .get_stranded_cvg, dataset.gr, field,
                        mc.cores = min(ncores, 3))
-    cvg <- do.call(c, cvg_ls)
-    return(sort(cvg))
+    sort(do.call(c, cvg_ls))
 }
 
 #' @import GenomicRanges
@@ -365,10 +355,8 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         lcm <- min(signal_counts)
         unnorm_signal <- signal_counts / lcm
         if (!all( round(unnorm_signal, 3) %% 1 == 0 )) {
-            stop(message = .nicemsg("Signal given in 'field' are not whole
-                                    numbers, and unable to infer a normalization
-                                    factor."))
-            return(geterrmessage())
+            stop(.nicemsg("Signal given in 'field' are not whole numbers, and
+                          unable to infer a normalization factor."))
         } else {
             warning(.nicemsg("Signal given in 'field' are not whole numbers. A
                              normalization factor was inferred based on the
@@ -384,7 +372,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
     mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
 
     if (normed_signal) mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm
-    return(sort(gr_out))
+    sort(gr_out)
 }
 
 
@@ -519,8 +507,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
         # use of apply will maintain integers; rowSums would make numeric
         mcols(gr)[field] <- apply(counts, 1, sum)
     }
-
-    return(gr)
+    gr
 }
 
 
@@ -542,10 +529,8 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 .check_merge_fields <- function(data_in, field) {
 
     if (length(field) > 1) {
-        if (length(field) != length(data_in)) {
-            stop("given fields not equal to number of datasets")
-            return(geterrmessage())
-        }
+        if (length(field) != length(data_in))
+            stop("Given fields not equal to number of datasets")
         return(field)
     }
 
@@ -553,5 +538,3 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 
     rep(field, length(data_in))
 }
-
-

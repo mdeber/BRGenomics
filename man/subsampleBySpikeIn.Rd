@@ -63,8 +63,8 @@ grl
 #--------------------------------------------------#
 
 # see examples for getSpikeInNFs for more
-getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
-              ncores = 2)
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+              method = "SNR", ncores = 2)
 
 #--------------------------------------------------#
 # Subsample the GRanges according to the spike-in NFs

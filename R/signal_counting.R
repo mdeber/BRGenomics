@@ -95,11 +95,13 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 
 .melt_counts <- function(df, snames, region_names) {
 
-    if (is.vector(df))  df <- data.frame(df)
+    if (is.vector(df))
+        df <- data.frame(df)
     nr <- nrow(df) # number of regions
     ns <- ncol(df) # number of samples
 
-    if (is.null(region_names))  region_names <- seq_len(nr)
+    if (is.null(region_names))
+        region_names <- seq_len(nr)
 
     if (length(snames) > 1) {
         df <- data.frame(region = rep(region_names, ns),
@@ -131,20 +133,17 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     } else {
         n <- length(field)
     }
+
     if (is.null(NF))  NF <- rep(1L, n)
 
     if (length(NF) != n) {
-        if (is.list(dataset.gr)) {
-            msg <- .nicemsg("If dataset.gr is a list and an NF is given, then
-                            length(NF) must equal length(dataset.gr)")
-        } else {
-            msg <- .nicemsg("If NF is given and length(field) > 1, then
-                            length(NF) must equal length(field)")
-        }
-        stop(msg)
-        return(geterrmessage())
+        if (is.list(dataset.gr))
+            stop(.nicemsg("If dataset.gr is a list and an NF is given, then
+                          length(NF) must equal length(dataset.gr)"))
+        stop(.nicemsg("If NF is given and length(field) > 1, then length(NF)
+                      must equal length(field)"))
     }
-    return(NF)
+    NF
 }
 
 
@@ -168,7 +167,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
                          all fields in dataset.gr"))
         field <- fnames
     }
-    return(field)
+    field
 }
 
 
@@ -284,11 +283,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     # apply blacklisting; xy positions (matrix row, column) of blacklist hits;
     # delay application if multiwidth -> send down arg as xy.bl
-    if (smw == "error") {
-        xy.bl <- NULL
-    } else {
-        xy.bl <- NA_blacklisted
-    }
+    xy.bl <- if (smw == "error") NULL else NA_blacklisted
 
     if (!is.null(blacklist)) {
         dataset.gr <- .blacklist(dataset.gr, blacklist, ncores)
@@ -367,25 +362,20 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 .check_mw_arg <- function(smw, melt, mw) {
     if (mw) { # if dispatched from .get_cbp_mw
-        if (smw == "error") {
-            stop(message = .nicemsg("regions.gr contains ranges with multiple
-                                    widths, but simplify.multi.widths is set to
-                                    'error'. Did you mean to call
-                                    getCountsByRegions instead?"))
-            return(geterrmessage())
-        }
-        if (melt)  smw <- "list"
+        if (smw == "error")
+            stop(.nicemsg("regions.gr contains ranges with multiple widths, but
+                          simplify.multi.widths is set to 'error'. Did you mean
+                          to call getCountsByRegions instead?"))
+        if (melt) smw <- "list"
         return(smw)
 
     } else {
         # check is necessary because NA_blacklisting would fail otherwise, but
         # will give error in every case to not confuse users if they discover
         # other conditions when the error isn't returned
-        if (smw != "error") {
-            stop(message = .nicemsg("simplify.multi.widths changed from default,
-                                    but regions.gr is not multiwidth"))
-            return(geterrmessage())
-        }
+        if (smw != "error")
+            stop(.nicemsg("simplify.multi.widths changed from default, but
+                          regions.gr is not multiwidth"))
     }
 
 }
@@ -450,17 +440,17 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     # initialize signal matrix of dim = (region, position within region)
     rwidth <- width(regions.gr[1])
-    if (length(rwidth) == 0) {
-        stop(.nicemsg("Cannot make counts matrix because regions.gr is empty"))
-        return(geterrmessage())
-    }
+    if (length(rwidth) == 0)
+        stop("Cannot make counts matrix because regions.gr is empty")
+
     mat <- matrix(0L, length(regions.gr), rwidth)
 
     # find (x, y) = (region, position)
     xy <- .get_positions_in_regions(hits, dataset.gr, regions.gr)
     mat[xy] <- mcols(dataset.gr)[[field]][hits@to]
 
-    if (!is.null(xy.bl))  mat[xy.bl] <- NA # apply NA_blacklisting
+    if (!is.null(xy.bl)) # apply NA_blacklisting
+        mat[xy.bl] <- NA
 
     if (binsize > 1) {
         mat <- apply(mat, 1, function(x) .binVector(x, binsize = binsize,
@@ -468,8 +458,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         mat <- t(mat) # apply will cbind rather than rbind
     }
     mat <- mat * NF # apply normalization
-    if (melt)  mat <- .meltmat(mat)
-    return(mat)
+    if (melt) mat <- .meltmat(mat)
+    mat
 }
 
 .get_positions_in_regions <- function(hits, dataset.gr, regions.gr) {
@@ -598,11 +588,9 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                               melt = FALSE, region_names = NULL,
                               ncores = detectCores()) {
 
-    if (length(promoters.gr) != length(genebodies.gr)) {
+    if (length(promoters.gr) != length(genebodies.gr))
         stop(message = .nicemsg("Number of ranges in promoters.gr not equal to
                                 number of ranges in genebodies.gr"))
-        return(geterrmessage())
-    }
 
     dwidth <- NULL # differences in width caused by blacklisting
     if (!is.null(blacklist)) {
@@ -678,7 +666,7 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         pidx <- .melt_counts(pidx, NULL, region_names)
         colnames(pidx) <- c("region", "pauseIndex")
     }
-    return(pidx)
+    pidx
 }
 
 .pidx_multi <- function(counts_pr, counts_gb, promoters.gr, genebodies.gr,
@@ -686,7 +674,8 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                         region_names, dwidth) {
 
     if (length.normalize) {
-        if (is.null(dwidth)) dwidth <- list(NULL, NULL)
+        if (is.null(dwidth))
+            dwidth <- list(NULL, NULL)
         counts_pr <- .lnorm_multi(counts_pr, promoters.gr, dnames, dwidth[[1]])
         counts_gb <- .lnorm_multi(counts_gb, genebodies.gr, dnames, dwidth[[2]])
     }
@@ -712,7 +701,7 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         pidx <- .melt_counts(pidx, colnames(pidx), region_names)
         colnames(pidx) <- c("region", "pauseIndex", "sample")
     }
-    return(pidx)
+    pidx
 }
 
 
@@ -722,8 +711,5 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
     counts <- lapply(counts, "/", widths.i)
     counts <- as.data.frame(counts)
     names(counts) <- dnames
-    return(counts)
+    counts
 }
-
-
-

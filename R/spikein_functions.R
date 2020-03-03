@@ -75,7 +75,8 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         names(dataset.gr) <- name_in
     }
 
-    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
+    if (!is.null(sample_names))
+        names(dataset.gr) <- sample_names
 
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
     .get_spikecounts(dataset.gr, spike_chrom, field, ncores)
@@ -161,6 +162,3 @@ getSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         keepSeqlevels(dataset.gr, spike_chrom, pruning.mode = "tidy")
     }
 }
-
-
-

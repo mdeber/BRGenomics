@@ -117,7 +117,7 @@ reduceByGene(gr, c("A", "A", "A", "A"))
 gnames <- c("A", "B", "B", "B")
 reduceByGene(gr, gnames)
 
-# With disjoin = TRUE, segments overlapping multiple genes are removed as well
+# With disjoin = TRUE, segments overlapping >1 gene are removed as well
 reduceByGene(gr, gnames, disjoin = TRUE)
 
 # Will use one more example to demonstrate how all

@@ -1,14 +1,4 @@
 
-# (some of the test cases demonstrate the equations well)
-
-# RPM normalization will remove any spike-in reads before generating RPM NFs
-
-# for batch normalization, sample names must contain "rep" followed by the
-#   replicate indication; if they're not named like this, users can use the
-#   sample_names argument to make them conform
-
-
-
 #' Calculating spike-in normalization factors
 #'
 #' Use \code{getSpikeInNFs} to obtain the spike-in normalization factors, or
@@ -137,8 +127,8 @@
 #' #--------------------------------------------------#
 #'
 #' # can use the names of all spike-in chromosomes
-#' getSpikeInNFs(grl, si_names = c("spikechr1", "spikechr2"), method = "RPM",
-#'               ncores = 2)
+#' getSpikeInNFs(grl, si_names = c("spikechr1", "spikechr2"),
+#'               method = "RPM", ncores = 2)
 #'
 #' # or use a regular expression that matches the spike-in chromosome names
 #' grep("spike", as.vector(seqnames(gr1_rep1)))
@@ -151,14 +141,14 @@
 #' #--------------------------------------------------#
 #'
 #' # without batch normalization, NFs make all spike-in readcounts match
-#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
-#'               batch_norm = FALSE, ncores = 2)
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'               method = "SNR", batch_norm = FALSE, ncores = 2)
 #'
-#' # with batch normalization, negative controls will have same normalized reads;
+#' # with batch normalization, controls will have the same normalized counts;
 #' # other samples are normalized to have same spike-in reads as their matched
 #' # control
-#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
-#'               batch_norm = TRUE, ncores = 2)
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'               method = "SNR", batch_norm = TRUE, ncores = 2)
 #'
 #' #--------------------------------------------------#
 #' # Get spike-in NFs with more meaningful units ("RPMC")
@@ -167,13 +157,13 @@
 #' # compare to raw RPM NFs above; takes into account spike-in reads;
 #' # units are directly comparable to the negative controls
 #'
-#' # with batch normalization, these negative controls are the same, as they have
-#' # the same number of non-spike-in readcounts (they're simply RPM)
+#' # with batch normalization, these negative controls are the same, as they
+#' # have the same number of non-spike-in readcounts (they're simply RPM)
 #' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
 #'
-#' # batch_norm = FALSE, the average reads-per-spike-in for the negative controls
-#' # are used to calculate all NFs; unless the controls have the exact same
-#' # ratio of non-spike-in to spike-in reads, nothing is precisely RPM
+#' # batch_norm = FALSE, the average reads-per-spike-in for the negative
+#' # controls are used to calculate all NFs; unless the controls have the exact
+#' # same ratio of non-spike-in to spike-in reads, nothing is precisely RPM
 #' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
 #'               batch_norm = FALSE, ncores = 2)
 #'
@@ -181,7 +171,8 @@
 #' # Apply NFs to the GRanges
 #' #--------------------------------------------------#
 #'
-#' spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
+#' spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'                    ncores = 2)
 getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                           method = c("SRPMC", "SNR", "RPM"), batch_norm = TRUE,
                           ctrl_pattern = NULL, ctrl_names = NULL,
@@ -360,7 +351,6 @@ applyNFsGRanges <- function(dataset.gr, NF, field = "score",
         message(.nicemsg("With field = NULL, will calculate stranded coverage
                          and make GRanges basepair-resolution before returning
                          normalized GRanges"))
-
         dataset.gr <- mclapply(dataset.gr, function(x) {
             makeGRangesBRG(getStrandedCoverage(x, field = NULL, ncores = 1))
         }, mc.cores = ncores)
@@ -380,25 +370,6 @@ applyNFsGRanges <- function(dataset.gr, NF, field = "score",
     mcols(gr)[field] <- mcmapply("*", mcols(gr)[field], nf, mc.cores = ncores)
     gr
 }
-
-
-
-# goal of SNR (spike-in normalized reads) is to downward adjust readcounts to be
-# correctly normalized; and then this can be used to subsample reads
-#   AFTER doing the subsampling, however, we could adjust the units to be in RPM;
-#   since all samples are then 1:1 in terms of raw (subsampled) readcounts,
-#   we would just use the negative control's read-depth to RPM normalize all
-#   samples
-
-# dataset.gr should be a list; but but should add support for using multiplex
-#   (already have a helper function somewhere for that...)
-
-# RPM_units will convert the raw readcounts into RPM, using the negative control
-#   if batch normalization is used, all negative controls have the same number
-#   of adjusted readcounts, and that number is used;
-#   if batch_norm = FALSE, the average number of reads across all negative
-#   controls is used
-
 
 
 #' Randomly subsample reads according to spike-in normalization
@@ -452,8 +423,8 @@ applyNFsGRanges <- function(dataset.gr, NF, field = "score",
 #' #--------------------------------------------------#
 #'
 #' # see examples for getSpikeInNFs for more
-#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", method = "SNR",
-#'               ncores = 2)
+#' getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
+#'               method = "SNR", ncores = 2)
 #'
 #' #--------------------------------------------------#
 #' # Subsample the GRanges according to the spike-in NFs
@@ -495,16 +466,16 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                    ncores = ncores)
 
     if (RPM_units) {
-        if (is.null(ctrl_pattern) & is.null(ctrl_names)) {
+        if (is.null(ctrl_pattern) & is.null(ctrl_names))
             stop(.nicemsg("Must give either ctrl_pattern or ctrl_names argument
                           if using the RPM_units option"))
-            return(geterrmessage())
-        }
+
         if (is.null(field)) {
             sc <- getStrandedCoverage(samples.gr, field = NULL, ncores = ncores)
             samples.gr <- makeGRangesBRG(sc, ncores = ncores)
             field <- "score"
         }
+
         # get RPM NF for negative controls
         idx_ctrl <- .get_idx_ctrl(counts.df, ctrl_pattern, ctrl_names)
         nf_rpm <- 1e6 / mean(nreads[idx_ctrl])
@@ -517,5 +488,5 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     if (length(samples.gr) == 1)
         return(samples.gr[[1]])
-    return(samples.gr)
+    samples.gr
 }

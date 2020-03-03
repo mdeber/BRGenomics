@@ -123,12 +123,10 @@ binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
 
     # check input bins
     n_dim <- ncol(dims.df)
-    if (length(nbins) > 1 & length(nbins) != n_dim) {
+    if (length(nbins) > 1 & length(nbins) != n_dim)
         stop(.nicemsg("User input %d dimensions of data, but length(nbins) = %d.
                       length(nbins) must be equal to ncol(dims.df), or be a
                       single number.", n_dim, length(nbins)))
-        return(geterrmessage())
-    }
 
     # get bin divisions for each dimension, evenly spaced from min to max values
     getBreaks <- function(x, y) {
@@ -140,7 +138,6 @@ binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
     # get bin indices for each datapoint along each dimension
     bin_idx <- mcMap(findInterval, dims.df, breaks, mc.cores = ncores)
     names(bin_idx) <- paste0("bin.", names(dims.df))
-
     as.data.frame(bin_idx)
 }
 
@@ -219,7 +216,7 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     datnames <- names(x.df)
     df[, datnames] <- empty
     df[idx, datnames] <- ag.bins[, datnames]
-    return(df)
+    df
 }
 
 
@@ -234,6 +231,5 @@ densityInNdimensionalBins <- function(dims.df, nbins = 10,
     ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = length,
                          drop = FALSE)
     ag.bins$value[is.na(ag.bins$value)] <- 0
-    return(ag.bins)
+    ag.bins
 }
-
