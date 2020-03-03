@@ -73,7 +73,7 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
     if (!keep.Y)  chrom <- chrom[ chrom != "chrY" ]
     if (!keep.M)  chrom <- chrom[ (chrom != "chrM") & (chrom != "chrMT") ]
 
-    if (methods::is(gr, "Seqinfo")) {
+    if (is(gr, "Seqinfo")) {
         gr <- keepSeqlevels(gr, chrom)
     } else {
         gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
@@ -367,13 +367,13 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     gr <- .import_bam(file, paired_end, yieldSize, mapq)
 
     # Apply Options
-    if (revcomp | shift != 0)  is_plus <- as.character(strand(gr)) == "+"
+    if (revcomp | !all(shift == 0))  is_plus <- as.character(strand(gr)) == "+"
     if (revcomp) {
         strand(gr) <- "+"
         strand(gr)[is_plus] <- "-"
         is_plus <- !is_plus
     }
-    if (shift != 0)  suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
+    if (!all(shift == 0))  suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
     if (trim.to != "whole") {
         opt <- paste0("opt.", trim.to)
         opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
@@ -441,9 +441,8 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     } else if (length(shift) == 2) {
         genebodies(gr, shift[1], shift[2], min.window = 0)
     } else {
-        stop(message = .nicemsg("shift argument must be a single number, or a
-                                numeric vector of length 2"))
-        return(geterrmessage())
+        stop(.nicemsg("shift argument must be a single number, or a numeric
+                      vector of length 2"))
     }
 }
 
@@ -495,117 +494,3 @@ import_bam_ATACseq <- function(file, mapq = 20, revcomp = FALSE,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
                paired_end = paired_end, yieldSize = yieldSize, ncores = ncores)
 }
-
-
-# ---------------------- #
-
-
-### convenience function for getting TxDb objects
-#
-# .getTxDb <- function(genome) {
-#     if (genome == "hg38") {
-#         db.txs <-
-#             TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
-#     } else if (genome == "hg19") {
-#         db.txs <-
-#             TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene
-#     } else if (genome == "mm10") {
-#         db.txs <-
-#             TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene
-#     } else if (genome == "mm9") {
-#         db.txs <-
-#             TxDb.Mmusculus.UCSC.mm9.knownGene::TxDb.Mmusculus.UCSC.mm9.knownGene
-#     } else if (genome == "dm6") {
-#         db.txs <-
-#             TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene
-#     } else if (genome == "dm3") {
-#         db.txs <-
-#             TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene
-#     }
-# }
-
-
-# #' Import transcripts from UCSC
-# #'
-# #' Imports all annotated transcripts by calling
-# #' \code{\link[GenomicFeatures:transcripts]{GenomicFeatures::transcripts}, which
-# #' includes alternative isoforms. Currently supports hg38, hg19, mm10, mm9, dm6,
-# #' and dm3. This script filters non-standard and mitochondrial chromosomes.
-# #'
-# #' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
-# #' @param keep.X A logical indicating if X chromosome transcripts should be
-# #'   kept.
-# #' @param keep.Y A logical indicating if Y chromosome transcripts should be
-# #'   kept.
-# #'
-# #' @return A GRanges object, including metadata for unique identifiers.
-# #' @author Mike DeBerardine
-# #' @export
-# importTxsUCSC <- function(genome,
-#                           keep.X = TRUE,
-#                           keep.Y = TRUE,
-#                           keep.M = FALSE,
-#                           keep.nonstandard = FALSE) {
-#
-#     db.txs <- .getTxDb(genome)
-#     txs <- GenomicFeatures::transcripts(db.txs)
-#
-#     # keep tx_name (unique ids); remove tx_id (numbered starting at 1);
-#     mcols(txs) <- data.frame(tx_name = txs$tx_name, stringsAsFactors = F)
-#
-#     # add gene_id
-#     suppressMessages(
-#         gene_names <- AnnotationDbi::select(
-#             db.txs, keys = keys(db.txs),
-#             columns = c("TXNAME"), keytype = "GENEID"
-#         )
-#     )
-#     txs <- txs[order(txs$tx_name)] # pre-sort for speed
-#     gene_names <- gene_names[order(gene_names$TXNAME), ]
-#
-#     if ( all(txs$tx_name == gene_names$TXNAME) )
-#         txs$gene_id <- gene_names$GENEID
-#
-#     # remove non-standard & mitochondrial chromosomes
-#     txs <- tidyChromosomes(txs, keep.X = keep.X, keep.Y = keep.Y,
-#                            keep.M = keep.M,
-#                            keep.nonstandard = keep.nonstandard)
-#
-#     return(sort(txs))
-# }
-#
-#
-#
-# #' Import genes from UCSC
-# #'
-# #' Imports all annotated genes by calling
-# #' \code{\link[GenomicFeatures:genes]{GenomicFeatures::genes}}, which provides a
-# #' single range for each annotated gene. Currently supports hg38, hg19, mm10,
-# #' mm9, dm6, and dm3. This script filters non-standard and mitochondrial
-# #' chromosomes.
-# #'
-# #' @param genome A string indicating the UCSC reference genome, e.g. "hg38".
-# #' @param keep.X A logical indicating if X chromosome transcripts should be
-# #'   kept.
-# #' @param keep.Y A logical indicating if Y chromosome transcripts should be
-# #'   kept.
-# #'
-# #' @return A GRanges object, including metadata for unique identifiers.
-# #' @author Mike DeBerardine
-# #' @export
-# importGenesUCSC <- function(genome,
-#                             keep.X = TRUE,
-#                             keep.Y = TRUE,
-#                             keep.M = FALSE,
-#                             keep.nonstandard = FALSE) {
-#
-#     db.txs <- .getTxDb(genome)
-#     genes <- GenomicFeatures::genes(db.txs)
-#     genes <- tidyChromosomes(txs,
-#                          keep.X = keep.X,
-#                          keep.Y = keep.Y,
-#                          keep.M = keep.M,
-#                          keep.nonstandard = keep.nonstandard)
-#     return(sort(genes))
-# }
-#
