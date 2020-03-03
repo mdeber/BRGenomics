@@ -2,6 +2,34 @@
 # Interal helper functions
 # ------------------------------------------------------------------------- #
 
+.mcMap <- function(f, ...) {
+    dots <- list(...)
+    dots$SIMPLIFY <- FALSE
+    dots$mc.silent <- TRUE
+    do.call(.mcmapply, c(match.fun(f), dots))
+}
+
+.mcmapply <- function(...) {
+    if (.Platform$OS.type == "unix") {
+        mcmapply(...)
+    } else {
+        dots <- list(...)
+        dots$mc.cores <- 1
+        do.call(mcmapply, dots)
+    }
+}
+
+
+.mclapply <- function(...) {
+    if (.Platform$OS.type == "unix") {
+        mclapply(...)
+    } else {
+        dots <- list(...)
+        dots$mc.cores <- 1
+        do.call(mclapply, dots)
+    }
+}
+
 
 .nicemsg <- function(...) {
     # format output msgs; removes newlines and leading spaces from strings
