@@ -75,9 +75,12 @@ p.bw <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
 m.bw <- system.file("extdata", "PROseq_dm6_chr4_minus.bw",
                     package = "BRGenomics")
 
-# import bigWigs
-PROseq <- import_bigWig(p.bw, m.bw, genome = "dm6")
-PROseq
+# import bigWigs (not supported on windows)
+if (.Platform$OS.type == "unix") {
+    PROseq <- import_bigWig(p.bw, m.bw, genome = "dm6")
+    PROseq
+}
+
 
 #--------------------------------------------------#
 # Import PRO-seq bedGraphs -> whole reads (matched 5' and 3' ends)

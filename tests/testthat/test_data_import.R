@@ -56,22 +56,25 @@ test_that("tidyChromosome works", {
 
 # Stranded bigWig import --------------------------------------------------
 
-ps <- import_bigWig(ps_p_file, ps_m_file, "dm6")
+if (.Platform$OS.type == "unix") {
 
-test_that("PROseq files import", {
-    expect_is(ps, "GRanges")
-})
+    ps <- import_bigWig(ps_p_file, ps_m_file, "dm6")
 
-test_that("Imported PROseq formatted correctly", {
-    expect_equal(c(genome(ps), use.names = FALSE), "dm6")
-    expect_true(all(width(ps) == 1))
-    expect_equal(length(ps), 150)
-    expect_equal(sum(score(ps)), 190)
-    expect_is(ps$score, "integer")
-    expect_equal(as.character(unique(seqnames(ps))), "chr4")
-    expect_true(all(as.character(strand(ps)) %in% c("+", "-")))
-})
+    test_that("PROseq files import", {
+        expect_is(ps, "GRanges")
+    })
 
+    test_that("Imported PROseq formatted correctly", {
+        expect_equal(c(genome(ps), use.names = FALSE), "dm6")
+        expect_true(all(width(ps) == 1))
+        expect_equal(length(ps), 150)
+        expect_equal(sum(score(ps)), 190)
+        expect_is(ps$score, "integer")
+        expect_equal(as.character(unique(seqnames(ps))), "chr4")
+        expect_true(all(as.character(strand(ps)) %in% c("+", "-")))
+    })
+
+}
 
 # Stranded bedGraph import ------------------------------------------------
 
