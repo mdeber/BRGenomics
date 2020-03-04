@@ -61,8 +61,9 @@ An atomic vector the same length as \code{regions.gr} containing the
 }
 \description{
 Get the sum of the signal in \code{dataset.gr} that overlaps each range in
-\code{regions.gr}. This function is written to return the \emph{readcounts}
-overlapping each region, and \emph{not} coverage signal (see details below).
+\code{regions.gr}. This function is written to calculate \emph{readcounts}
+overlapping each region, and \emph{not} "coverage signal" (see details
+below).
 }
 \details{
 This function is designed to work with data in which each range

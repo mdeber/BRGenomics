@@ -3,8 +3,9 @@
 #' Get signal counts in regions of interest
 #'
 #' Get the sum of the signal in \code{dataset.gr} that overlaps each range in
-#' \code{regions.gr}. This function is written to return the \emph{readcounts}
-#' overlapping each region, and \emph{not} coverage signal (see details below).
+#' \code{regions.gr}. This function is written to calculate \emph{readcounts}
+#' overlapping each region, and \emph{not} "coverage signal" (see details
+#' below).
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field), or a named list of such GRanges objects.
@@ -200,7 +201,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' Get the sum of the signal in \code{dataset.gr} that overlaps each position
 #' within each range in \code{regions.gr}. If binning is used (i.e. positions
 #' are wider than 1 bp), any function can be used to summarize the signal
-#' overlapping each bin.
+#' overlapping each bin. Just as in \code{\link[BRGenomics:getCountsByRegions]{
+#' getCountsByRegions}}, this function calculates \emph{readcounts} overlapping
+#' positions, and not "coverage signal".
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field), or a named list of such GRanges objects.

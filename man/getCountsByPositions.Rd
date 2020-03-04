@@ -75,7 +75,9 @@ If the widths of all ranges in \code{regions.gr} are equal, a matrix
 Get the sum of the signal in \code{dataset.gr} that overlaps each position
 within each range in \code{regions.gr}. If binning is used (i.e. positions
 are wider than 1 bp), any function can be used to summarize the signal
-overlapping each bin.
+overlapping each bin. Just as in \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}, this function calculates \emph{readcounts} overlapping
+positions, and not "coverage signal".
 }
 \section{Use of multi-width regions of interest}{
  If the input
