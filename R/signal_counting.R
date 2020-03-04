@@ -3,7 +3,8 @@
 #' Get signal counts in regions of interest
 #'
 #' Get the sum of the signal in \code{dataset.gr} that overlaps each range in
-#' \code{regions.gr}.
+#' \code{regions.gr}. This function is written to return the \emph{readcounts}
+#' overlapping each region, and \emph{not} coverage signal (see details below).
 #'
 #' @param dataset.gr A GRanges object in which signal is contained in metadata
 #'   (typically in the "score" field), or a named list of such GRanges objects.
@@ -40,11 +41,26 @@
 #'   column to indicate signal, and a third column containing the sample name
 #'   (unless \code{dataset.gr} is a single GRanges object).
 #'
+#' @details This function is designed to work with data in which each range
+#'   represents one type of molecule, whether it's a single base (e.g. the 5'
+#'   ends, 3' ends, or centers of reads) or entire reads (i.e. paired 5' and 3'
+#'   ends of reads).
+#'
+#'   This is in contrast to standard run-length compressed GRanges object, as
+#'   imported using \code{\link[rtracklayer:import.bw]{rtracklayer::import.bw}},
+#'   in which a single range can represent multiple contiguous positions that
+#'   share the same signal information. This function does \emph{not} expand
+#'   run-length compressed coverage objects. As an example, a range of length 10
+#'   with a score of 2 is treated as 2 reads (each spanning the same 10 bases),
+#'   not 20 reads.
+#'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #' @export
+#' @importFrom parallel detectCores mcMap mclapply
+#' @importFrom methods is
 #' @importFrom GenomicRanges findOverlaps mcols
-#' @importFrom parallel detectCores mcMap
+#' @importFrom IRanges subsetByOverlaps
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -67,8 +83,11 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     if (!is.null(blacklist))
         dataset.gr <- .blacklist(dataset.gr, blacklist, ncores)
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         NF <- .check_nfs(dataset.gr, NF, field)
+        # subset to increase performance for large datasets
+        dataset.gr <- mclapply(dataset.gr, subsetByOverlaps, regions.gr,
+                               mc.cores = ncores)
         cl <- mcMap(.get_cbr, dataset.gr, list(regions.gr), field, NF,
                     mc.cores = ncores)
         cl <- as.data.frame(cl)
@@ -80,6 +99,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     field <- .check_fields(dataset.gr, field)
     NF <- .check_nfs(dataset.gr, NF, field)
 
+    # subset to increase performance for large datasets
+    dataset.gr <- subsetByOverlaps(dataset.gr, regions.gr)
+
     if (length(field) > 1) {
         cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF,
                     mc.cores = ncores)
@@ -89,38 +111,16 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         return(cl)
     } else {
         counts <- .get_cbr(dataset.gr, regions.gr, field, NF)
-        if (melt)  return(.melt_counts(counts, snames = NULL, region_names))
+        if (melt) return(.melt_counts(counts, snames = NULL, region_names))
         return(counts)
     }
 }
 
-.melt_counts <- function(df, snames, region_names) {
-
-    if (is.vector(df))
-        df <- data.frame(df)
-    nr <- nrow(df) # number of regions
-    ns <- ncol(df) # number of samples
-
-    if (is.null(region_names))
-        region_names <- seq_len(nr)
-
-    if (length(snames) > 1) {
-        df <- data.frame(region = rep(region_names, ns),
-                         signal = unlist(df),
-                         sample = rep(snames, each = nr))
-    } else {
-        df <- data.frame(region = region_names,
-                         signal = unlist(df))
-    }
-    rownames(df) <- NULL
-    df
-}
-
-
+#' @importFrom methods is
 #' @importFrom parallel mclapply
 #' @importFrom IRanges subsetByOverlaps
 .blacklist <- function(dataset.gr, blacklist, ncores) {
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         mclapply(dataset.gr, subsetByOverlaps, blacklist, invert = TRUE,
                  mc.cores = ncores)
     } else {
@@ -128,9 +128,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     }
 }
 
-
+#' @importFrom methods is
 .check_nfs <- function(dataset.gr, NF, field) {
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         n <- length(dataset.gr)
     } else {
         n <- length(field)
@@ -170,6 +170,28 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         field <- fnames
     }
     field
+}
+
+
+.melt_counts <- function(df, snames, region_names) {
+    if (is.vector(df))
+        df <- data.frame(df)
+    nr <- nrow(df) # number of regions
+    ns <- ncol(df) # number of samples
+
+    if (is.null(region_names))
+        region_names <- seq_len(nr)
+
+    if (length(snames) > 1) {
+        df <- data.frame(region = rep(region_names, ns),
+                         signal = unlist(df),
+                         sample = rep(snames, each = nr))
+    } else {
+        df <- data.frame(region = region_names,
+                         signal = unlist(df))
+    }
+    rownames(df) <- NULL
+    df
 }
 
 
@@ -235,8 +257,10 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel detectCores mcMap mclapply
+#' @importFrom methods is
 #' @importFrom GenomicRanges width
+#' @importFrom IRanges subsetByOverlaps
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -297,8 +321,11 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     }
 
     # function dispatch (for lists)
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         NF <- .check_nfs(dataset.gr, NF, field)
+        # subset to increase performance for large datasets
+        dataset.gr <- mclapply(dataset.gr, subsetByOverlaps, regions.gr,
+                               mc.cores = ncores)
         cl <- mcMap(.get_cbp, dataset.gr, list(regions.gr), binsize, list(FUN),
                     smw, field, NF, melt, list(blacklist), list(xy.bl),
                     ncores = 1, mc.cores = ncores)
@@ -309,6 +336,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         # convenience: if field not in dataset.gr, use all fields that are
         field <- .check_fields(dataset.gr, field)
         NF <- .check_nfs(dataset.gr, NF, field)
+        # increase performance for large datasets
+        dataset.gr <- subsetByOverlaps(dataset.gr, regions.gr)
         .get_cbp(dataset.gr, regions.gr, binsize, FUN, smw, field, NF, melt,
                  blacklist, xy.bl, ncores)
     }
@@ -354,40 +383,25 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         .get_cbp_mw(hits, dataset.gr, regions.gr, binsize, FUN, smw, field, NF,
                     melt, blacklist, xy.bl)
     } else {
-        .check_mw_arg(smw, melt, mw = FALSE)
+        if (smw != "error")
+            # check is necessary because NA_blacklisting would fail otherwise,
+            # but will give an error in every case for the sake of consistency
+            stop(.nicemsg("simplify.multi.widths changed from default, but
+                          regions.gr is not multiwidth"))
         .get_signal_mat(hits, dataset.gr, regions.gr, binsize, FUN, field, NF,
                         melt, blacklist, xy.bl)
     }
-
 }
 
-
-.check_mw_arg <- function(smw, melt, mw) {
-    if (mw) { # if dispatched from .get_cbp_mw
-        if (smw == "error")
-            stop(.nicemsg("regions.gr contains ranges with multiple widths, but
-                          simplify.multi.widths is set to 'error'. Did you mean
-                          to call getCountsByRegions instead?"))
-        if (melt) smw <- "list"
-        return(smw)
-
-    } else {
-        # check is necessary because NA_blacklisting would fail otherwise, but
-        # will give error in every case to not confuse users if they discover
-        # other conditions when the error isn't returned
-        if (smw != "error")
-            stop(.nicemsg("simplify.multi.widths changed from default, but
-                          regions.gr is not multiwidth"))
-    }
-
-}
 
 
 #' @importFrom GenomicRanges width resize
 .get_cbp_mw <- function(hits, dataset.gr, regions.gr, binsize, FUN, smw, field,
                         NF, melt, blacklist, xy.bl) {
-
-    smw <- .check_mw_arg(smw, melt, mw = TRUE)
+    if (smw == "error")
+        stop(.nicemsg("regions.gr contains ranges with multiple widths, but
+                      simplify.multi.widths is set to 'error'. Did you mean
+                      to call getCountsByRegions instead?"))
 
     # expand all regions to be the same width, then get counts
     widths <- width(regions.gr) # save widths
@@ -407,11 +421,11 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                            NF, melt = FALSE, blacklist, xy.bl)
     nbins <- floor(widths / binsize) # number of bins to keep for each region
 
-    if (smw == "list") { # includes if melt == TRUE
+    if (melt | smw == "list") {
         # list of vectors whose lengths determined by width of range i
         cl <- Map(function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)],
                   seq_len(nrow(mat)), nbins)
-        if (melt)  cl <- .meltmw(cl)
+        if (melt)  return(.meltmw(cl))
         return(cl)
 
     } else {
@@ -460,8 +474,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         mat <- t(mat) # apply will cbind rather than rbind
     }
     mat <- mat * NF # apply normalization
-    if (melt) mat <- .meltmat(mat)
-    mat
+    if (melt) return(.meltmat(mat))
+    return(mat)
 }
 
 .get_positions_in_regions <- function(hits, dataset.gr, regions.gr) {
@@ -543,6 +557,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
 #' @importFrom parallel detectCores mcMap
+#' @importFrom methods is
 #'
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -609,7 +624,7 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
     counts_gb <- getCountsByRegions(dataset.gr, genebodies.gr, field = field,
                                     ncores = ncores)
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
                     names(dataset.gr), length.normalize, remove.empty, melt,
                     region_names, dwidth)
@@ -706,12 +721,12 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
     pidx
 }
 
-
+#' @importFrom GenomicRanges width
 .lnorm_multi <- function(counts, regions, dnames, dwidth.i) {
-    widths.i <- GenomicRanges::width(regions)
-    if (!is.null(dwidth.i))  widths.i <- widths.i - dwidth.i
-    counts <- lapply(counts, "/", widths.i)
-    counts <- as.data.frame(counts)
+    widths.i <- width(regions)
+    if (!is.null(dwidth.i))
+        widths.i <- widths.i - dwidth.i
+    counts <- as.data.frame(lapply(counts, "/", widths.i))
     names(counts) <- dnames
     counts
 }
