@@ -2,6 +2,12 @@
 # Interal helper functions
 # ------------------------------------------------------------------------- #
 
+mcMap <- function(f, ...) {
+    # on windows (?) this gets passed to Map, putting mc.cores in the dots
+    f <- match.fun(f)
+    mcmapply(f, ..., SIMPLIFY = FALSE, mc.silent = TRUE)
+}
+
 .nicemsg <- function(...) {
     # format output msgs; removes newlines and leading spaces from strings
     strwrap(sprintf(...), prefix = " ", initial = "")

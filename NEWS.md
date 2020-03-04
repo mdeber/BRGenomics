@@ -1,3 +1,9 @@
+(Changelog from 0.99.x temporary; will be collapsed)
+
+## BRGenomics 0.99.7
+
+* Redefine mcMap to avoid errors on Windows, and allow Windows again
+
 ## BRGenomics 0.99.6
 
 * Formally remove support for Windows

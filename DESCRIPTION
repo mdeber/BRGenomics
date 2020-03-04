@@ -19,7 +19,6 @@ License: Artistic-2.0
 Encoding: UTF-8
 LazyData: FALSE
 RoxygenNote: 7.0.2
-OS_type: unix
 Depends:
     R (>= 4.0),
     rtracklayer,

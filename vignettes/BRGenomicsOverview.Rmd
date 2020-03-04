@@ -565,7 +565,7 @@ To format our matrix for ggplot, we want to "melt" it. The package `reshape2` ca
 
 ```{r}
 cbp.df <- getCountsByPositions(PROseq, txs_pr, binsize = 10, melt = TRUE,
-                               ncores = 2)
+                               ncores = 1)
 head(cbp.df)
 ```
 
@@ -609,14 +609,14 @@ _Note that BRGenomics does not currently support the use of `GRangesList` or `Co
 We can pass our list of GRanges directly to `getCountsByRegions` to simultaneously count reads for each dataset, and melt the result for plotting with `ggplot`:
 
 ```{r}
-getCountsByRegions(ps_list, txs_dm6_chr4[1:5], ncores = 2)
+getCountsByRegions(ps_list, txs_dm6_chr4[1:5], ncores = 1)
 ```
 
 ```{r}
 # melt, and use the optional region_names argument
 txs_counts <- getCountsByRegions(ps_list, txs_dm6_chr4, melt = TRUE,
                                  region_names = txs_dm6_chr4$tx_name,
-                                 ncores = 2)
+                                 ncores = 1)
 head(txs_counts)
 ```
 
@@ -633,7 +633,7 @@ Plotting signal over a single locus for several datasets, we can use `getCountsB
 
 ```{r}
 cbp_maxtx <- getCountsByPositions(ps_list, txs_dm6_chr4[idx], 
-                                  melt = TRUE, ncores = 2)
+                                  melt = TRUE, ncores = 1)
 head(cbp_maxtx)
 ```
 
@@ -655,7 +655,7 @@ There is another data structure that is widely supported with BRGenomics, called
 A multiplexed GRanges object can be made using the `mergeGRangesData` with option `multiplex = TRUE`.
 
 ```{r}
-ps_multi <- mergeGRangesData(ps1, ps2, ps3, multiplex = TRUE, ncores = 2)
+ps_multi <- mergeGRangesData(ps1, ps2, ps3, multiplex = TRUE, ncores = 1)
 ps_multi
 ```
 
@@ -674,13 +674,13 @@ This data structure can be passed to most functions in BRGenomics. To be explici
 ```{r}
 # for all datasets (all fields), get counts in the first 5 transcripts
 getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], field = names(mcols(ps_multi)),
-                   ncores = 2)
+                   ncores = 1)
 
 # get counts for ps2 dataset only
-getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], field = "ps2", ncores = 2)
+getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], field = "ps2", ncores = 1)
 
 # if no field is given, most functions will default to using all fields
-getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], ncores = 2)
+getCountsByRegions(ps_multi, txs_dm6_chr4[1:5], ncores = 1)
 ```
 
 In our experience with PRO-seq data, and to our surprise, a list of GRanges objects typically outperforms multiplexed GRanges on a typical laptop, despite the theoretical benefits of multiplexing. 
@@ -721,7 +721,7 @@ As an example, we'll plot PRO-seq signal in promoter-proximal regions by calcula
 First, calculate signal at each base for all promoter-proximal regions:
 
 ```{r, collapse = TRUE}
-countmatrix_pr <- getCountsByPositions(PROseq, txs_pr, ncores = 2)
+countmatrix_pr <- getCountsByPositions(PROseq, txs_pr, ncores = 1)
 dim(countmatrix_pr)
 dim(countmatrix_pr) == c(length(txs_pr), unique(width(txs_pr)))
 ```
@@ -780,7 +780,7 @@ Given the small size our dataset, we'll reduce this to a 30% confidence interval
 
 ```{r}
 bootmeans.df <- metaSubsample(PROseq, txs_pr, binsize = 5, 
-                              lower = 0.35, upper = 0.65, ncores = 2)
+                              lower = 0.35, upper = 0.65, ncores = 1)
 head(bootmeans.df)
 ```
 
@@ -819,7 +819,7 @@ Like other functions in BRGenomics, we can pass a list of GRanges to `metaSubsam
 
 ```{r}
 bm_list.df <- metaSubsample(ps_list, txs_pr, binsize = 5, 
-                            lower = 0.35, upper = 0.65, ncores = 2)
+                            lower = 0.35, upper = 0.65, ncores = 1)
 head(bm_list.df)
 ```
 
@@ -878,7 +878,7 @@ We can identify the spike-in chromosomes either by full names, or by a regular e
 To count the reads for each dataset:
 
 ```{r}
-getSpikeInCounts(grl, si_pattern = "spike", ncores = 2)
+getSpikeInCounts(grl, si_pattern = "spike", ncores = 1)
 ```
 
 ## Filtering Spike-in Reads
@@ -886,7 +886,7 @@ getSpikeInCounts(grl, si_pattern = "spike", ncores = 2)
 We can also remove the spike-in reads from our data:
 
 ```{r}
-removeSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 2)
+removeSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 1)
 ```
 
 And if we wanted to isolate the spike-in reads, there is an analagous `getSpikeInReads` function.
@@ -940,7 +940,7 @@ However, we have to also identify the negative control, which is the sample that
 The default method is "SRPMC", but there are other options, as well.
 
 ```{r}
-getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
+getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 1)
 ```
 
 (The NFs are high because our dummy data contain only a few reads).
@@ -954,7 +954,7 @@ Currently, batch normalization requires the sample names end with strings matchi
 We can also use the `spikeInNormGRanges` function to simultaneously find the spike-in reads, calculate the spike-in normalization factors, filter out spike-in reads, and normalize the readcounts:
 
 ```{r}
-spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 2)
+spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 1)
 ```
 
 # Normalization by Subsampling 
@@ -974,7 +974,7 @@ reads.gene_i <- subsetByOverlaps(PROseq, gene_i)
 
 # sample half the raw reads
 set.seed(11)
-sreads.gene_i <- subsampleGRanges(reads.gene_i, prop = 0.5, ncores = 2)
+sreads.gene_i <- subsampleGRanges(reads.gene_i, prop = 0.5, ncores = 1)
 
 # downscale raw reads by a factor of 2
 score(reads.gene_i) <- 0.5 * score(reads.gene_i)
@@ -1014,10 +1014,10 @@ To address the above concerns, we've included a function `subsampleBySpikeIn` to
 Internally, the function uses the `getSpikInNFs` function, but instead of SRPMC normalization, using the option `method = "SNR"`, which calculates normalization factors that downscale each dataset to match the dataset with the least spike-in reads. From this, the number of "desired reads" is established for each dataset, and subsequently that number of reads is randomly sampled.
 
 ```{r}
-removeSpikeInReads(grl, si_pattern = "spike", ncores = 2)
+removeSpikeInReads(grl, si_pattern = "spike", ncores = 1)
 getSpikeInNFs(grl, si_pattern = "spike", method = "SNR", batch_norm = FALSE,
-              ncores = 2)
-subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE, ncores = 2)
+              ncores = 1)
+subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE, ncores = 1)
 ```
 
 Normalization by subsampling sacrifices information to reduce biases across datasets.
@@ -1075,7 +1075,7 @@ However, since our sample names conform, we won't use that argument:
 ```{r}
 dds <- getDESeqDataSet(ps_list2, txs_dm6_chr4,
                        gene_names = txs_dm6_chr4$gene_id,
-                       ncores = 2)
+                       ncores = 1)
 dds
 ```
 
@@ -1093,7 +1093,7 @@ Generating DESeq2 results is simple:
 
 ```{r}
 getDESeqResults(dds, contrast.numer = "B", contrast.denom = "A",
-                quiet = TRUE, ncores = 2)
+                quiet = TRUE, ncores = 1)
 ```
 
 We can also make multiple pairwise-comparisons by ignoring the `contrast.numer` and `contrast.denom` arguments, and instead using the `comparisons` argument. The resulting list of results is named according to the comparisons:
@@ -1102,7 +1102,7 @@ We can also make multiple pairwise-comparisons by ignoring the `contrast.numer` 
 dsres <- getDESeqResults(dds, comparisons = list(c("B", "A"), 
                                                  c("C", "A"),
                                                  c("C", "B")),
-                         quiet = TRUE, ncores = 2)
+                         quiet = TRUE, ncores = 1)
 names(dsres)
 dsres$C_vs_B
 ```
@@ -1128,7 +1128,7 @@ length(ps3)
 ```
 
 ```{r}
-merge_ps <- mergeGRangesData(ps1, ps2, ps3, ncores = 2)
+merge_ps <- mergeGRangesData(ps1, ps2, ps3, ncores = 1)
 merge_ps
 ```
 
@@ -1141,7 +1141,7 @@ isBRG(merge_ps)
 We could have also passed a list of GRanges objects directly as an argument:
 
 ```{r}
-mergeGRangesData(ps_list, ncores = 2)
+mergeGRangesData(ps_list, ncores = 1)
 ```
 
 # Sequence Extraction
