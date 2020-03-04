@@ -64,21 +64,21 @@ grl
 
 # see examples for getSpikeInNFs for more
 getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
-              method = "SNR", ncores = 2)
+              method = "SNR", ncores = 1)
 
 #--------------------------------------------------#
 # Subsample the GRanges according to the spike-in NFs
 #--------------------------------------------------#
 
 ss <- subsampleBySpikeIn(grl, si_pattern = "spike", ctrl_pattern = "gr1",
-                         ncores = 2)
+                         ncores = 1)
 ss
 
 lapply(ss, function(x) sum(score(x))) # total reads in each
 
 # Put in units of RPM for the negative control
 ssr <- subsampleBySpikeIn(grl, si_pattern = "spike", ctrl_pattern = "gr1",
-                          RPM_units = TRUE, ncores = 2)
+                          RPM_units = TRUE, ncores = 1)
 
 ssr
 

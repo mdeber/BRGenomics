@@ -77,8 +77,8 @@ ps_3 <- PROseq[(thirds[2]+1):thirds[3]]
 # re-merge
 length(PROseq)
 length(ps_1)
-length(mergeGRangesData(ps_1, ps_2, ncores = 2))
-length(mergeGRangesData(ps_1, ps_2, ps_3, ncores = 2))
+length(mergeGRangesData(ps_1, ps_2, ncores = 1))
+length(mergeGRangesData(ps_1, ps_2, ps_3, ncores = 1))
 
 #--------------------------------------------------#
 # combine PRO-seq with overlapping positions
@@ -89,13 +89,13 @@ gr2 <- PROseq[12:15]
 
 PROseq[10:15]
 
-mergeGRangesData(gr1, gr2, ncores = 2)
+mergeGRangesData(gr1, gr2, ncores = 1)
 
 #--------------------------------------------------#
 # multiplex separate PRO-seq experiments
 #--------------------------------------------------#
 
-multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 2)
+multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 1)
 multi.gr
 
 #--------------------------------------------------#

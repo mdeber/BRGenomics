@@ -5,12 +5,12 @@ library(BRGenomics)
 
 data("PROseq_paired")
 paired_3p_ends <- resize(PROseq_paired, 1, fix = "end")
-paired_3p_cov <- getStrandedCoverage(paired_3p_ends, ncores = 2)
+paired_3p_cov <- getStrandedCoverage(paired_3p_ends, ncores = 1)
 
 
 test_that("Stranded coverage makes stranded GRanges", {
     expect_is(paired_3p_cov, "GRanges")
-    expect_is(getStrandedCoverage(PROseq_paired, ncores = 2), "GRanges")
+    expect_is(getStrandedCoverage(PROseq_paired, ncores = 1), "GRanges")
     expect_true(all(as.character(strand(paired_3p_cov)) %in% c("+", "-")))
 })
 
@@ -40,14 +40,14 @@ test_that("Stranded coverage correctly calculated", {
 test_that("stranded coverage correct without any weighting", {
     reads_gr <- rep(paired_3p_ends, paired_3p_ends$score)
     mcols(reads_gr) <- NULL
-    reads_cov <- getStrandedCoverage(reads_gr, field = NULL, ncores = 2)
+    reads_cov <- getStrandedCoverage(reads_gr, field = NULL, ncores = 1)
 
     expect_equivalent(reads_cov, paired_3p_cov)
-    expect_error(getStrandedCoverage(reads_gr, ncores = 2))
+    expect_error(getStrandedCoverage(reads_gr, ncores = 1))
 })
 
 test_that("Empty input returns GRanges", {
-    null_cov <- getStrandedCoverage(paired_3p_ends[0], ncores = 2)
+    null_cov <- getStrandedCoverage(paired_3p_ends[0], ncores = 1)
     expect_is(null_cov, "GRanges")
     expect_equal(length(null_cov), 0)
     expect_equivalent(seqinfo(paired_3p_ends), seqinfo(null_cov))
@@ -55,7 +55,7 @@ test_that("Empty input returns GRanges", {
 })
 
 test_that("error on invalid field", {
-    expect_error(getStrandedCoverage(paired_3p_ends, "wrongname", ncores = 2))
+    expect_error(getStrandedCoverage(paired_3p_ends, "wrongname", ncores = 1))
 })
 
 
@@ -85,11 +85,3 @@ test_that("BPresGRanges preserves input information", {
     expect_equal(length(paired_3p_bpres), sum(width(paired_3p_cov)))
     expect_equal(sum_3pcov_by_width, sum(score(paired_3p_bpres)))
 })
-
-
-
-
-
-
-
-

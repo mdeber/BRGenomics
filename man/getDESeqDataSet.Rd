@@ -127,7 +127,7 @@ dds <- getDESeqDataSet(ps_list,
                        txs_dm6_chr4,
                        gene_names = txs_dm6_chr4$gene_id,
                        quiet = TRUE,
-                       ncores = 2)
+                       ncores = 1)
 dds
 }
 \seealso{

@@ -81,7 +81,7 @@
 #' set.seed(11)
 #' df <- metaSubsample(PROseq, pr, binsize = 5,
 #'                     lower = 0.35, upper = 0.65,
-#'                     ncores = 2)
+#'                     ncores = 1)
 #' df[1:10, ]
 #'
 #' #--------------------------------------------------#
@@ -109,7 +109,7 @@
 #' set.seed(11)
 #'  df <- metaSubsampleMatrix(countsmat, binsize = 10,
 #'                            sample.name = "PROseq",
-#'                            ncores = 2)
+#'                            ncores = 1)
 #' df[1:10, ]
 #'
 #' #--------------------------------------------------#
@@ -119,7 +119,7 @@
 #' set.seed(11)
 #' df <- metaSubsampleMatrix(countsmat, binsize = 10,
 #'                           first.output.xval = 0, NF = 0.75,
-#'                           sample.name = "PROseq", ncores = 2)
+#'                           sample.name = "PROseq", ncores = 1)
 #' df[1:10, ]
 NULL
 

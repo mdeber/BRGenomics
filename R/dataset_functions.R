@@ -91,7 +91,7 @@
 #' #--------------------------------------------------#
 #' # -> for more examples, see getStrandedCoverage
 #'
-#' undo <- getStrandedCoverage(gr, ncores = 2)
+#' undo <- getStrandedCoverage(gr, ncores = 1)
 #'
 #' isBRG(undo)
 #' range(width(undo))
@@ -165,7 +165,7 @@ isBRG <- function(x) {
 #'
 #' PROseq_paired[1:6]
 #'
-#' getStrandedCoverage(PROseq_paired, ncores = 2)[1:6]
+#' getStrandedCoverage(PROseq_paired, ncores = 1)[1:6]
 #'
 #' #--------------------------------------------------#
 #' # Getting coverage from single bases of single reads
@@ -183,7 +183,7 @@ isBRG <- function(x) {
 #' ps_reads[1:6]
 #'
 #' # re-create coverage
-#' getStrandedCoverage(ps_reads, field = NULL, ncores = 2)[1:6]
+#' getStrandedCoverage(ps_reads, field = NULL, ncores = 1)[1:6]
 #'
 #' #--------------------------------------------------#
 #' # Reversing makeGRangesBRG
@@ -196,7 +196,7 @@ isBRG <- function(x) {
 #' range(width(PROseq))
 #' isDisjoint(PROseq)
 #'
-#' ps_cov <- getStrandedCoverage(PROseq, ncores = 2)
+#' ps_cov <- getStrandedCoverage(PROseq, ncores = 1)
 #'
 #' range(width(ps_cov))
 #' sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
@@ -208,7 +208,7 @@ isBRG <- function(x) {
 #'
 #' PROseq[idx]
 #'
-#' getStrandedCoverage(PROseq[idx], ncores = 2)
+#' getStrandedCoverage(PROseq[idx], ncores = 1)
 getStrandedCoverage <- function(dataset.gr, field = "score",
                                 ncores = detectCores()) {
 
@@ -441,8 +441,8 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #' # re-merge
 #' length(PROseq)
 #' length(ps_1)
-#' length(mergeGRangesData(ps_1, ps_2, ncores = 2))
-#' length(mergeGRangesData(ps_1, ps_2, ps_3, ncores = 2))
+#' length(mergeGRangesData(ps_1, ps_2, ncores = 1))
+#' length(mergeGRangesData(ps_1, ps_2, ps_3, ncores = 1))
 #'
 #' #--------------------------------------------------#
 #' # combine PRO-seq with overlapping positions
@@ -453,13 +453,13 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #'
 #' PROseq[10:15]
 #'
-#' mergeGRangesData(gr1, gr2, ncores = 2)
+#' mergeGRangesData(gr1, gr2, ncores = 1)
 #'
 #' #--------------------------------------------------#
 #' # multiplex separate PRO-seq experiments
 #' #--------------------------------------------------#
 #'
-#' multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 2)
+#' multi.gr <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 1)
 #' multi.gr
 #'
 #' #--------------------------------------------------#

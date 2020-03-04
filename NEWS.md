@@ -1,5 +1,9 @@
 (Changelog from 0.99.x temporary; will be collapsed)
 
+## BRgenomics 0.99.8
+
+* Made all examples and tests use single core (for Windows test build)
+
 ## BRGenomics 0.99.7
 
 * Redefine mcMap to avoid errors on Windows, and allow Windows again

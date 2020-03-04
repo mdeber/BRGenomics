@@ -43,7 +43,7 @@ data("PROseq_paired")
 
 PROseq_paired[1:6]
 
-getStrandedCoverage(PROseq_paired, ncores = 2)[1:6]
+getStrandedCoverage(PROseq_paired, ncores = 1)[1:6]
 
 #--------------------------------------------------#
 # Getting coverage from single bases of single reads
@@ -61,7 +61,7 @@ mcols(ps_reads) <- NULL
 ps_reads[1:6]
 
 # re-create coverage
-getStrandedCoverage(ps_reads, field = NULL, ncores = 2)[1:6]
+getStrandedCoverage(ps_reads, field = NULL, ncores = 1)[1:6]
 
 #--------------------------------------------------#
 # Reversing makeGRangesBRG
@@ -74,7 +74,7 @@ getStrandedCoverage(ps_reads, field = NULL, ncores = 2)[1:6]
 range(width(PROseq))
 isDisjoint(PROseq)
 
-ps_cov <- getStrandedCoverage(PROseq, ncores = 2)
+ps_cov <- getStrandedCoverage(PROseq, ncores = 1)
 
 range(width(ps_cov))
 sum(score(PROseq)) == sum(score(ps_cov) * width(ps_cov))
@@ -86,7 +86,7 @@ idx <- unique(from(hits)) # indices for PROseq with neighbor
 
 PROseq[idx]
 
-getStrandedCoverage(PROseq[idx], ncores = 2)
+getStrandedCoverage(PROseq[idx], ncores = 1)
 }
 \seealso{
 \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}},

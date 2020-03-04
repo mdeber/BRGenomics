@@ -49,22 +49,22 @@
 #' #--------------------------------------------------#
 #'
 #' # by giving names of all spike-in chromosomes
-#' getSpikeInCounts(grl, si_names = c("spikechr1", "spikechr2"), ncores = 2)
+#' getSpikeInCounts(grl, si_names = c("spikechr1", "spikechr2"), ncores = 1)
 #'
 #' # or by matching the string/regular expression "spike" in chromosome names
-#' getSpikeInCounts(grl, si_pattern = "spike", ncores = 2)
+#' getSpikeInCounts(grl, si_pattern = "spike", ncores = 1)
 #'
 #' #--------------------------------------------------#
 #' # Filter out spike-in reads
 #' #--------------------------------------------------#
 #'
-#' removeSpikeInReads(grl, si_pattern = "spike", ncores = 2)
+#' removeSpikeInReads(grl, si_pattern = "spike", ncores = 1)
 #'
 #' #--------------------------------------------------#
 #' # Return spike-in reads
 #' #--------------------------------------------------#
 #'
-#' getSpikeInReads(grl, si_pattern = "spike", ncores = 2)
+#' getSpikeInReads(grl, si_pattern = "spike", ncores = 1)
 getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                              field = "score", sample_names = NULL,
                              ncores = detectCores()) {

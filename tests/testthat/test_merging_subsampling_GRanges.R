@@ -11,23 +11,23 @@ PROseq$quartile <- findInterval(seq_along(PROseq),
 
 test_that("Merging is non-destructive", {
     expect_identical(subset(PROseq, select = score),
-                     suppressWarnings(mergeGRangesData(PROseq, ncores = 2)))
+                     suppressWarnings(mergeGRangesData(PROseq, ncores = 1)))
     expect_identical(subset(PROseq, select = score),
                      mergeGRangesData(subset(PROseq, quartile == 1),
                                       subset(PROseq, quartile == 2),
                                       subset(PROseq, quartile == 3),
                                       subset(PROseq, quartile == 4),
-                                      ncores = 2))
+                                      ncores = 1))
 })
 
 ps_10ranges <- PROseq[seq(1, 100, 10)] # ensure disjoint when resized below
 
 test_that("Merging non-single-width GRanges produces warning", {
-    expect_warning(mergeGRangesData(PROseq, resize(ps_10ranges, 2), ncores = 2))
+    expect_warning(mergeGRangesData(PROseq, resize(ps_10ranges, 2), ncores = 1))
 })
 
 test_that("Merging sums signals in overlaps", {
-    merge_10ranges <- mergeGRangesData(PROseq, ps_10ranges, ncores = 2)
+    merge_10ranges <- mergeGRangesData(PROseq, ps_10ranges, ncores = 1)
     expect_equal(length(PROseq), length(merge_10ranges))
 
     overlap_scores_combined <- score(merge_10ranges)[seq(1, 100, 10)]
@@ -40,7 +40,7 @@ test_that("Merging sums signals in overlaps", {
 
 test_that("Merging concatenates non-overlapping ranges", {
     merge_nonoverlap <- mergeGRangesData(ps_10ranges, shift(ps_10ranges, 1),
-                                         ncores = 2)
+                                         ncores = 1)
     expect_equal(length(merge_nonoverlap), 2*length(ps_10ranges))
     # %in% operator fails depending on environment?
     # expect_true(all( merge_nonoverlap %in%
@@ -49,7 +49,7 @@ test_that("Merging concatenates non-overlapping ranges", {
 
 gr1 <- PROseq[10:13]
 gr2 <- PROseq[12:15]
-gr_multi <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 2)
+gr_multi <- mergeGRangesData(gr1, gr2, multiplex = TRUE, ncores = 1)
 
 test_that("Multiplexed merging works with input GRanges", {
     expect_equivalent(names(mcols(gr_multi)), c("gr1", "gr2"))
@@ -61,10 +61,10 @@ test_that("Multiplexed merging works with input GRanges", {
 
 test_that("Multiplexed merging works with listed input", {
     expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1, gr2 = gr2),
-                                                 multiplex = TRUE, ncores = 2))
+                                                 multiplex = TRUE, ncores = 1))
     expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1),
                                                  list(gr2 = gr2),
-                                                 multiplex = TRUE, ncores = 2))
+                                                 multiplex = TRUE, ncores = 1))
 })
 
 # Sampling GRanges --------------------------------------------------------
@@ -98,7 +98,7 @@ test_that("can subsample with field = NULL", {
 
 test_that("can subsample multiplexed GRanges", {
     ssmulti <- subsampleGRanges(gr_multi, prop = 0.1, field = c("gr1", "gr2"),
-                                ncores = 2)
+                                ncores = 1)
     expect_is(ssmulti, "GRanges")
     expect_equivalent(names(mcols(ssmulti)), c("gr1", "gr2"))
     expect_equal(sum(ssmulti$gr1), round(0.1*sum(gr_multi$gr1)))
@@ -130,7 +130,3 @@ test_that("error when non-simple normalization", {
 
     expect_error(subsampleGRanges(norm_mix, prop = 0.1))
 })
-
-
-
-

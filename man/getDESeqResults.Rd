@@ -114,7 +114,7 @@ ps_list <- list(A_rep1 = ps_a_rep1, A_rep2 = ps_a_rep2,
 dds <- getDESeqDataSet(ps_list,
                        txs_dm6_chr4,
                        gene_names = txs_dm6_chr4$gene_id,
-                       ncores = 2)
+                       ncores = 1)
 
 dds
 

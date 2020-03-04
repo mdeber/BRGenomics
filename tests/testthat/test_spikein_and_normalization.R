@@ -27,7 +27,7 @@ names(grl) <- c("gr1_rep1", "gr2_rep1", "gr3_rep1",
 # test getting spike-in counts --------------------------------------------
 
 s_counts <- getSpikeInCounts(grl, si_names = c("spikechr1", "spikechr2"),
-                             ncores = 2)
+                             ncores = 1)
 sr <- s_counts$spike_reads
 er <- s_counts$exp_reads
 
@@ -41,7 +41,7 @@ test_that("can get read counts from given spike-in chromosomes", {
 
 test_that("can get read counts from pattern-matched spike-in chromosomes", {
     expect_equivalent(s_counts,
-                      getSpikeInCounts(grl, si_pattern = "spike", ncores = 2))
+                      getSpikeInCounts(grl, si_pattern = "spike", ncores = 1))
 })
 
 test_that("can get spike-in counts for GRanges input", {
@@ -53,7 +53,7 @@ test_that("can get spike-in counts for GRanges input", {
 
 test_that("can get spike-in counts for NULL field", {
     null_counts <- getSpikeInCounts(grl, si_pattern = "spike", field = NULL,
-                                    ncores = 2)
+                                    ncores = 1)
     expect_equivalent(s_counts$sample, null_counts$sample)
     expect_true(all(null_counts$total_reads == 4))
     expect_true(all(null_counts$exp_reads == 2))
@@ -66,7 +66,7 @@ test_that("can get spike-in counts for multiple fields", {
     mix_counts <- getSpikeInCounts(grl_mix, si_pattern = "spike",
                                    field = c("newscore", "newscore", "score",
                                              "score", "score", "score"),
-                                   ncores = 2)
+                                   ncores = 1)
     expect_equivalent(s_counts[1:2, -1], mix_counts[2:1, -1])
 })
 
@@ -79,7 +79,7 @@ test_that("can filter out spike-in reads", {
     gr <- removeSpikeInReads(gr1_rep1, si_pattern = "spike", ncores = 1)
     expect_equivalent(gr, gr1_rep1[1:2])
 
-    trimlist <- removeSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 2)
+    trimlist <- removeSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 1)
     expect_is(trimlist, "list")
     expect_equivalent(trimlist[[1]], gr)
     expect_equivalent(trimlist[[2]], gr2_rep1[1:2])
@@ -90,7 +90,7 @@ test_that("can isolate spike-in reads", {
     gr <- getSpikeInReads(gr1_rep1, si_pattern = "spike", ncores = 1)
     expect_equivalent(gr, gr1_rep1[3:4])
 
-    trimlist <- getSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 2)
+    trimlist <- getSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 1)
     expect_is(trimlist, "list")
     expect_equivalent(trimlist[[1]], gr)
     expect_equivalent(trimlist[[2]], gr2_rep1[3:4])
@@ -103,21 +103,21 @@ context("normalization factor calculations")
 
 test_that("RPM normalization works", {
     nf_rpm <- getSpikeInNFs(grl, si_pattern = "spike", method = "RPM",
-                            ncores = 2)
+                            ncores = 1)
     expect_is(nf_rpm, "numeric")
     expect_true(all(nf_rpm * er == 1e6))
 })
 
 test_that("simple spike-in read normalization", {
     nf_snr <- getSpikeInNFs(grl, si_pattern = "spike", method = "SNR",
-                            batch_norm = FALSE, ncores = 2)
+                            batch_norm = FALSE, ncores = 1)
     expect_is(nf_snr, "numeric")
     expect_true(all(nf_snr * sr == min(sr)))
 })
 
 test_that("batch-corrected spike-in read normalization", {
     nf_snrb <- getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
-                             method = "SNR", batch_norm = TRUE, ncores = 2)
+                             method = "SNR", batch_norm = TRUE, ncores = 1)
     expect_is(nf_snrb, "numeric")
 
     # in each replicate, spike-in normalization
@@ -136,7 +136,7 @@ si_ratio <- er / sr # spike-in normalized read counts
 test_that("spike-in normalized RPM vs. control", {
     nf_srpmcb <- getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
                                 method = "SRPMC", batch_norm = TRUE,
-                                ncores = 2)
+                                ncores = 1)
 
     expect_true(all(er[c(1,4)] * nf_srpmcb[c(1,4)] == 1e6))
 
@@ -151,7 +151,7 @@ test_that("spike-in normalized RPM vs. control, no batch normalization", {
     # without batch normalization; takes average number of reads across controls
     nf_srpmc <- getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1",
                                method = "SRPMC", batch_norm = FALSE,
-                               ncores = 2)
+                               ncores = 1)
 
     expect_true(all(er[c(1,4)] * nf_srpmc[c(1,4)] != 1e6))
     expect_equal(mean( er[c(1,4)] * nf_srpmc[c(1,4)] ), 1e6)
@@ -192,11 +192,11 @@ test_that("can spike-in normalize a GRanges with field = NULL", {
 
 test_that("correctly spike-in normalize multiple GRanges objects", {
     nf_snr <- getSpikeInNFs(grl[1:2], si_pattern = "spike", method = "SNR",
-                            batch_norm = FALSE, ncores = 2)
+                            batch_norm = FALSE, ncores = 1)
     # snr with 1 and 2 makes them identical
     norm12snr <- spikeInNormGRanges(grl[1:2], si_pattern = "spike",
                                     method = "SNR", batch_norm = FALSE,
-                                    ncores = 2)
+                                    ncores = 1)
     expect_is(norm12snr, "list")
     expect_is(norm12snr[[1]], "GRanges")
     expect_identical(norm12snr[[1]], norm12snr[[2]])
@@ -210,15 +210,15 @@ context("subsampling by spike-in NFs")
 
 test_that("can subsample single GRanges by spike-in NF", {
     gr_ss <- subsampleBySpikeIn(grl[[1]], si_pattern = "spike",
-                                batch_norm = FALSE, ncores = 2)
+                                batch_norm = FALSE, ncores = 1)
     expect_equal(sum(score(gr_ss)), sum(score(grl[[1]][1:2])))
 })
 
 test_that("subsampled GRanges list have correct readcounts", {
     grl_ss <- subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE,
-                                 ncores = 2)
+                                 ncores = 1)
     grl_nf_snr <- getSpikeInNFs(grl, si_pattern = "spike", method = "SNR",
-                                batch_norm = FALSE, ncores = 2)
+                                batch_norm = FALSE, ncores = 1)
     # (ranges 3 and 4 are the spike-ins)
     counts <- floor(sapply(grl, function(x) sum(score(x[1:2]))) * grl_nf_snr)
 
@@ -226,7 +226,7 @@ test_that("subsampled GRanges list have correct readcounts", {
 
     grl_ss_rpm <- subsampleBySpikeIn(grl, si_pattern = "spike",
                                      batch_norm = FALSE, ctrl_pattern = "gr1",
-                                     RPM_units = TRUE, ncores = 2)
+                                     RPM_units = TRUE, ncores = 1)
 })
 
 grl_ones <- lapply(grl, function(x) {
@@ -236,10 +236,10 @@ grl_ones <- lapply(grl, function(x) {
 
 test_that("can subsample with field = NULL", {
     sslones <- subsampleBySpikeIn(grl_ones, si_pattern = "spike",
-                                  batch_norm = FALSE, ncores = 2)
+                                  batch_norm = FALSE, ncores = 1)
     nullsslones <- subsampleBySpikeIn(grl_ones, si_pattern = "spike",
                                       batch_norm = FALSE, field = NULL,
-                                      ncores = 2)
+                                      ncores = 1)
     expect_equivalent(sapply(sslones, function(x) sum(score(x))),
                       sapply(nullsslones, function(x) sum(score(x))))
 })
@@ -256,7 +256,3 @@ test_that("can subsample with field = NULL and RPM_units", {
     expect_equivalent(sapply(sslonesr, function(x) sum(score(x))),
                       sapply(nullsslonesr, function(x) sum(score(x))))
 })
-
-
-
-

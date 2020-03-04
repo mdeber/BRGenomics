@@ -61,7 +61,7 @@ test_that("multicore bootstrapping successful", {
     expect_equivalent(df, metaSubsample(PROseq, txs_pr,
                                         first.output.xval = -10,
                                         sample.name = "countsmat",
-                                        ncores = 2))
+                                        ncores = 1))
 })
 
 ps_rename <- PROseq
@@ -72,14 +72,14 @@ test_that("bootstrapping successful over several fields", {
     set.seed(11)
     df_alt <- metaSubsample(ps_rename, txs_pr, field = "signal",
                             first.output.xval = -10, sample.name = "countsmat",
-                            ncores = 2)
+                            ncores = 1)
     expect_equivalent(df, df_alt)
 
     set.seed(11)
     df_m <- metaSubsample(ps_rename, txs_pr, field = c("signal", "posnum"),
                           first.output.xval = -10,
                           sample.name = c("countsmat", "posnum"),
-                          ncores = 2)
+                          ncores = 1)
     expect_is(df_m, "data.frame")
     expect_equal(nrow(df_m), 2 * nrow(df))
     expect_equivalent(as.character(unique(df_m$sample.name)),

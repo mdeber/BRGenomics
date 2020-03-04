@@ -83,7 +83,7 @@
 #' # divide genes into 20 bins for each measurement
 #' #--------------------------------------------------#
 #'
-#' bin3d <- binNdimensions(df, nbins = 20, ncores = 2)
+#' bin3d <- binNdimensions(df, nbins = 20, ncores = 1)
 #'
 #' length(txs_dm6_chr4)
 #' nrow(bin3d)
@@ -94,7 +94,7 @@
 #' #--------------------------------------------------#
 #'
 #' bin_counts <- densityInNdimensionalBins(df, nbins = 20,
-#'                                         ncores = 2)
+#'                                         ncores = 1)
 #'
 #' bin_counts[1:6, ]
 #'
@@ -103,7 +103,7 @@
 #' #--------------------------------------------------#
 #'
 #' bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df,
-#'                                          nbins = 20, ncores = 2)
+#'                                          nbins = 20, ncores = 1)
 #'
 #' bin2d_cps[1:6, ]
 #'
@@ -114,7 +114,7 @@
 #' #--------------------------------------------------#
 #'
 #' bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
-#'                                              FUN = median, ncores = 2)
+#'                                              FUN = median, ncores = 1)
 #'
 #' bin2d_cps_med[1:6, ]
 #'

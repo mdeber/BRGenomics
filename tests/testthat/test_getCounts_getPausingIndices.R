@@ -44,12 +44,12 @@ ps_rename$posnum <- seq_along(ps_rename)
 test_that("signal counts work over multiple metadata fields", {
     counts_multiple <- getCountsByRegions(ps_rename, txs_dm6_chr4,
                                           field = c("signal", "posnum"),
-                                          ncores = 2)
+                                          ncores = 1)
     expect_is(counts_multiple, "data.frame")
     expect_equivalent(counts_multiple$signal, test_counts)
 })
 
-countsl <- getCountsByRegions(ps_list, txs_dm6_chr4, ncores = 2)
+countsl <- getCountsByRegions(ps_list, txs_dm6_chr4, ncores = 1)
 
 test_that("signal counting works over a list", {
     expect_is(countsl, "data.frame")
@@ -64,7 +64,7 @@ test_that("signal counting works over a list", {
 
 test_that("melt option works for list", {
     mcountsl <- getCountsByRegions(ps_list, txs_dm6_chr4, melt = TRUE,
-                                   ncores = 2)
+                                   ncores = 1)
     expect_is(mcountsl, "data.frame")
     expect_equivalent(names(mcountsl), c("region", "signal", "sample"))
     expect_equivalent(subset(mcountsl, sample == "B_rep1")$signal,
@@ -73,10 +73,10 @@ test_that("melt option works for list", {
 
 test_that("error if NFs given don't match input", {
     expect_error(getCountsByRegions(ps_list, txs_dm6_chr4, NF = 1:5,
-                                    ncores = 2))
+                                    ncores = 1))
     expect_error(getCountsByRegions(ps_rename, txs_dm6_chr4,
                                     field = c("signal", "posnum"),
-                                    NF = 1, ncores = 2))
+                                    NF = 1, ncores = 1))
 })
 
 bl <- txs_dm6_chr4[2]
@@ -116,7 +116,7 @@ test_that("melt option melts simple counts matrix", {
 test_that("simple counts matrix works over multiple metadata fields", {
     fieldcounts <- getCountsByPositions(ps_rename, txs_pr,
                                         field = c("signal", "posnum"),
-                                        ncores = 2)
+                                        ncores = 1)
     expect_is(fieldcounts, "list")
     expect_equivalent(names(fieldcounts), c("signal", "posnum"))
     expect_is(fieldcounts[[1]], "matrix")
@@ -126,11 +126,11 @@ test_that("simple counts matrix works over multiple metadata fields", {
     expect_equivalent(fieldcounts[[2]] * 0.5,
                       getCountsByPositions(ps_rename, txs_pr,
                                            field = c("signal", "posnum"),
-                                           NF = c(1, 0.5), ncores = 2)[[2]])
+                                           NF = c(1, 0.5), ncores = 1)[[2]])
 })
 
 test_that("simple counts matrix works for list input", {
-    countsl <- getCountsByPositions(ps_list, txs_pr, ncores = 2)
+    countsl <- getCountsByPositions(ps_list, txs_pr, ncores = 1)
     expect_is(countsl, "list")
     expect_equivalent(names(countsl), names(ps_list))
     expect_is(countsl[[1]], "matrix")
@@ -141,7 +141,7 @@ test_that("simple counts matrix works for list input", {
 })
 
 test_that("melting for list input returns single dataframe", {
-    countslmelt <- getCountsByPositions(ps_list, txs_pr, melt=TRUE, ncores = 2)
+    countslmelt <- getCountsByPositions(ps_list, txs_pr, melt=TRUE, ncores = 1)
     expect_is(countslmelt, "data.frame")
     expect_equal(ncol(countslmelt), 4)
     expect_equivalent(unique(countslmelt[,4]), names(ps_list))
@@ -194,7 +194,7 @@ test_that("melting option works", {
     # for multiple fields
     fieldcountsdf <- getCountsByPositions(ps_rename, txs_pr,
                                           field = c("signal", "posnum"),
-                                          melt = TRUE, ncores = 2)
+                                          melt = TRUE, ncores = 1)
     expect_is(fieldcountsdf, "data.frame")
     expect_equal(ncol(fieldcountsdf), 4) # has sample names now
     expect_equivalent(unique(fieldcountsdf[,4]), c("signal", "posnum"))
@@ -310,7 +310,7 @@ test_that("melt option works for single dataset", {
 test_that("can get pause indices over multiple fields", {
     pidx_multi <- getPausingIndices(ps_rename, txs_pr, txs_gb,
                                     field = c("signal", "posnum"),
-                                    ncores = 2)
+                                    ncores = 1)
     expect_is(pidx_multi, "data.frame")
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi[, 1], pidx)
@@ -318,13 +318,13 @@ test_that("can get pause indices over multiple fields", {
     # with remove.empty
     pidx_multi_re <- getPausingIndices(ps_rename, txs_pr, txs_gb,
                                        field = c("signal", "posnum"),
-                                       remove.empty = TRUE, ncores = 2)
+                                       remove.empty = TRUE, ncores = 1)
     expect_is(pidx_multi, "data.frame")
     expect_equivalent(names(pidx_multi), c("signal", "posnum"))
     expect_equivalent(pidx_multi_re[, 1], pidx_re)
 })
 
-pidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, ncores = 2)
+pidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, ncores = 1)
 
 test_that("can get pause indices for a list", {
     expect_is(pidxl, "data.frame")
@@ -333,13 +333,13 @@ test_that("can get pause indices for a list", {
 
     # with remove.empty
     pidxl_re <- getPausingIndices(ps_list, txs_pr, txs_gb, remove.empty = TRUE,
-                                  ncores = 2)
+                                  ncores = 1)
     expect_equal(nrow(pidxl_re), 189)
 })
 
 test_that("melt option works for a list", {
     mpidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, melt = TRUE,
-                                ncores = 2)
+                                ncores = 1)
     expect_is(mpidxl, "data.frame")
     expect_equivalent(names(mpidxl), c("region", "pauseIndex", "sample"))
     expect_equivalent(subset(mpidxl, sample == "B_rep1")$pauseIndex,
@@ -348,20 +348,13 @@ test_that("melt option works for a list", {
 
 test_that("blacklisting works", {
     blpidx <- getPausingIndices(PROseq, txs_pr, txs_gb, blacklist = bl,
-                                ncores = 2)
+                                ncores = 1)
     expect_true(is.finite(pidx[2]))
     expect_true(!is.finite(blpidx[2]))
 
     # with a list
     blpidxl <- getPausingIndices(ps_list, txs_pr, txs_gb, blacklist = bl,
-                                 ncores = 2)
+                                 ncores = 1)
     expect_true(identical(blpidxl[1,], pidxl[1,]))
     expect_true(!identical(blpidxl[2,], pidxl[2,]))
 })
-
-
-
-
-
-
-

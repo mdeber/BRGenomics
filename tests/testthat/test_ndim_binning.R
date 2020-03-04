@@ -17,7 +17,7 @@ counts_gb <- counts_gb[idx]
 df <- data.frame(pr = counts_pr, gb = counts_gb)
 
 test_that("names given in input are used in output", {
-    bin_deciles <- binNdimensions(df, nbins = 10, ncores = 2)
+    bin_deciles <- binNdimensions(df, nbins = 10, ncores = 1)
     expect_equivalent(names(bin_deciles), c("bin.pr", "bin.gb"))
 })
 
@@ -26,9 +26,9 @@ pidx <- counts_pr / counts_gb
 test_that("can use different nbins for different dimensions", {
     df3 <- data.frame(counts_pr, counts_gb, pidx)
 
-    expect_is(binNdimensions(df3, ncores = 2), "data.frame")
-    expect_error(binNdimensions(df3, nbins = c(10, 15), ncores = 2))
-    bin_3d <- binNdimensions(df3, nbins = c(10, 15, 20), ncores = 2)
+    expect_is(binNdimensions(df3, ncores = 1), "data.frame")
+    expect_error(binNdimensions(df3, nbins = c(10, 15), ncores = 1))
+    bin_3d <- binNdimensions(df3, nbins = c(10, 15, 20), ncores = 1)
     expect_is(bin_3d, "data.frame")
     expect_equivalent(sapply(bin_3d, max), c(10, 15, 20))
 })
@@ -38,7 +38,7 @@ test_that("can use different nbins for different dimensions", {
 
 
 test_that("can aggregate in ndimensional bins", {
-    mean_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, ncores = 2)
+    mean_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, ncores = 1)
 
     expect_is(mean_bins, "data.frame")
     expect_equal(names(mean_bins), c("bin.pr", "bin.gb", "value"))
@@ -48,18 +48,18 @@ test_that("can aggregate in ndimensional bins", {
     # test using x = column name
     dfplus <- df
     dfplus$agvar <- seq_len(nrow(df))
-    mbinsp <- aggregateByNdimensionalBins("agvar", dfplus, ncores = 2)
+    mbinsp <- aggregateByNdimensionalBins("agvar", dfplus, ncores = 1)
     expect_identical(mean_bins, mbinsp)
 })
 
 test_that("can modify function and default output values", {
     sum_bins <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
-                                            ncores = 2)
+                                            ncores = 1)
     expect_equal(sum_bins$value[1], 19330)
     expect_true(is.na(sum_bins$value[3]))
 
     sum_bins2 <- aggregateByNdimensionalBins(seq_len(nrow(df)), df, FUN = sum,
-                                             empty = 0, ncores = 2)
+                                             empty = 0, ncores = 1)
     expect_equal(sum_bins2$value[1], 19330)
     expect_equal(sum_bins2$value[3], 0)
 })
@@ -82,8 +82,6 @@ test_that("can separate 'empty NAs' from 'output NAs'", {
 # Test density ------------------------------------------------------------
 
 test_that("can find density in ndimensional bins", {
-    bin_density <- densityInNdimensionalBins(df, ncores = 2)
+    bin_density <- densityInNdimensionalBins(df, ncores = 1)
     expect_equivalent(bin_density$value[1:3], c(136, 9, 0))
 })
-
-
