@@ -61,7 +61,22 @@ An atomic vector the same length as \code{regions.gr} containing the
 }
 \description{
 Get the sum of the signal in \code{dataset.gr} that overlaps each range in
-\code{regions.gr}.
+\code{regions.gr}. This function is written to return the \emph{readcounts}
+overlapping each region, and \emph{not} coverage signal (see details below).
+}
+\details{
+This function is designed to work with data in which each range
+  represents one type of molecule, whether it's a single base (e.g. the 5'
+  ends, 3' ends, or centers of reads) or entire reads (i.e. paired 5' and 3'
+  ends of reads).
+
+  This is in contrast to standard run-length compressed GRanges object, as
+  imported using \code{\link[rtracklayer:import.bw]{rtracklayer::import.bw}},
+  in which a single range can represent multiple contiguous positions that
+  share the same signal information. This function does \emph{not} expand
+  run-length compressed coverage objects. As an example, a range of length 10
+  with a score of 2 is treated as 2 reads (each spanning the same 10 bases),
+  not 20 reads.
 }
 \examples{
 data("PROseq") # load included PROseq data
