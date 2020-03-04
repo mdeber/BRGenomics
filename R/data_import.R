@@ -248,7 +248,8 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                               keep.M = keep.M,
                               keep.nonstandard = keep.nonstandard)
     }
-    return(sort(gr))
+
+    .collapse_reads(sort(gr), "score")
 }
 
 
@@ -370,7 +371,7 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     gr <- .import_bam(file, paired_end, yieldSize, mapq)
 
     # Apply Options
-    if (revcomp | !all(shift == 0))  is_plus <- as.character(strand(gr)) == "+"
+    if (revcomp || !all(shift == 0))  is_plus <- as.character(strand(gr)) == "+"
     if (revcomp) {
         strand(gr) <- "+"
         strand(gr)[is_plus] <- "-"
