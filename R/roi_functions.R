@@ -258,7 +258,7 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' aggregate(reads ~ sample*gene, df, FUN = sum)
 intersectByGene <- function(regions.gr, gene_names) {
 
-    if (is.list(regions.gr) | is(regions.gr, "GRangesList")) {
+    if (is.list(regions.gr) || is(regions.gr, "GRangesList")) {
         names(regions.gr) <- gene_names
         regions.gr <- unlist(regions.gr)
         gene_names <- names(regions.gr)
@@ -299,7 +299,7 @@ intersectByGene <- function(regions.gr, gene_names) {
 #' @export
 reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
 
-    if (is.list(regions.gr) | is(regions.gr, "GRangesList")) {
+    if (is.list(regions.gr) || is(regions.gr, "GRangesList")) {
         names(regions.gr) <- gene_names
         regions.gr <- unlist(reduce(regions.gr))
     } else {
