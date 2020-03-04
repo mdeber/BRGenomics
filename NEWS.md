@@ -1,5 +1,14 @@
 (Changelog from 0.99.x temporary; will be collapsed)
 
+## BRGenomics 0.99.12-13
+
+* Revert rtracklayer::import link to point to function (rtracklayer:io not working...)
+
+## BRGenomics 0.99.11
+
+* Change tidyChromosomes test
+* Remove indirect links in doc pages (use only exact names of man pages)
+
 ## BRGenomics 0.99.10
 
 * (Fixed missed bigWig import in makeGRangesBRG example)

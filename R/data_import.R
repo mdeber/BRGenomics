@@ -116,7 +116,7 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
-#'   \code{\link[rtracklayer:io]{rtracklayer::import}}
+#'   \code{\link[rtracklayer:export]{rtracklayer::import}}
 #' @name import-functions
 #' @examples
 #' #--------------------------------------------------#
