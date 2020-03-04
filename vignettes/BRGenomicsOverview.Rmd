@@ -79,10 +79,10 @@ If you're using Windows, [Rtools for Windows](https://cran.rstudio.com/bin/windo
 
 ## Parallel Processing
 
-By default, many BRGenomics functions will use multicore processing, as implemented in the `parallel` package, and the default is to use all available cores, as found using `detectCores()`. To meet the hosting requirements for Bioconductor, all code in the vignette and documentation is set to use no more than 2 cores, i.e. `ncores = 2`.
+By default, many BRGenomics functions will use multicore processing as implemented in the `parallel` package, and the default is to use all available cores (found using `detectCores()`). 
 
-There is no support for parallel processing on Windows.
-
+However, parallel processing is not available on Windows. To maintain compatability, all code in this vignette as well as the example code in the documentation is to use a single core, i.e. `ncores = 1`.
+  
 ## Included Datasets
 
 BRGenomics ships with an example dataset of PRO-seq data from Drosophila melanogaster^[Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis (2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct Initiation and Pausing. _Science_  __339__(6122): 950–953. https://doi.org/10.1126/science.1229386]. PRO-seq is a basepair-resolution method that uses 3'-end sequencing of nascent RNA to map the locations of actively engaged RNA polymerases. 

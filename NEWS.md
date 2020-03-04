@@ -1,47 +1,23 @@
-(Changelog from 0.99.x temporary; will be collapsed)
+## BRGenomics 0.99 Bioconductor Submission
 
-## BRGenomics 0.99.12-13
-
-* Revert rtracklayer::import link to point to function (rtracklayer:io not working...)
-
-## BRGenomics 0.99.11
+[0.99.14]
 
 * Change tidyChromosomes test
 * Remove indirect links in doc pages (use only exact names of man pages)
 
-## BRGenomics 0.99.10
+[0.99.10]
 
-* (Fixed missed bigWig import in makeGRangesBRG example)
+* Code modifications to pass test builds on Windows:
+    + Make all examples and tests single core
+    + Internally (not exported) redefine mcMap (current implementation in package parallel needs to be modified)
+    + In tests and examples, test if on Windows before attempting any bigWig file import
 
-## BRGenomics 0.99.9
+[0.99.0]
 
-* Avoid importing bigWigs in test/examples if on Windows
-
-## BRGenomics 0.99.8
-
-* Made all examples and tests use single core (for Windows test build)
-
-## BRGenomics 0.99.7
-
-* Redefine mcMap to avoid errors on Windows, and allow Windows again
-
-## BRGenomics 0.99.6
-
-* Formally remove support for Windows
-
-## BRGenomics 0.99.4
-
-* For Bioconductor, made new branch `R3` to allow users to install under R version >=3.5
-    + Branch `master` now requires R version 4.0 (development version)
-* Updated readme to have users install from branch `R3`
-
-## BRGenomics 0.99.1
-
-* Remove .Rproj file from git repository
-
-## BRGenomics 0.99.0 (Bioconductor submission)
-
-* Update version for Bioconductor submission
+* For Bioconductor version requirements:
+    + Change package versioning scheme
+    + Update R requirement to version 4.0
+    + Add new branch `R3` to allow users to install under R version >=3.5
 * Various minor formatting changes to codebase
 
 ## BRGenomics 0.8.1
