@@ -98,7 +98,7 @@ PROseq_paired
 }
 \seealso{
 \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
-  \code{\link[rtracklayer:import]{rtracklayer::import}}
+  \code{\link[rtracklayer:io]{rtracklayer::import}}
 }
 \author{
 Mike DeBerardine

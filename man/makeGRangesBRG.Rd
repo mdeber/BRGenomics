@@ -23,7 +23,7 @@ computations.}
   \code{all(width(output) == 1)}.
 
   \code{isBRG(x)} returns \code{TRUE} if \code{x} is a GRanges object with
-   the above characteristics.
+  the above characteristics.
 }
 \description{
 \code{makeGRangesBRG} splits up all ranges in \code{dataset.gr} to be each 1
@@ -55,22 +55,22 @@ Note that \code{makeGRangesBRG} doesn't perform any transformation
  If working
   with a GRanges object containing whole reads, one can obtain base-pair
   resolution information by using the strand-specific function
-  \code{\link[GenomicRanges:resize]{GenomicRanges::resize}} to select a
-  single base from each read: set \code{width = 1} and use the \code{fix}
-  argument to choose the strand-specific 5' or 3' end. Then, strand-specific
-  coverage can be calculated using
+  \code{\link[GenomicRanges:intra-range-methods]{GenomicRanges::resize}} to
+  select a single base from each read: set \code{width = 1} and use the
+  \code{fix} argument to choose the strand-specific 5' or 3' end. Then,
+  strand-specific coverage can be calculated using
   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}}.
 }
 
 \section{On the use of GRanges instead of GPos}{
  The
-  \code{\link[GenomicRanges:GPos]{GPos}} class is a more suitable container
-  for data of this type, as the GPos class is specific to 1-bp-wide ranges.
-  However, in early testing, we encountered some kind of compatibility
-  limitations with the newer GPos class, and have not re-tested it since. If
-  you have feedback on switching to this class, please contact the author.
-  Users can readily coerce a basepair-resolution GRanges object to a GPos
-  object via \code{gp <- GPos(gr, score = score(gr))}.
+  \code{\link[GenomicRanges:GPos-class]{GPos}} class is a more suitable
+  container for data of this type, as the GPos class is specific to 1-bp-wide
+  ranges. However, in early testing, we encountered some kind of
+  compatibility limitations with the newer GPos class, and have not re-tested
+  it since. If you have feedback on switching to this class, please contact
+  the author. Users can readily coerce a basepair-resolution GRanges object
+  to a GPos object via \code{gp <- GPos(gr, score = score(gr))}.
 }
 
 \examples{
@@ -117,7 +117,7 @@ if (.Platform$OS.type == "unix") {
 }
 \seealso{
 \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
-  \code{\link[GenomicRanges:resize]{GenomicRanges::resize()}}
+  \code{\link[GenomicRanges:intra-range-methods]{GenomicRanges::resize()}}
 }
 \author{
 Mike DeBerardine

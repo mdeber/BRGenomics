@@ -31,15 +31,16 @@
 #'   shorter than 600 bp would be removed.
 #'
 #' @details Unlike
-#'   \code{\link[GenomicRanges:promoters]{GenomicRanges::promoters}}, distances
-#'   can be defined to be upstream or downstream by changing the sign of the
-#'   argument, and both the start and end of the returned regions can be defined
-#'   in terms of the strand-specific start or end site of the input ranges. For
-#'   example, \code{genebodies(txs, -50, 150, fix.end = "start")} is equivalent
-#'   to \code{promoters(txs, 50, 151)} (the downstream edge is off by 1 because
-#'   \code{promoters} keeps the downstream interval closed). The default
-#'   arguments return ranges that begin 300 bases downstream of the original
-#'   start positions, and end 300 bases upstream of the original end positions.
+#'   \code{\link[GenomicRanges:intra-range-methods]{GenomicRanges::promoters}},
+#'   distances can be defined to be upstream or downstream by changing the sign
+#'   of the argument, and both the start and end of the returned regions can be
+#'   defined in terms of the strand-specific start or end site of the input
+#'   ranges. For example, \code{genebodies(txs, -50, 150, fix.end = "start")} is
+#'   equivalent to \code{promoters(txs, 50, 151)} (the downstream edge is off by
+#'   1 because \code{promoters} keeps the downstream interval closed). The
+#'   default arguments return ranges that begin 300 bases downstream of the
+#'   original start positions, and end 300 bases upstream of the original end
+#'   positions.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[GenomicRanges:intra-range-methods]{intra-range-methods}}

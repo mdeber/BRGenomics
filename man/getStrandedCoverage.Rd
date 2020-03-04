@@ -90,7 +90,7 @@ getStrandedCoverage(PROseq[idx], ncores = 1)
 }
 \seealso{
 \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}},
-  \code{\link[GenomicRanges:coverage]{GenomicRanges::coverage}}
+  \code{\link[IRanges:coverage-methods]{GenomicRanges::coverage}}
 }
 \author{
 Mike DeBerardine

@@ -29,12 +29,12 @@
 #'   with trimmed chromosomes have been removed.
 #'
 #' @details Standard chromosomes are defined using the
-#'   \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}}
-#'   function from the \code{GenomeInfoDb} package.
+#'   \code{\link[GenomeInfoDb:seqlevels-wrappers]{standardChromosomes}} function
+#'   from the \code{GenomeInfoDb} package.
 #'
 #' @author Mike DeBerardine
-#' @seealso \code{\link[GenomeInfoDb:standardChromosomes]{
-#' GenomeInfoDb::standardChromosomes}}
+#' @seealso \code{\link[GenomeInfoDb:seqlevels-wrappers]{
+#'   GenomeInfoDb::standardChromosomes}}
 #'
 #' @export
 #' @importFrom GenomeInfoDb standardChromosomes seqlevels keepSeqlevels
@@ -116,7 +116,7 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
-#'   \code{\link[rtracklayer:import]{rtracklayer::import}}
+#'   \code{\link[rtracklayer:io]{rtracklayer::import}}
 #' @name import-functions
 #' @examples
 #' #--------------------------------------------------#

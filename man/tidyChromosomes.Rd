@@ -32,8 +32,8 @@ chromosomes from any GRanges object.
 }
 \details{
 Standard chromosomes are defined using the
-  \code{\link[GenomeInfoDb:standardChromosomes]{standardChromosomes}}
-  function from the \code{GenomeInfoDb} package.
+  \code{\link[GenomeInfoDb:seqlevels-wrappers]{standardChromosomes}} function
+  from the \code{GenomeInfoDb} package.
 }
 \examples{
 # make a GRanges
@@ -55,8 +55,8 @@ tidyChromosomes(gr, keep.M = TRUE, keep.Y = FALSE)
 tidyChromosomes(gr, keep.nonstandard = TRUE)
 }
 \seealso{
-\code{\link[GenomeInfoDb:standardChromosomes]{
-GenomeInfoDb::standardChromosomes}}
+\code{\link[GenomeInfoDb:seqlevels-wrappers]{
+  GenomeInfoDb::standardChromosomes}}
 }
 \author{
 Mike DeBerardine
