@@ -1,5 +1,9 @@
 (Changelog from 0.99.x temporary; will be collapsed)
 
+## BRGenomics 0.99.10
+
+* (Fixed missed bigWig import in makeGRangesBRG example)
+
 ## BRGenomics 0.99.9
 
 * Avoid importing bigWigs in test/examples if on Windows

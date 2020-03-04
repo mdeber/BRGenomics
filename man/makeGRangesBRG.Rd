@@ -74,42 +74,46 @@ Note that \code{makeGRangesBRG} doesn't perform any transformation
 }
 
 \examples{
-#--------------------------------------------------#
-# Make a bigWig file single width
-#--------------------------------------------------#
+if (.Platform$OS.type == "unix") {
 
-# get local address for an included bigWig file
-bw_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
-                       package = "BRGenomics")
+    #--------------------------------------------------#
+    # Make a bigWig file single width
+    #--------------------------------------------------#
 
-# BRGenomics::import_bigWig automatically applies makeGRangesBRG;
-# therefore will import using rtracklayer
-bw <- rtracklayer::import.bw(bw_file)
-strand(bw) <- "+"
+    # get local address for an included bigWig file
+    bw_file <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
+                           package = "BRGenomics")
 
-range(width(bw))
-length(bw)
+    # BRGenomics::import_bigWig automatically applies makeGRangesBRG;
+    # therefore will import using rtracklayer
+    bw <- rtracklayer::import.bw(bw_file)
+    strand(bw) <- "+"
 
-# make basepair-resolution (single-width)
-gr <- makeGRangesBRG(bw)
+    range(width(bw))
+    length(bw)
 
-isBRG(gr)
-range(width(gr))
-length(gr)
-length(gr) == sum(width(bw))
-sum(score(gr)) == sum(score(bw) * width(bw))
+    # make basepair-resolution (single-width)
+    gr <- makeGRangesBRG(bw)
 
-#--------------------------------------------------#
-# Reverse using getStrandedCoverage
-#--------------------------------------------------#
-# -> for more examples, see getStrandedCoverage
+    isBRG(gr)
+    range(width(gr))
+    length(gr)
+    length(gr) == sum(width(bw))
+    sum(score(gr)) == sum(score(bw) * width(bw))
 
-undo <- getStrandedCoverage(gr, ncores = 1)
+    #--------------------------------------------------#
+    # Reverse using getStrandedCoverage
+    #--------------------------------------------------#
+    # -> for more examples, see getStrandedCoverage
 
-isBRG(undo)
-range(width(undo))
-length(undo) == length(bw)
-all(score(undo) == score(bw))
+    undo <- getStrandedCoverage(gr, ncores = 1)
+
+    isBRG(undo)
+    range(width(undo))
+    length(undo) == length(bw)
+    all(score(undo) == score(bw))
+
+}
 }
 \seealso{
 \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
