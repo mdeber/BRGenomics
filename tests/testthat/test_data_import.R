@@ -27,10 +27,9 @@ test_that("PROseq files are found", {
 # Check tidyChromosome function -------------------------------------------
 
 test_that("tidyChromosome works", {
-    bw <- rtracklayer::import.bw(ps_p_file)
-    seqlevels(bw) <- c("chr4", "chr2L", "chrM", "chrX", "chrY", "unassigned")
+    bw <- GRanges(seqnames = c("chr2L", "chrM", "chrX", "chrY", "unassigned"),
+                  ranges = IRanges(1:5, 2:6))
     genome(bw) <- "dm6"
-    seqnames(bw)[1:5] <- c("chr2L", "chrM", "chrX", "chrY", "unassigned")
 
     trim_x <- tidyChromosomes(bw, keep.X = FALSE, keep.M = TRUE,
                               keep.nonstandard = TRUE)
@@ -46,7 +45,8 @@ test_that("tidyChromosome works", {
 
     # default keeps sex, trims M and non-standard
     trim_default <- tidyChromosomes(bw, keep.X = TRUE, keep.Y = TRUE,
-                                    keep.M = FALSE, keep.nonstandard = FALSE)
+                                    keep.M = FALSE,
+                                    keep.nonstandard = FALSE)
     expect_equal(length(trim_default), length(bw)-2)
     expect_equal(seqinfo(trim_default),
                  sortSeqlevels(dropSeqlevels(seqinfo(bw),
