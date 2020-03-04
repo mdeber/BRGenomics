@@ -58,7 +58,7 @@ test_that("signal counting works over a list", {
     expect_equal(sum(sapply(countsl, sum)), sum(test_counts))
 
     # with nfs
-    countslnf <- getCountsByRegions(ps_list, txs_dm6_chr4, NF=1:6, ncores=2)
+    countslnf <- getCountsByRegions(ps_list, txs_dm6_chr4, NF=1:6, ncores=1)
     expect_equivalent(countslnf, as.data.frame(Map("*", countsl, 1:6)))
 })
 
