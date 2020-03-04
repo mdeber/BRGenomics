@@ -161,7 +161,7 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
     }
     if (is.null(NF))  NF <- rep(1L, length(signal.bins))
 
-    cl <- .mcMap(metaSubsampleMatrix, signal.bins, binsize = 1,
+    cl <- mcMap(metaSubsampleMatrix, signal.bins, binsize = 1,
                 sample.name = sample.name, n.iter = n.iter,
                 prop.sample = prop.sample, lower = lower, upper = upper,
                 NF = NF, remove.empty = remove.empty, ncores = ncores_in,
@@ -229,7 +229,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     #    -> Matrix of dim = (nbins, n.iter)
     idx.list <- replicate(n.iter, sample(ngenes, size = nsample),
                           simplify = FALSE)
-    binavg.list <- .mclapply(idx.list,
+    binavg.list <- mclapply(idx.list,
                             function(idx) colMeans(counts.mat[idx, ], TRUE),
                             mc.cores = ncores)
     binavg.mat <- matrix(unlist(binavg.list), ncol = n.iter)

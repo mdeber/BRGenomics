@@ -609,14 +609,14 @@ _Note that BRGenomics does not currently support the use of `GRangesList` or `Co
 We can pass our list of GRanges directly to `getCountsByRegions` to simultaneously count reads for each dataset, and melt the result for plotting with `ggplot`:
 
 ```{r}
-getCountsByRegions(ps_list, txs_dm6_chr4[1:5], ncores = 1)
+getCountsByRegions(ps_list, txs_dm6_chr4[1:5], ncores = 2)
 ```
 
 ```{r}
 # melt, and use the optional region_names argument
 txs_counts <- getCountsByRegions(ps_list, txs_dm6_chr4, melt = TRUE,
                                  region_names = txs_dm6_chr4$tx_name,
-                                 ncores = 1)
+                                 ncores = 2)
 head(txs_counts)
 ```
 

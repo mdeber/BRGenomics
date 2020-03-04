@@ -69,7 +69,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 
     if (is.list(dataset.gr)) {
         NF <- .check_nfs(dataset.gr, NF, field)
-        cl <- .mcMap(.get_cbr, dataset.gr, list(regions.gr), field, NF,
+        cl <- mcMap(.get_cbr, dataset.gr, list(regions.gr), field, NF,
                     mc.cores = ncores)
         cl <- as.data.frame(cl)
         if (melt) return(.melt_counts(cl, colnames(cl), region_names))
@@ -81,7 +81,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     NF <- .check_nfs(dataset.gr, NF, field)
 
     if (length(field) > 1) {
-        cl <- .mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF,
+        cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF,
                     mc.cores = ncores)
         names(cl) <- field
         cl <- as.data.frame(cl)
@@ -121,7 +121,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #' @importFrom IRanges subsetByOverlaps
 .blacklist <- function(dataset.gr, blacklist, ncores) {
     if (is.list(dataset.gr)) {
-        .mclapply(dataset.gr, subsetByOverlaps, blacklist, invert = TRUE,
+        mclapply(dataset.gr, subsetByOverlaps, blacklist, invert = TRUE,
                  mc.cores = ncores)
     } else {
         subsetByOverlaps(dataset.gr, blacklist, invert = TRUE)
@@ -299,7 +299,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     # function dispatch (for lists)
     if (is.list(dataset.gr)) {
         NF <- .check_nfs(dataset.gr, NF, field)
-        cl <- .mcMap(.get_cbp, dataset.gr, list(regions.gr), binsize, list(FUN),
+        cl <- mcMap(.get_cbp, dataset.gr, list(regions.gr), binsize, list(FUN),
                     smw, field, NF, melt, list(blacklist), list(xy.bl),
                     ncores = 1, mc.cores = ncores)
         if (melt)  cl <- .dfList2df(cl, prepend = FALSE)
@@ -333,7 +333,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                        FUN = FUN, smw = smw, field = field.i, NF = NF.i,
                        melt = melt, blacklist = blacklist, xy.bl = xy.bl)
         }
-        cl <- .mcMap(call_multifield, field, NF, mc.cores = ncores)
+        cl <- mcMap(call_multifield, field, NF, mc.cores = ncores)
         names(cl) <- field
         if (melt)  cl <- .dfList2df(cl, prepend = FALSE)
         return(cl)

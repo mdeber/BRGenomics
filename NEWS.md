@@ -1,3 +1,7 @@
+## BRGenomics 0.99.6
+
+* Formally remove support for Windows
+
 ## BRGenomics 0.99.4
 
 * For Bioconductor, made new branch `R3` to allow users to install under R version >=3.5
