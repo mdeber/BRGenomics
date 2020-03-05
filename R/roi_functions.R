@@ -96,7 +96,7 @@ genebodies <- function(genelist, start = 300, end = -300,
     # Filter genelist based on min.window
     if (fix.start == "start" & fix.end == "end")
         min.window <- start - end + min.window
-    genelist <- subset(genelist, width >= min.window)
+    genelist <- genelist[width(genelist) >= min.window]
 
     # starts are at strand-specific beginnings of the genebodies
     sense_starts <- start(resize(genelist, 1, fix = fix.start))
