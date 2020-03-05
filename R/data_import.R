@@ -110,9 +110,14 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #'   coverage, i.e. the number of reads for each position.
 #'
 #'   \code{import_bedGraph} is useful for when both 5'- and 3'-end information
-#'   is to be maintained for each sequenced molecule. It effectively imports the
-#'   entire read, and the \code{score} represents the number of reads sharing
-#'   identical 5' and 3' ends.
+#'   is to be maintained for each sequenced molecule. For this purpose, one use
+#'   bedGraphs to store entire reads, with the \code{score} representing the
+#'   number of reads sharing identical 5' and 3' ends. However,
+#'   \code{import_bedGraph} doesn't modify the information in the bedGraph
+#'   files. If the bedGraph file represents basepair-resolution coverage data,
+#'   then users can coerce it to a basepair-resolution GRanges object by using
+#'   \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}} followed
+#'   by \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
@@ -225,18 +230,15 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 
     p_gr <- GRanges() # initialize
     m_gr <- GRanges()
-
     if (!is.null(plus_file)) {
         p_gr <- import.bedGraph(plus_file)
         strand(p_gr) <- "+"
     }
-
     if (!is.null(minus_file)) {
         m_gr <- import.bedGraph(minus_file)
         score(m_gr) <- abs(score(m_gr)) # make scores positive
         strand(m_gr) <- "-"
     }
-
     suppressWarnings( gr <- c(p_gr, m_gr) )
 
     # scores are imported as doubles by default; if whole numbers, make integers
@@ -248,8 +250,7 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                               keep.M = keep.M,
                               keep.nonstandard = keep.nonstandard)
     }
-
-    .collapse_reads(sort(gr), "score")
+    sort(gr)
 }
 
 

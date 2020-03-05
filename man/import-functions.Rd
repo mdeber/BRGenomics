@@ -60,9 +60,14 @@ For \code{import_bigWig}, the output GRanges is formatted by
   coverage, i.e. the number of reads for each position.
 
   \code{import_bedGraph} is useful for when both 5'- and 3'-end information
-  is to be maintained for each sequenced molecule. It effectively imports the
-  entire read, and the \code{score} represents the number of reads sharing
-  identical 5' and 3' ends.
+  is to be maintained for each sequenced molecule. For this purpose, one use
+  bedGraphs to store entire reads, with the \code{score} representing the
+  number of reads sharing identical 5' and 3' ends. However,
+  \code{import_bedGraph} doesn't modify the information in the bedGraph
+  files. If the bedGraph file represents basepair-resolution coverage data,
+  then users can coerce it to a basepair-resolution GRanges object by using
+  \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}} followed
+  by \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}.
 }
 \examples{
 #--------------------------------------------------#
