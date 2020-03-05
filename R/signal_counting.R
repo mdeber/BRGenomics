@@ -143,8 +143,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         if (is.list(dataset.gr))
             stop(.nicemsg("If dataset.gr is a list and an NF is given, then
                           length(NF) must equal length(dataset.gr)"))
-        stop(.nicemsg("If NF is given and length(field) > 1, then length(NF)
-                      must equal length(field)"))
+        stop(.nicemsg("If NF is given and length(NF) > 1, then length(NF) must
+                      equal length(field)"))
     }
     NF
 }
