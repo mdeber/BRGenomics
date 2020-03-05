@@ -1,5 +1,10 @@
 ## BRGenomics 0.99 Bioconductor Submission
 
+[0.99.15]
+
+* Add pre-filtering to counting functions for performance
+* Some additional clarification of readcounts vs. coverage signal in counting and import functions
+
 [0.99.14]
 
 * Change tidyChromosomes test
