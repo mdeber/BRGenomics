@@ -48,7 +48,7 @@
 #'   ends of reads).
 #'
 #'   This is in contrast to standard run-length compressed GRanges object, as
-#'   imported using \code{\link[rtracklayer:import.bw]{rtracklayer::import.bw}},
+#'   imported using \code{\link[rtracklayer:export]{rtracklayer::import.bw}},
 #'   in which a single range can represent multiple contiguous positions that
 #'   share the same signal information. This function does \emph{not} expand
 #'   run-length compressed coverage objects. As an example, a range of length 10
