@@ -1,4 +1,4 @@
-context("counting signal by region")
+context("Counting signal by region")
 library(BRGenomics)
 
 data("PROseq")
@@ -358,3 +358,55 @@ test_that("blacklisting works", {
     expect_true(identical(blpidxl[1,], pidxl[1,]))
     expect_true(!identical(blpidxl[2,], pidxl[2,]))
 })
+
+
+
+# Test Expand Ranges (Work in Progress) -----------------------------------
+
+context("Signal counting by region with range expansion (coverage signal)")
+
+# Get PRO-seq coverage (collapse adjacent positions);
+#  subset for collapsed reads (ranges of interest for these comparisons)
+cvg <- subset(getStrandedCoverage(PROseq), width > 1)
+cvg <- subset(cvg, width > 1)
+
+# Get overlapping signal from the expanded data (basepair-resolution GRanges)
+bpr <- subsetByOverlaps(PROseq, cvg)
+
+# expanded- and unexpanded-counts on compressed (cvg) and expanded (bpr) data
+bpr_noexp <- getCountsByRegions(bpr, txs_dm6_chr4)
+bpr_exp <- getCountsByRegions(bpr, txs_dm6_chr4, expand_ranges = TRUE)
+cvg_noexp <- getCountsByRegions(cvg, txs_dm6_chr4)
+cvg_exp <- getCountsByRegions(cvg, txs_dm6_chr4, expand_ranges = TRUE)
+
+
+test_that("expansion doesn't affect basepair-resolution GRanges", {
+    # (b/c disjoint, single-width)
+    expect_equivalent(bpr_exp, bpr_noexp)
+})
+
+test_that("expanding coverage data increases signal", {
+    expect_true(all(cvg_noexp <= bpr_noexp))
+    expect_true(all(cvg_exp >= cvg_noexp))
+})
+
+context("Signal counting by position with range expansion (coverage signal)")
+
+# expanded- and unexpanded-counts on compressed (cvg) and expanded (bpr) data[*]
+mat_bpr_noexp <- getCountsByPositions(bpr, promoters(txs_dm6_chr4, 0, 100))
+mat_bpr_exp <- getCountsByPositions(bpr, promoters(txs_dm6_chr4, 0, 100),
+                                    expand_ranges = TRUE)
+mat_cvg_exp <- getCountsByPositions(cvg, promoters(txs_dm6_chr4, 0, 100),
+                                    expand_ranges = TRUE)
+
+# [*] but can't get unexpanded counts on expanded data
+test_that("error on unexpanded counts on expanded data", {
+    expect_error(getCountsByPositions(cvg, promoters(txs_dm6_chr4, 0, 100)))
+})
+
+# (nothing affected - must write test cases)
+test_that("expansion doesn't affect countsmat when no multi-width ranges", {
+    expect_equivalent(mat_bpr_exp, mat_bpr_noexp)
+    expect_equivalent(mat_cvg_exp, mat_cvg_noexp)
+})
+
