@@ -54,6 +54,11 @@
 #'   signal at blacklisted sites will be treated as equal to zero. For
 #'   bootstrapping, the default behavior of ignoring signal at blacklisted sites
 #'   should almost always be kept.
+#' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
+#'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+#'   should be treated as representing multiple adjacent positions with the same
+#'   signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+#'   getCountsByRegions}}.
 #' @param ncores Number of cores to use for computations.
 #'
 #' @return A dataframe containing x-values, means, lower quantiles, upper
@@ -134,7 +139,8 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                           n.iter = 1000, prop.sample = 0.1, lower = 0.125,
                           upper = 0.875, field = "score", NF = NULL,
                           remove.empty = FALSE, blacklist = NULL,
-                          zero_blacklisted = FALSE, ncores = detectCores()) {
+                          zero_blacklisted = FALSE, expand_ranges = FALSE,
+                          ncores = detectCores()) {
 
     if (length(unique(width(regions.gr))) > 1) # check ranges all same width
         stop(message = "Not all ranges in regions.gr are the same width")
@@ -144,6 +150,7 @@ metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
                                         binsize = binsize, field = field,
                                         blacklist = blacklist,
                                         NA_blacklisted = !zero_blacklisted,
+                                        expand_ranges = expand_ranges,
                                         ncores = ncores)
     if (is.list(signal.bins)) {
         if (length(sample.name) != length(signal.bins))

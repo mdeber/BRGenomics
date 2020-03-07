@@ -44,6 +44,11 @@
 #'   used simultaneously. Blacklisting doesn't affect the ranges returned as
 #'   rowRanges in the output DESeqDataSet object (unlike the use of
 #'   non-contiguous regions).
+#' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
+#'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+#'   should be treated as representing multiple adjacent positions with the same
+#'   signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+#'   getCountsByRegions}}.
 #' @param ncores Number of cores to use for read counting across all samples. By
 #'   default, all available cores are used.
 #' @param quiet If \code{TRUE}, all output messages from call to
@@ -122,11 +127,14 @@
 getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
                             gene_names = NULL, sizeFactors = NULL,
                             field = "score", blacklist = NULL,
-                            ncores = detectCores(), quiet = FALSE) {
+                            expand_ranges = FALSE, ncores = detectCores(),
+                            quiet = FALSE) {
 
     # Get counts dataframe for all samples in each range of regions.gr
     counts.df <- getCountsByRegions(dataset.list, regions.gr, field = field,
-                                    blacklist = blacklist, ncores = ncores)
+                                    blacklist = blacklist,
+                                    expand_ranges = expand_ranges,
+                                    ncores = ncores)
 
     # check for valid sample_names
     if (is.null(sample_names))
