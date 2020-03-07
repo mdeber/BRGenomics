@@ -85,7 +85,7 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
     FUN <- if (expand_ranges) .get_spikecounts_expand else .get_spikecounts
-    FUN(dataset.gr, spike_chrom, field, expand_ranges, ncores)
+    FUN(dataset.gr, spike_chrom, field, ncores)
 }
 
 #' @importFrom parallel mclapply
