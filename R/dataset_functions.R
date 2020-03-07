@@ -269,6 +269,11 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #'   then \code{dataset.gr} will be treated as a multiplexed GRanges, and each
 #'   field will be treated as an indpendent dataset. See
 #'   \code{\link[BRGenomics:mergeGRangesData]{mergeGRangesData}}.
+#' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
+#'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+#'   should be treated as representing multiple adjacent positions with the same
+#'   signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+#'   getCountsByRegions}}.
 #' @param ncores Number of cores to use for computations. Multicore only used
 #'   when \code{dataset.gr} is a list, or if \code{length(field) > 1}.
 #'
@@ -315,7 +320,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #' ps_sample <- sample(PROseq, 0.1 * length(PROseq))
 #' length(ps_sample)
 subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
-                             ncores = detectCores()) {
+                             expand_ranges = FALSE, ncores = detectCores()) {
 
     .check_xor_args(n, prop)
 
@@ -342,41 +347,60 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 }
 
 
-.subsample_gr <- function(dataset.gr, n, prop, field) {
-
+.subsample_gr <- function(dataset.gr, n, prop, field, expand_ranges) {
     if (is.null(field)) {
         if (is.null(n))  n <- floor(prop * length(dataset.gr))
         return(sample(dataset.gr, n))
     }
-
     signal_counts <- mcols(dataset.gr)[[field]]
-    if (is.null(n))  n <- round(prop * sum(signal_counts))
 
-    if (all( round(signal_counts, 3) %% 1 == 0 )) {
-        normed_signal <- FALSE
-    } else {
-        normed_signal <- TRUE
+    if (expand_ranges)
+        signal_counts <- signal_counts * width(dataset.gr)
+    if (normed_signal <- any( round(signal_counts, 3) %% 1 != 0 )) {
         lcm <- min(signal_counts)
-        unnorm_signal <- signal_counts / lcm
-        if (!all( round(unnorm_signal, 3) %% 1 == 0 )) {
-            stop(.nicemsg("Signal given in 'field' are not whole numbers, and
-                          unable to infer a normalization factor."))
-        } else {
-            warning(.nicemsg("Signal given in 'field' are not whole numbers. A
-                             normalization factor was inferred based on the
-                             lowest signal value."))
-            signal_counts <- round(unnorm_signal)
-        }
+        signal_counts <- .try_unnorm_signal(signal_counts, lcm)
     }
+    nreads <- sum(signal_counts)
+    if (is.null(n))
+        n <- round(prop * nreads)
 
-    # avoid expanding GRanges, and sample associated indices
-    idx <- rep(seq_along(dataset.gr), times = signal_counts)
-    gr_sample <- dataset.gr[sample(idx, n)]
-    gr_out <- unique(gr_sample)
-    mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
-
-    if (normed_signal) mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm
+    if (expand_reads) {
+        # 1. Sample read numbers (integers 1 to nreads)
+        samp_reads <- sort(sample.int(nreads, n))
+        # 2. For each range, get the associated read numbers
+        csumreads <- cumsum(signal_counts)
+        # 3. For each sampled read:
+        #  - Get the associated range index -> idx.range
+        #  - Get its number within each range (e.g. "2nd read in that range")
+        #  - Get its position within each range (offset from start, in bp)
+        idx.range <- findInterval(samp_reads + 1, csumreads)
+        read_in_range <- samp_reads - (c(0, csumreads)[idx.range]) #(add floor)
+        pos_in_range <- ceiling(read_in_range / mcols(dataset.gr)[[field]][idx.range])
+        gr_sample <- shift(start(dataset.gr[idx.range]), pos_in_range)
+        gr_out <- getStrandedCoverage(gr_sample, field = NULL)
+    } else {
+        # avoid modifying GRanges, and sample associated indices (w/o replace)
+        idx <- rep(seq_along(dataset.gr), times = signal_counts)
+        gr_sample <- dataset.gr[sample(idx, n)] # critical to not use 'prob' arg
+        gr_out <- unique(gr_sample)
+        mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
+    }
+    if (normed_signal)
+        mcols(gr_out)[field] <- mcols(gr_out)[[field]] * lcm
     sort(gr_out)
+}
+
+.try_unnorm_signal <- function(signal_counts, lcm) {
+    unnorm_signal <- signal_counts / lcm
+    if (!all( round(unnorm_signal, 3) %% 1 == 0 )) {
+        stop(.nicemsg("Signal given in 'field' are not whole numbers, and unable
+                      to infer a normalization factor."))
+    } else {
+        warning(.nicemsg("Signal given in 'field' are not whole numbers. A
+                         normalization factor was inferred based on the lowest
+                         signal value."))
+        as.integer(unnorm_signal)
+    }
 }
 
 
