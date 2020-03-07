@@ -329,19 +329,20 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         if (is.null(n))  n <- list(NULL)
         if (is.null(prop))  prop <- list(NULL)
 
-        mcMap(.subsample_gr, dataset.gr, n, prop, field, mc.cores = ncores)
+        mcMap(.subsample_gr, dataset.gr, n, prop, field, expand_ranges,
+              mc.cores = ncores)
 
     } else if (length(field) > 1) {
         if (is.null(n))  n <- list(NULL)
         if (is.null(prop))  prop <- list(NULL)
 
         grl <- mcMap(.subsample_gr, list(dataset.gr), n, prop, field,
-                     mc.cores = ncores)
+                     expand_ranges, mc.cores = ncores)
         names(grl) <- field
         mergeGRangesData(grl, field = field, multiplex = TRUE, ncores = ncores)
 
     } else {
-        .subsample_gr(dataset.gr, n, prop, field)
+        .subsample_gr(dataset.gr, n, prop, field, expand_ranges)
 
     }
 }
