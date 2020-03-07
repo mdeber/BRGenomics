@@ -365,7 +365,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
     if (is.null(n))
         n <- round(prop * nreads)
 
-    if (expand_reads) {
+    if (expand_ranges) {
         # 1. Sample read numbers (integers 1 to nreads)
         samp_reads <- sort(sample.int(nreads, n))
         # 2. For each range, get the associated read numbers
@@ -377,6 +377,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         idx.range <- findInterval(samp_reads + 1, csumreads)
         read_in_range <- samp_reads - (c(0, csumreads)[idx.range]) #(add floor)
         pos_in_range <- ceiling( read_in_range / signal_counts[idx.range] )
+
         gr_sample <- shift(start(dataset.gr[idx.range]), pos_in_range)
         gr_out <- getStrandedCoverage(gr_sample, field = NULL)
         names(mcols(gr_out)) <- field
@@ -394,15 +395,14 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 
 .try_unnorm_signal <- function(signal_counts, lcm) {
     unnorm_signal <- signal_counts / lcm
-    if (!all( round(unnorm_signal, 3) %% 1 == 0 )) {
+    if (!all( round(unnorm_signal, 3) %% 1 == 0 ))
         stop(.nicemsg("Signal given in 'field' are not whole numbers, and unable
                       to infer a normalization factor."))
-    } else {
-        warning(.nicemsg("Signal given in 'field' are not whole numbers. A
-                         normalization factor was inferred based on the lowest
-                         signal value."))
-        as.integer(unnorm_signal)
-    }
+
+    warning(.nicemsg("Signal given in 'field' are not whole numbers. A
+                     normalization factor was inferred based on the lowest
+                     signal value."))
+    as.integer(unnorm_signal)
 }
 
 
