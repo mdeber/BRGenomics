@@ -542,3 +542,81 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 
     rep(field, length(data_in))
 }
+
+
+
+#' Merge replicates of basepair-resolution GRanges objects
+#'
+#' This simple convenience function uses
+#' \code{\link[BRGenomics:mergeGRangesData]{ mergeGRangesData}} to combine
+#' replicates (e.g. biological replicates) of basepair-resolution GRanges
+#' objects.
+#'
+#' @param ... Either a list of GRanges objects, or any number of GRanges objects
+#'   (see \code{\link[BRGenomics:mergeGRangesData]{mergeGRangesData}}). However,
+#'   the names of the datasets must end in \code{"_rep#"}, where "#" is one or
+#'   more characters indicating the replicate.
+#' @param field The metadata field that contains count information for each
+#'   range. \code{length(field)} should either be 1, or equal to the number of
+#'   datasets.
+#' @param sample_names Optional character vector with which to rename the
+#'   datasets. This is useful if the sample names do not conform to the "_rep"
+#'   naming scheme.
+#' @param ncores The number of cores to use. This function will try to maximize
+#'   the use of the \code{ncores} given, but care should be taken as
+#'   \code{mergeGRangesData} can be memory intensive.
+#'
+#'
+#' @return A list of GRanges objects (one for each replicate).
+#' @export
+#'
+#' @examples
+#' data("PROseq")
+#' ps_list <- list(a_rep1 = PROseq[seq(1, length(PROseq), 4)],
+#'                 b_rep1 = PROseq[seq(2, length(PROseq), 4)],
+#'                 a_rep2 = PROseq[seq(3, length(PROseq), 4)],
+#'                 b_rep2 = PROseq[seq(4, length(PROseq), 4)])
+#' mergeReplicates(ps_list, ncores = 1)
+mergeReplicates <- function(..., field = "score", sample_names = NULL,
+                            ncores = detectCores()) {
+    data_in <- list(...)
+    if (any(vapply(data_in, is.list, logical(1))))
+        data_in <- unlist(data_in)
+
+    if (!is.null(sample_names))
+        names(data_in) <- sample_names
+
+    if (is.null(names(data_in))) {
+        exclude <- c("field", "multiplex", "ncores")
+        in.names <- as.list(match.call())[-1]
+        names(data_in) <- in.names[!names(in.names) %in% exclude]
+    }
+
+    if (!all(grepl("_rep.+", names(data_in), perl = TRUE)))
+        stop(.nicemsg("All sample names must end with \"_rep\" followed by one
+                      or more characters that indicate the replicate"))
+
+    if (length(field) == 1)
+        field <- rep(field, length(data_in))
+
+    basenames <- unique(sub("_rep.*", "", names(data_in)))
+
+    nreps <- length(data_in) / length(basenames)
+    if (length(basenames) > nreps) {
+        ncores_out <- ncores
+        ncores_in <- 1
+    } else {
+        ncores_out <- 1
+        ncores_in <- ncores
+    }
+
+    mrg <- function(basename) {
+        idx <- grep(basename, names(data_in))
+        mergeGRangesData(data_in[idx], field = field[idx], multiplex = FALSE,
+                         ncores = ncores_in)
+    }
+    data_out <- mclapply(basenames, mrg, mc.cores = ncores_out)
+    names(data_out) <- basenames
+    data_out
+}
+
