@@ -375,9 +375,10 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         #  - Get its position within each range (offset from start, in bp)
         idx.range <- findInterval(samp_reads + 1, csumreads)
         read_in_range <- samp_reads - (c(0, csumreads)[idx.range]) #(add floor)
-        pos_in_range <- ceiling(read_in_range / mcols(dataset.gr)[[field]][idx.range])
+        pos_in_range <- ceiling( read_in_range / signal_counts[idx.range] )
         gr_sample <- shift(start(dataset.gr[idx.range]), pos_in_range)
         gr_out <- getStrandedCoverage(gr_sample, field = NULL)
+        names(mcols(gr_out)) <- field
     } else {
         # avoid modifying GRanges, and sample associated indices (w/o replace)
         idx <- rep(seq_along(dataset.gr), times = signal_counts)
