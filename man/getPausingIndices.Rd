@@ -66,7 +66,7 @@ the regions in \code{regions.gr}. If left as \code{NULL}, indices of
 be treated as descriptions of single molecules (\code{FALSE}), or if ranges
 should be treated as representing multiple adjacent positions with the same
 signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
-getCountsByRegions/getCoverageByRegions}}.}
+getCountsByRegions}}.}
 
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}

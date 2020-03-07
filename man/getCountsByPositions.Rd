@@ -2,7 +2,7 @@
 % Please edit documentation in R/signal_counting.R
 \name{getCountsByPositions}
 \alias{getCountsByPositions}
-\alias{getCoverageByPositions}
+\alias{.getCoverageByPositions}
 \title{Get signal counts at each position within regions of interest}
 \usage{
 getCountsByPositions(
@@ -16,21 +16,22 @@ getCountsByPositions(
   blacklist = NULL,
   NA_blacklisted = FALSE,
   melt = FALSE,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 
-getCoverageByPositions(
+.getCoverageByPositions(
   dataset.gr,
   regions.gr,
-  binsize = 1,
-  FUN = sum,
-  simplify.multi.widths = c("error", "list", "pad 0", "pad NA"),
-  field = "score",
-  NF = NULL,
-  blacklist = NULL,
-  NA_blacklisted = FALSE,
-  melt = FALSE,
-  ncores = detectCores()
+  binsize,
+  FUN,
+  simplify.multi.widths,
+  field,
+  NF,
+  blacklist,
+  NA_blacklisted,
+  melt,
+  ncores
 )
 }
 \arguments{
@@ -76,6 +77,12 @@ individual sample names. If used with multi-width \code{regions.gr}, the
 resulting dataframe will only contain positions that are found within each
 respective region.}
 
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
+
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}
 }
@@ -91,9 +98,8 @@ Get the sum of the signal in \code{dataset.gr} that overlaps each position
 within each range in \code{regions.gr}. If binning is used (i.e. positions
 are wider than 1 bp), any function can be used to summarize the signal
 overlapping each bin. For a description of the critical difference between
-\code{getCountsByPositions} and \code{getCoverageByPositions}, see the
-documentation for \code{\link[BRGenomics:getCountsByRegions]{
-getCountsByRegions/getCoverageByRegions}}.
+\code{expand_ranges = FALSE} and \code{expand_ranges = TRUE}, see
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}.
 }
 \section{Use of multi-width regions of interest}{
  If the input
@@ -145,8 +151,7 @@ countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
 round(countsmat[10:15, ], 1)
 }
 \seealso{
-\code{\link[BRGenomics:getCountsByRegions]{
-  getCountsByRegions/getCoverageByRegions}}
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 }
 \author{
 Mike DeBerardine
