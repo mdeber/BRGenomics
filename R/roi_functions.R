@@ -340,6 +340,11 @@ reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
 #' @param keep.signal Logical indicating if the signal value at the max site
 #'   should be reported. If set to \code{TRUE}, the values are kept as a new
 #'   \code{MaxSiteSignal} metadata column in the output GRanges.
+#' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
+#'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+#'   should be treated as representing multiple adjacent positions with the same
+#'   signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+#'   getCountsByRegions}}.
 #'
 #' @return Output is a GRanges object with regions.gr metadata, but each range
 #'   only contains the site within each \code{regions.gr} range that had the
@@ -386,7 +391,8 @@ reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
 #' getMaxPositionsBySignal(PROseq, pr[1:3], binsize = 5, keep.signal = TRUE)
 getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
                                     bin.centers = FALSE, field = "score",
-                                    keep.signal = FALSE) {
+                                    keep.signal = FALSE,
+                                    expand_ranges = FALSE) {
     # keep only ranges with signal
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
@@ -397,11 +403,9 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
     }
 
     # Get list with 2 vectors: max bin for each gene, and score in max bin
-    if (length(unique(width(regions.gr))) == 1) {
-        maxsites <- .get_maxsite(dataset.gr, regions.gr, binsize, field)
-    } else { # widths vary
-        maxsites <- .get_maxsite_mw(dataset.gr, regions.gr, binsize, field)
-    }
+    mw <- length(unique(width(regions.gr))) > 1L
+    FUN <- if (mw) .get_maxsite_mw else .get_maxsite
+    maxsites <- FUN(dataset.gr, regions.gr, binsize, field, expand_ranges)
 
     # Make new GRanges object with only max site for each gene
     regions.max.gr <- regions.gr
@@ -425,12 +429,13 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 }
 
 
-.get_maxsite <- function(dataset.gr, regions.gr, binsize, field) {
+.get_maxsite <- function(dataset.gr, regions.gr, binsize, field,
+                         expand_ranges) {
 
     mat <- getCountsByPositions(dataset.gr = dataset.gr,
                                 regions.gr = regions.gr,
-                                binsize = binsize, field = field)
-
+                                binsize = binsize, field = field,
+                                expand_ranges = expand_ranges)
     max_pos <- apply(mat, 1, which.max)
     max_scores <- apply(mat, 1, max)
 
@@ -439,16 +444,17 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 
 
 #' @importFrom GenomicRanges width resize
-.get_maxsite_mw <- function(dataset.gr, regions.gr, binsize, field) {
+.get_maxsite_mw <- function(dataset.gr, regions.gr, binsize, field,
+                            expand_ranges) {
 
     countslist <- getCountsByPositions(dataset.gr = dataset.gr,
                                        regions.gr = regions.gr,
                                        binsize = binsize,
                                        simplify.multi.widths = "list",
-                                       field = field)
-
-    max_pos <- vapply(countslist, which.max, FUN.VALUE = integer(1))
-    max_scores <- vapply(countslist, max, FUN.VALUE = numeric(1))
+                                       field = field,
+                                       expand_ranges = expand_ranges)
+    max_pos <- vapply(countslist, which.max, integer(1))
+    max_scores <- vapply(countslist, max, numeric(1))
 
     list(pos = max_pos, score = max_scores)
 }
@@ -482,6 +488,11 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 #'   to \code{TRUE}, the signal for each range (length-normalized if
 #'   \code{density = TRUE}) are kept as a new \code{Signal} metadata column in
 #'   the output GRanges object.
+#' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
+#'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+#'   should be treated as representing multiple adjacent positions with the same
+#'   signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+#'   getCountsByRegions}}.
 #'
 #' @return A GRanges object of length \code{length(regions.gr) * (upper_quantile
 #'   - lower_quantile)}.
@@ -524,25 +535,27 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 #'                       keep.signal = TRUE)
 subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   field = "score", order.by.rank = FALSE,
-                                  density = FALSE, keep.signal = FALSE) {
+                                  density = FALSE, keep.signal = FALSE,
+                                  expand_ranges = FALSE) {
 
     if (quantiles[1] == 1 | quantiles[2] == 0)
         return(regions.gr[0])
 
     signal_counts <- getCountsByRegions(dataset.gr = dataset.gr,
                                         regions.gr = regions.gr,
-                                        field = field)
+                                        field = field,
+                                        expand_ranges = expand_ranges)
 
-    if (density) signal_counts <- signal_counts / width(regions.gr)
-    if (keep.signal) regions.gr$Signal <- signal_counts
+    if (density)
+        signal_counts <- signal_counts / width(regions.gr)
+    if (keep.signal)
+        regions.gr$Signal <- signal_counts
 
     idx_rank <- order(signal_counts) # increasing
     bounds <- quantile(seq_along(regions.gr), quantiles)
     idx <- window(idx_rank, bounds[1], bounds[2])
 
-    if (order.by.rank) {
-        rev(regions.gr[idx])
-    } else {
-        sort(regions.gr[idx])
-    }
+    if (order.by.rank)
+        return(rev(regions.gr[idx]))
+    sort(regions.gr[idx])
 }
