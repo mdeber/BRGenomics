@@ -77,6 +77,13 @@
 #'   ascertainment bias across different genes (e.g. as might be relevant for
 #'   GSEA or Go analysis).
 #'
+#' @section On gene names and unexpected errors: Certain gene names can cause
+#' this function to return an error. We've never encountered errors using
+#' conventional, systematic naming schemes (e.g. ensembl IDs), but we have
+#' seen errors when using Drosophila (Flybase) "symbols". We expect this is due
+#' to the unconventional use of non-alphanumeric characters in some Drosophila
+#' gene names.
+#'
 #' @export
 #' @importFrom parallel detectCores
 #' @importFrom DESeq2 DESeqDataSet sizeFactors<-
@@ -266,11 +273,20 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #'   \code{DESeq}.
 #'
 #' @return For a single comparison, the output is the \code{DESeqResults} result
-#'   table. If a \code{comparisons} is used to make multiple comparisons,
-#'   the output is a named list of \code{DESeqResults} objects, with elements
-#'   named following the pattern \code{"X_vs_Y"}, where \code{X} is the name of
-#'   the numerator condition, and \code{Y} is the name of the denominator
-#'   condition.
+#'   table. If a \code{comparisons} is used to make multiple comparisons, the
+#'   output is a named list of \code{DESeqResults} objects, with elements named
+#'   following the pattern \code{"X_vs_Y"}, where \code{X} is the name of the
+#'   numerator condition, and \code{Y} is the name of the denominator condition.
+#'
+#' @section Errors when \code{ncores > 1}: If this function returns an error,
+#'   set \code{ncores = 1}. Whether or not this occurs can depend on whether
+#'   users are using alternative BLAS libraries (e.g. OpenBLAS or Apple's
+#'   Accelerate framework) and/or how DESeq2 was installed. This is because some
+#'   DESeq2 functions (e.g. \code{\link[DESeq2:nbinomWaldTest]{
+#'   nbinomWaldTest}}) use C code that can be compiled to use parallelization,
+#'   and this conflicts with our use of process forking (via the
+#'   \code{\link[parallel:parallel-package]{parallel package}}) when
+#'   \code{ncores > 1}.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getDESeqDataSet]{getDESeqDataSet}},

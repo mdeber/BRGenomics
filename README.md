@@ -32,18 +32,18 @@ documentation for currently implemented functions, complete with
 demonstrative example code. The package currently includes example
 PRO-seq data<sup>\[1\]</sup>.
 
-## Known issues and limitations
+## Limitations for Windows users
 
-  - Currently no support for multicore processing on Windows
-  - No support for importing bigWig files on Windows
-  - Certain gene names can cause `getDESeqDataSet` to return an error
-      - Systematic naming schemes work (e.g. ensembl IDs) while some
-        lists of conventional gene names, i.e. “symbols”, will cause
-        failure
-  - Most multicore support is robust to the use of alternative BLAS
-    libraries, with the exception of `getDESeqResults`. Users opting to
-    use alternative, concurrent BLAS libraries may have to set `ncores
-    = 1`.
+  - Currently no support for parallel/multicore processing
+  - No support for import bigWig files
+
+## To Do
+
+  - Convert method dispatch to S4 generics
+  - Add support for `GRangesList` objects (progress underway)
+  - Write methods for `BigWigFile`/`BigWigFileList` objects (to avoid
+    loading data into memory)
+  - (Possibly) use `GPos` objects by default
 
 -----
 

@@ -102,6 +102,15 @@ regions.
   GSEA or Go analysis).
 }
 
+\section{On gene names and unexpected errors}{
+ Certain gene names can cause
+this function to return an error. We've never encountered errors using
+conventional, systematic naming schemes (e.g. ensembl IDs), but we have
+seen errors when using Drosophila (Flybase) "symbols". We expect this is due
+to the unconventional use of non-alphanumeric characters in some Drosophila
+gene names.
+}
+
 \examples{
 suppressPackageStartupMessages(require(DESeq2))
 data("PROseq") # import included PROseq data

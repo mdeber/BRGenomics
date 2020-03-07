@@ -72,11 +72,10 @@ in \code{args.DESeq} will supersede this option for the call to
 }
 \value{
 For a single comparison, the output is the \code{DESeqResults} result
-  table. If a \code{comparisons} is used to make multiple comparisons,
-  the output is a named list of \code{DESeqResults} objects, with elements
-  named following the pattern \code{"X_vs_Y"}, where \code{X} is the name of
-  the numerator condition, and \code{Y} is the name of the denominator
-  condition.
+  table. If a \code{comparisons} is used to make multiple comparisons, the
+  output is a named list of \code{DESeqResults} objects, with elements named
+  following the pattern \code{"X_vs_Y"}, where \code{X} is the name of the
+  numerator condition, and \code{Y} is the name of the denominator condition.
 }
 \description{
 This function calls \code{\link[DESeq2:DESeq]{DESeq2::DESeq}} and
@@ -87,6 +86,18 @@ more pairwise comparisons. However, unlike a standard call to
 subsets the dataset so that DESeq2 only estimates dispersion for the samples
 being compared, and not for all samples present.
 }
+\section{Errors when \code{ncores > 1}}{
+ If this function returns an error,
+  set \code{ncores = 1}. Whether or not this occurs can depend on whether
+  users are using alternative BLAS libraries (e.g. OpenBLAS or Apple's
+  Accelerate framework) and/or how DESeq2 was installed. This is because some
+  DESeq2 functions (e.g. \code{\link[DESeq2:nbinomWaldTest]{
+  nbinomWaldTest}}) use C code that can be compiled to use parallelization,
+  and this conflicts with our use of process forking (via the
+  \code{\link[parallel:parallel-package]{parallel package}}) when
+  \code{ncores > 1}.
+}
+
 \examples{
 #--------------------------------------------------#
 # getDESeqDataSet
