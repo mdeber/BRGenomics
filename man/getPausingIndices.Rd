@@ -14,6 +14,7 @@ getPausingIndices(
   blacklist = NULL,
   melt = FALSE,
   region_names = NULL,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 }
@@ -60,6 +61,12 @@ below).}
 \item{region_names}{If \code{melt = TRUE}, an optional vector of names for
 the regions in \code{regions.gr}. If left as \code{NULL}, indices of
 \code{regions.gr} are used instead.}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions/getCoverageByRegions}}.}
 
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}

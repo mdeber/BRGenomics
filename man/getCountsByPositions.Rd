@@ -2,9 +2,24 @@
 % Please edit documentation in R/signal_counting.R
 \name{getCountsByPositions}
 \alias{getCountsByPositions}
+\alias{getCoverageByPositions}
 \title{Get signal counts at each position within regions of interest}
 \usage{
 getCountsByPositions(
+  dataset.gr,
+  regions.gr,
+  binsize = 1,
+  FUN = sum,
+  simplify.multi.widths = c("error", "list", "pad 0", "pad NA"),
+  field = "score",
+  NF = NULL,
+  blacklist = NULL,
+  NA_blacklisted = FALSE,
+  melt = FALSE,
+  ncores = detectCores()
+)
+
+getCoverageByPositions(
   dataset.gr,
   regions.gr,
   binsize = 1,
@@ -75,9 +90,10 @@ If the widths of all ranges in \code{regions.gr} are equal, a matrix
 Get the sum of the signal in \code{dataset.gr} that overlaps each position
 within each range in \code{regions.gr}. If binning is used (i.e. positions
 are wider than 1 bp), any function can be used to summarize the signal
-overlapping each bin. Just as in \code{\link[BRGenomics:getCountsByRegions]{
-getCountsByRegions}}, this function calculates \emph{readcounts} overlapping
-positions, and not "coverage signal".
+overlapping each bin. For a description of the critical difference between
+\code{getCountsByPositions} and \code{getCoverageByPositions}, see the
+documentation for \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions/getCoverageByRegions}}.
 }
 \section{Use of multi-width regions of interest}{
  If the input
@@ -129,7 +145,8 @@ countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
 round(countsmat[10:15, ], 1)
 }
 \seealso{
-\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
+\code{\link[BRGenomics:getCountsByRegions]{
+  getCountsByRegions/getCoverageByRegions}}
 }
 \author{
 Mike DeBerardine
