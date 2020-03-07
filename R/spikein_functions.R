@@ -11,6 +11,11 @@
 #'   readcounts. If each range is an individual read, set \code{field = NULL}.
 #' @param sample_names An optional character vector used to rename the datasets
 #'   in \code{dataset.gr}
+#' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
+#'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+#'   should be treated as representing multiple adjacent positions with the same
+#'   signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+#'   getCountsByRegions}}.
 #' @param ncores The number of cores to use for computations.
 #'
 #' @return A dataframe containing total readcounts, experimental (non-spike-in)
@@ -67,7 +72,7 @@
 #' getSpikeInReads(grl, si_pattern = "spike", ncores = 1)
 getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                              field = "score", sample_names = NULL,
-                             ncores = detectCores()) {
+                             expand_ranges = FALSE, ncores = detectCores()) {
 
     if (!is.list(dataset.gr)) {
         name_in <- deparse(substitute(dataset.gr))
@@ -79,7 +84,8 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         names(dataset.gr) <- sample_names
 
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
-    .get_spikecounts(dataset.gr, spike_chrom, field, ncores)
+    FUN <- if (expand_ranges) .get_spikecounts_expand else .get_spikecounts
+    FUN(dataset.gr, spike_chrom, field, expand_ranges, ncores)
 }
 
 #' @importFrom parallel mclapply
@@ -126,6 +132,28 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                        spike_reads = sum( mcols(x[si])[[field]] ))
         }, dataset.list, field, mc.cores = ncores)
     }
+
+    names(cl) <- snames
+    .dfList2df(cl)
+}
+
+#' @importFrom parallel mclapply mcMap
+#' @importFrom GenomicRanges seqnames mcols
+.get_spikecounts_expand <- function(dataset.list, spike_chrom, field, ncores) {
+
+    snames <- names(dataset.list)
+
+    if (is.null(field))
+        stop(.nicemsg("Cannot use field = NULL when expand_ranges = TRUE.
+                      expand_ranges is for collapsed coverage objects, which
+                      always have associated signal position"))
+
+    cl <- mcMap(function(x, field) {
+        si <- seqnames(x) %in% spike_chrom
+        data.frame(total_reads = sum( mcols(x)[[field]] * width(x)),
+                   exp_reads = sum( mcols(x[!si])[[field]] * width(x)[!si]),
+                   spike_reads = sum( mcols(x[si])[[field]] * width(x)[si]))
+    }, dataset.list, field, mc.cores = ncores)
 
     names(cl) <- snames
     .dfList2df(cl)
