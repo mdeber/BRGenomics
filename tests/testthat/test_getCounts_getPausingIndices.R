@@ -367,7 +367,7 @@ context("Signal counting by region with range expansion (coverage signal)")
 
 # Get PRO-seq coverage (collapse adjacent positions);
 #  subset for collapsed reads (ranges of interest for these comparisons)
-cvg <- subset(getStrandedCoverage(PROseq), width > 1)
+cvg <- subset(getStrandedCoverage(PROseq, ncores = 1), width > 1)
 cvg <- subset(cvg, width > 1)
 
 # Get overlapping signal from the expanded data (basepair-resolution GRanges)

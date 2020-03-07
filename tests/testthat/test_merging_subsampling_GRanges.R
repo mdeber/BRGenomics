@@ -112,7 +112,9 @@ test_that("can subsample when simple normalization factor was applied", {
 
     set.seed(11)
     norm_tenth <- suppressWarnings(subsampleGRanges(norm_ps, prop = 0.1))
-    expect_equal(length(norm_tenth), 5688)
+    signal_ps_tenth <- sum(score(ps_tenth))
+    signal_norm_tenth <- sum(score(norm_tenth))
+    expect_true(abs(0.89*signal_ps_tenth - signal_norm_tenth) < 1)
 })
 
 test_that("error when incorrect input arguments", {
