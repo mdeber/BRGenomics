@@ -396,6 +396,7 @@ context("Signal counting by position with range expansion (coverage signal)")
 mat_bpr_noexp <- getCountsByPositions(bpr, promoters(txs_dm6_chr4, 0, 100))
 mat_bpr_exp <- getCountsByPositions(bpr, promoters(txs_dm6_chr4, 0, 100),
                                     expand_ranges = TRUE)
+# (this currently just here to check if there's an error)
 mat_cvg_exp <- getCountsByPositions(cvg, promoters(txs_dm6_chr4, 0, 100),
                                     expand_ranges = TRUE)
 
@@ -407,6 +408,5 @@ test_that("error on unexpanded counts on expanded data", {
 # (nothing affected - must write test cases)
 test_that("expansion doesn't affect countsmat when no multi-width ranges", {
     expect_equivalent(mat_bpr_exp, mat_bpr_noexp)
-    expect_equivalent(mat_cvg_exp, mat_cvg_noexp)
 })
 
