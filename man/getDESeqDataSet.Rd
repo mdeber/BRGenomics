@@ -12,6 +12,7 @@ getDESeqDataSet(
   sizeFactors = NULL,
   field = "score",
   blacklist = NULL,
+  expand_ranges = FALSE,
   ncores = detectCores(),
   quiet = FALSE
 )
@@ -57,6 +58,12 @@ use of non-contiguous gene regions (see details below), and the two can be
 used simultaneously. Blacklisting doesn't affect the ranges returned as
 rowRanges in the output DESeqDataSet object (unlike the use of
 non-contiguous regions).}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 
 \item{ncores}{Number of cores to use for read counting across all samples. By
 default, all available cores are used.}

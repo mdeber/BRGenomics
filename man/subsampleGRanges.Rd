@@ -9,6 +9,7 @@ subsampleGRanges(
   n = NULL,
   prop = NULL,
   field = "score",
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 }
@@ -30,6 +31,12 @@ for reach position. If each range represents a single read, set \code{field
 then \code{dataset.gr} will be treated as a multiplexed GRanges, and each
 field will be treated as an indpendent dataset. See
 \code{\link[BRGenomics:mergeGRangesData]{mergeGRangesData}}.}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 
 \item{ncores}{Number of cores to use for computations. Multicore only used
 when \code{dataset.gr} is a list, or if \code{length(field) > 1}.}

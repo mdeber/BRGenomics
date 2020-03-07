@@ -14,11 +14,12 @@ subsampleBySpikeIn(
   RPM_units = FALSE,
   field = "score",
   sample_names = NULL,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 }
 \arguments{
-\item{dataset.gr, si_pattern, si_names, ctrl_pattern, ctrl_names, batch_norm, field, sample_names, ncores}{See \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}}
+\item{dataset.gr, si_pattern, si_names, ctrl_pattern, ctrl_names, batch_norm, field, sample_names, expand_ranges, ncores}{See \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}}
 
 \item{RPM_units}{If set to \code{TRUE}, the final readcount values will be
 converted to units equivalent to/directly comparable with \code{RPM} for
@@ -35,6 +36,9 @@ An object parallel to \code{dataset.gr}, but with fewer reads. E.g.
 }
 \description{
 Randomly subsample reads according to spike-in normalization
+}
+\details{
+Note that if \code{field = NULL},
 }
 \examples{
 #--------------------------------------------------#

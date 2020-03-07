@@ -21,6 +21,7 @@ metaSubsample(
   remove.empty = FALSE,
   blacklist = NULL,
   zero_blacklisted = FALSE,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 
@@ -90,6 +91,12 @@ blacklisted sites is ignored from computations. If set to \code{TRUE},
 signal at blacklisted sites will be treated as equal to zero. For
 bootstrapping, the default behavior of ignoring signal at blacklisted sites
 should almost always be kept.}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 
 \item{ncores}{Number of cores to use for computations.}
 

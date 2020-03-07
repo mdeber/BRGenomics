@@ -12,6 +12,7 @@ getSpikeInCounts(
   si_names = NULL,
   field = "score",
   sample_names = NULL,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 
@@ -46,6 +47,12 @@ readcounts. If each range is an individual read, set \code{field = NULL}.}
 
 \item{sample_names}{An optional character vector used to rename the datasets
 in \code{dataset.gr}}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 
 \item{ncores}{The number of cores to use for computations.}
 }

@@ -10,7 +10,8 @@ getMaxPositionsBySignal(
   binsize = 1,
   bin.centers = FALSE,
   field = "score",
-  keep.signal = FALSE
+  keep.signal = FALSE,
+  expand_ranges = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,12 @@ opposed to the entire bin. By default, entire bins are returned.}
 \item{keep.signal}{Logical indicating if the signal value at the max site
 should be reported. If set to \code{TRUE}, the values are kept as a new
 \code{MaxSiteSignal} metadata column in the output GRanges.}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 }
 \value{
 Output is a GRanges object with regions.gr metadata, but each range

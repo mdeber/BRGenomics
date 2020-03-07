@@ -11,7 +11,8 @@ subsetRegionsBySignal(
   field = "score",
   order.by.rank = FALSE,
   density = FALSE,
-  keep.signal = FALSE
+  keep.signal = FALSE,
+  expand_ranges = FALSE
 )
 }
 \arguments{
@@ -42,6 +43,12 @@ normalized to the width (chromosomal length) of ranges in
 to \code{TRUE}, the signal for each range (length-normalized if
 \code{density = TRUE}) are kept as a new \code{Signal} metadata column in
 the output GRanges object.}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 }
 \value{
 A GRanges object of length \code{length(regions.gr) * (upper_quantile

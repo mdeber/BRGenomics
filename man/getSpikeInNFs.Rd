@@ -15,6 +15,7 @@ getSpikeInNFs(
   ctrl_names = NULL,
   field = "score",
   sample_names = NULL,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 
@@ -28,6 +29,7 @@ spikeInNormGRanges(
   ctrl_names = NULL,
   field = "score",
   sample_names = NULL,
+  expand_ranges = FALSE,
   ncores = detectCores()
 )
 }
@@ -67,6 +69,12 @@ readcounts. If each range is an individual read, set \code{field = NULL}.}
 the samples in \code{dataset.gr}. Intended use is if \code{dataset.gr} is
 an unnamed list, or if \code{batch_norm = TRUE} but the sample names don't
 conform to the required naming scheme.}
+
+\item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
+be treated as descriptions of single molecules (\code{FALSE}), or if ranges
+should be treated as representing multiple adjacent positions with the same
+signal (\code{TRUE}). See \code{\link[BRGenomics:getCountsByRegions]{
+getCountsByRegions}}.}
 
 \item{ncores}{The number of cores to use for computations.}
 }
