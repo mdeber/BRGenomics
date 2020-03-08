@@ -104,6 +104,7 @@
 #' @seealso \code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}}
 #' @export
 #' @importFrom parallel detectCores
+#' @importFrom methods is
 #'
 #' @examples
 #' #--------------------------------------------------#
@@ -186,7 +187,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     method <- match.arg(method, c("SRPMC", "SNR", "RPM"))
 
-    if (!is.list(dataset.gr)) {
+    if (!is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         name_in <- deparse(substitute(dataset.gr))
         dataset.gr <- list(dataset.gr)
         names(dataset.gr) <- name_in
@@ -280,6 +281,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
 
 #' @importFrom parallel detectCores
+#' @importFrom methods is
 #' @rdname getSpikeInNFs
 #' @export
 spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
@@ -289,8 +291,11 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                sample_names = NULL, expand_ranges = FALSE,
                                ncores = detectCores()) {
 
-    if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
-    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
+    if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList"))
+        dataset.gr <- list(dataset.gr)
+
+    if (!is.null(sample_names))
+        names(dataset.gr) <- sample_names
 
     NF <- getSpikeInNFs(dataset.gr, si_pattern = si_pattern,
                         si_names = si_names, method = method,
@@ -326,6 +331,7 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}
 #' @importFrom parallel detectCores mcMap
+#' @importFrom methods is
 #' @export
 #'
 #' @examples
@@ -357,7 +363,8 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 applyNFsGRanges <- function(dataset.gr, NF, field = "score",
                             ncores = detectCores()) {
 
-    if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
+    if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList"))
+        dataset.gr <- list(dataset.gr)
 
     if (is.null(field)) {
         message(.nicemsg("With field = NULL, will calculate stranded coverage
@@ -461,8 +468,10 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                field = "score", sample_names = NULL,
                                expand_ranges = FALSE, ncores = detectCores()) {
 
-    if (!is.list(dataset.gr))  dataset.gr <- list(dataset.gr)
-    if (!is.null(sample_names))  names(dataset.gr) <- sample_names
+    if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList"))
+        dataset.gr <- list(dataset.gr)
+    if (!is.null(sample_names))
+        names(dataset.gr) <- sample_names
 
     counts.df <- getSpikeInCounts(
         dataset.gr, si_pattern = si_pattern, si_names = si_names, field = field,
@@ -480,7 +489,6 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     samples.gr <- subsampleGRanges(dataset.gr, n = nreads, field = field,
                                    expand_ranges = expand_ranges,
                                    ncores = ncores)
-
     if (RPM_units) {
         if (is.null(ctrl_pattern) & is.null(ctrl_names))
             stop(.nicemsg("Must give either ctrl_pattern or ctrl_names argument
@@ -491,6 +499,5 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         samples.gr <- applyNFsGRanges(samples.gr, NF = nf_rpm, field = field,
                                       ncores = ncores)
     }
-
     if (length(samples.gr) == 1) samples.gr[[1]] else samples.gr
 }

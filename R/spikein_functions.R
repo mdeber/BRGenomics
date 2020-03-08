@@ -22,6 +22,8 @@
 #'   readcounts, and spike-in readcounts.
 #' @author Mike DeBerardine
 #'
+#' @importFrom parallel detectCores
+#' @importFrom methods is
 #' @import GenomicRanges
 #' @export
 #'
@@ -74,7 +76,7 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                              field = "score", sample_names = NULL,
                              expand_ranges = FALSE, ncores = detectCores()) {
 
-    if (!is.list(dataset.gr)) {
+    if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList")) {
         name_in <- deparse(substitute(dataset.gr))
         dataset.gr <- list(dataset.gr)
         names(dataset.gr) <- name_in
@@ -88,11 +90,12 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     FUN(dataset.gr, spike_chrom, field, ncores)
 }
 
+#' @importFrom methods is
 #' @importFrom parallel mclapply
 #' @importFrom GenomicRanges seqinfo
 .get_spike_chrom <- function(X, si_pattern, si_names, ncores = 1) {
 
-    if (is.list(X)) {
+    if (is.list(X) || is(X, "GRangesList")) {
         chrom <- mclapply(X, function(x) names(seqinfo(x)), mc.cores = ncores)
         chrom <- unique(unlist(chrom))
     } else {
@@ -159,7 +162,7 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     .dfList2df(cl)
 }
 
-
+#' @importFrom methods is
 #' @importFrom GenomeInfoDb dropSeqlevels
 #' @importFrom parallel mclapply
 #' @rdname getSpikeInCounts
@@ -168,14 +171,14 @@ removeSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                field = "score", ncores = detectCores()) {
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         mclapply(dataset.gr, dropSeqlevels, spike_chrom, pruning.mode = "tidy")
     } else {
         dropSeqlevels(dataset.gr, spike_chrom, pruning.mode = "tidy")
     }
 }
 
-
+#' @importFrom methods is
 #' @importFrom GenomeInfoDb keepSeqlevels
 #' @importFrom parallel mclapply
 #' @rdname getSpikeInCounts
@@ -184,7 +187,7 @@ getSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                             field = "score", ncores = detectCores()) {
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         mclapply(dataset.gr, keepSeqlevels, spike_chrom, pruning.mode = "tidy")
     } else {
         keepSeqlevels(dataset.gr, spike_chrom, pruning.mode = "tidy")
