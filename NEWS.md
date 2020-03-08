@@ -1,4 +1,4 @@
-## BRGenomics 0.99.19
+## BRGenomics 0.99.20
 
 * Added support for non-basepair-resolution GRanges throughout, via the `expand_ranges` argument
     + Substantial performance benefits for less-sparse datasets (e.g. whole read coverage)
