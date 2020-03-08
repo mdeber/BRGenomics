@@ -34,8 +34,7 @@ If you're using Windows, [Rtools for Windows](https://cran.rstudio.com/bin/windo
 
 ## Features
 
-See the [documentation website](https://mdeber.github.io/), which includes a draft version of the introductory vignette, as well as the documentation for currently implemented functions, complete with demonstrative example code. The package currently includes example PRO-seq 
-data^[1]^.
+See the [documentation website](https://mdeber.github.io/), which includes an introductory vignette, as well as the documentation for currently implemented functions, complete with demonstrative example code. The package currently includes example PRO-seq data^[1]^.
 
 ## Limitations for Windows users
 
@@ -45,7 +44,7 @@ data^[1]^.
 ## To Do
 
 * Convert method dispatch to S4 generics
-* Add support for `GRangesList` objects (progress underway)
+* Formalize support for `GRangesList` objects (progress underway)
 * Write methods for `BigWigFile`/`BigWigFileList` objects (to avoid loading data into memory)
 * (Possibly) use `GPos` objects by default
 

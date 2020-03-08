@@ -1011,7 +1011,7 @@ For instance, consider an example in which there is a true, two-fold biological 
 
 To address the above concerns, we've included a function `subsampleBySpikeIn` to randomly sample reads to match the normalized signal proportions between datasets.
 
-Internally, the function uses the `getSpikInNFs` function, but instead of SRPMC normalization, using the option `method = "SNR"`, which calculates normalization factors that downscale each dataset to match the dataset with the least spike-in reads. From this, the number of "desired reads" is established for each dataset, and subsequently that number of reads is randomly sampled.
+Internally, the function uses the `getSpikeInNFs` function, but instead of SRPMC normalization, using the option `method = "SNR"`, which calculates normalization factors that downscale each dataset to match the dataset with the least spike-in reads. From this, the number of "desired reads" is established for each dataset, and subsequently that number of reads is randomly sampled.
 
 ```{r}
 removeSpikeInReads(grl, si_pattern = "spike", ncores = 1)
