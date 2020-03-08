@@ -17,8 +17,8 @@ Install development version from
 [GitHub](https://github.com/mdeber/BRGenomics):
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("mdeber/BRGenomics@R3")
+# install.packages("remotes")
+remotes::install_github("mdeber/BRGenomics@R3")
 ```
 
 If you’re using Windows, [Rtools for
