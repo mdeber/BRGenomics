@@ -406,24 +406,22 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 }
 
 
-#' Merge basepair-resolution GRanges objects
+#' Merge GRanges objects
 #'
-#' Merges 2 or more basepair-resolution (single-width) GRanges objects by
-#' combining all of their ranges and associated signal (e.g. readcounts). If
-#' \code{multiplex = TRUE}, the input datasets are reversibly combined into a
-#' multiplexed GRanges containing a field for each input dataset.
+#' Merges 2 or more GRanges objects by combining all of their ranges and
+#' associated signal (e.g. readcounts). If \code{multiplex = TRUE}, the input
+#' datasets are reversibly combined into a multiplexed GRanges containing a
+#' field for each input dataset.
 #'
 #' @param ... Any number of GRanges objects in which signal (e.g. readcounts)
-#'   are contained within metadata. GRanges not single-width will be coerced
-#'   using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}. Lists of
-#'   GRanges can also be passed, but they must be named lists if
-#'   \code{multiplex = TRUE}. Multiple lists can be passed, but if any inputs
-#'   are lists, then all inputs must be lists.
+#'   are contained within metadata. Lists of GRanges can also be passed, but
+#'   they must be named lists if \code{multiplex = TRUE}. Multiple lists can be
+#'   passed, but if any inputs are lists, then all inputs must be lists.
 #' @param field One or more \emph{input} metadata fields to be combined,
 #'   typically the "score" field. Fields typically contain coverage information.
 #'   If only a single field is given (i.e. all input GRanges use the same
 #'   field), that same field will be used for the output. Otherwise, the
-#'   \code{score} metadata field will be used by default. The output metadata
+#'   \code{"score"} metadata field will be used by default. The output metadata
 #'   fields are different if \code{multiplex} is enabled.
 #' @param multiplex When set to \code{FALSE} (the default), input GRanges are
 #'   merged irreversibly into a single new GRange, effectively combining the
@@ -431,6 +429,16 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #'   GRanges data are reversibly combined into a multiplexed GRanges object,
 #'   such that each input GRanges object has its own metadata field in the
 #'   output.
+#' @param makeBRG If \code{TRUE} (the default), the output GRanges will be made
+#'   "basepair-resolution" via \code{\link[BRGenomics:makeGRangesBRG]{
+#'   makeGRangesBRG}}.
+#' @param exact_overlaps By default (\code{FALSE}), any ranges that cover more
+#'   than a single base are treated as "coverage" signal (see
+#'   \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}). If
+#'   \code{exact_overlaps = TRUE}, all input ranges are conserved exactly as
+#'   they are; ranges are only combined if they overlap exactly, and the signal
+#'   of any combined range is the sum of the input ranges that were merged.
+#'   Using \code{exact_overlaps} will automatically set \code{makeBRG = FALSE}.
 #' @param ncores Number of cores to use for computations.
 #'
 #' @return A disjoint, basepair-resolution (single-width) GRanges object
@@ -454,8 +462,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export
-#' @importFrom parallel detectCores mclapply mcmapply
-#' @importFrom GenomicRanges mcols mcols<- sort
+#' @importFrom parallel detectCores
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -500,73 +507,113 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #'
 #' subset(multi.gr, gr1 > 0, select = gr1)
 mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
+                             makeBRG = TRUE, exact_overlaps = FALSE,
                              ncores = detectCores()) {
     data_in <- list(...)
-    if (any(vapply(data_in, is.list, logical(1))))  data_in <- unlist(data_in)
+    if (any(vapply(data_in, is.list, logical(1))))
+        data_in <- unlist(data_in)
 
-    if (is.null(names(data_in))) {
-        exclude <- c("field", "multiplex", "ncores")
-        in.names <- as.list(match.call())[-1]
-        names(data_in) <- in.names[!names(in.names) %in% exclude]
+    # check field names match inputs
+    if (length(field) == 1) {
+        if (is.null(field))
+            field <- "score"
+        field <- rep(field, length(data_in))
+    } else if (length(field) != length(data_in)) {
+        stop("Given fields not equal to number of datasets")
     }
 
-    # data must be *sorted*, base-pair resolution coverage data
-    data_in <- .check_sorted_BRG(data_in, field, ncores)
+    if (multiplex) {
+        if (is.null(names(data_in))) {
+            exclude <- c("field", "multiplex", "ncores")
+            in.names <- as.list(match.call())[-1]
+            names(data_in) <- in.names[!names(in.names) %in% exclude]
+        }
+        .multiplex_gr(data_in, field, ncores)
+    } else if (exact_overlaps) {
+        .merge_gr_exact(data_in, field, ncores)
+    } else {
+        .merge_gr(data_in, field, makeBRG, ncores)
+    }
+}
 
-    # check length of fields vs. data_in
-    field <- .check_merge_fields(data_in, field)
+#' @importFrom parallel mcMap
+#' @importFrom GenomicRanges mcols mcols<-
+.merge_gr <- function(data_in, field, makeBRG, ncores) {
+
+    if (any(field != "score"))
+        mcMap(.rename_field_score, data_in, field, mc.cores = ncores)
+
+    gr <- getStrandedCoverage(do.call(c, c(data_in, use.names = FALSE)),
+                              field = "score", ncores = ncores)
+    if (length(unique(field)) == 1)
+        names(mcols(gr)) <- field[1]
+
+    if (makeBRG) return(makeGRangesBRG(gr, ncores = ncores))
+    gr
+}
+
+#' @importFrom GenomicRanges mcols mcols<-
+.rename_field_score <- function(gr, field) {
+    mcols(gr) <- mcols(gr)[field]
+    names(mcols(gr)) <- "score"
+    gr
+}
+
+#' @importFrom parallel mcMap
+#' @importFrom GenomicRanges sort duplicated findOverlaps score score<-
+#' @importFrom S4Vectors from to
+.merge_gr_exact <- function(data_in, field, ncores) {
+
+    if (any(field != "score"))
+        mcMap(.rename_field_score, data_in, field, mc.cores = ncores)
+
+    gr <- do.call(c, c(data_in, use.names = FALSE))
+    dupes <- duplicated(gr)
+    gr_out <- sort(gr[!dupes])
+    gr_dp <- gr[dupes]
+
+    # get exact hits to redundant ranges, and aggregate their scores
+    hits <- findOverlaps(gr_out, gr_dp, type = "equal")
+    dpsc <- aggregate(score(gr_dp)[to(hits)], by = list(from(hits)), FUN = sum)
+    names(dpsc) <- c("idx", "score")
+
+    # add the scores from the redundant ranges
+    score(gr_out)[dpsc$idx] <- score(gr_out)[dpsc$idx] + dpsc$score
+    gr_out
+}
+
+
+#' @importFrom parallel mclapply mcmapply
+#' @importFrom GenomicRanges width sort mcols mcols<-
+.multiplex_gr <- function(data_in, field, ncores) {
+
+    # data must be *sorted*, base-pair resolution coverage data
+    if (all(vapply(data_in, function(x) all(width(x) == 1), logical(1)))) {
+        data_in <- mclapply(data_in, sort, mc.cores = ncores)
+    } else {
+        warning(.nicemsg("One or more inputs are not 'basepair resolution
+                         GRanges' objects. Coercing them using
+                         makeGRangesBRG()..."), immediate. = TRUE)
+        data_in <- mclapply(data_in, makeGRangesBRG, mc.cores = ncores)
+    }
 
     # merge ranges
     gr <- do.call(c, c(data_in, use.names = FALSE))
     mcols(gr) <- NULL
     gr <- unique(sort(gr))
 
-    # Fastest to keep these steps separated (esp. for large datasets)
-    idx <- mclapply(data_in, function(x) which(gr %in% x), mc.cores = ncores)
+    # (Fastest to keep these next steps separated, esp. for large datasets)
 
+    # get dataframe of signal counts for each dataset in the output GRanges
+    idx <- mclapply(data_in, function(x) which(gr %in% x), mc.cores = ncores)
     counts <- mcmapply(function(dat, idx, field) {
         out <- rep(0L, length(gr))
         out[idx] <- mcols(dat)[[field]]
         out
     }, data_in, idx, field, mc.cores = ncores, SIMPLIFY = TRUE)
 
-    if (multiplex) {
-        mcols(gr)[names(data_in)] <- counts
-    } else {
-        field <- ifelse(length(unique(field)) == 1, field[1], "score")
-        # use of apply will maintain integers; rowSums would make numeric
-        mcols(gr)[field] <- apply(counts, 1, sum)
-    }
+    mcols(gr)[names(data_in)] <- counts
     gr
-}
-
-
-#' @importFrom GenomicRanges width sort
-.check_sorted_BRG <- function(data_in, field, ncores) {
-
-    widths_ok <- vapply(data_in, function(x) all(width(x) == 1),
-                        FUN.VALUE = logical(1))
-
-    if (all(widths_ok) & !is.null(field))
-        return(mclapply(data_in, sort, mc.cores = ncores))
-
-    warning(.nicemsg("One or more inputs are not 'basepair resolution GRanges'
-                     objects. Coercing them using makeGRangesBRG()..."),
-            immediate. = TRUE)
-    return(mclapply(data_in, makeGRangesBRG, mc.cores = ncores)) # (sorted)
-}
-
-.check_merge_fields <- function(data_in, field) {
-
-    if (length(field) > 1) {
-        if (length(field) != length(data_in))
-            stop("Given fields not equal to number of datasets")
-        return(field)
-    }
-
-    if (is.null(field))  field <- "score" # (modified in .check_sorted_BRG)
-
-    rep(field, length(data_in))
 }
 
 

@@ -2,28 +2,28 @@
 % Please edit documentation in R/dataset_functions.R
 \name{mergeGRangesData}
 \alias{mergeGRangesData}
-\title{Merge basepair-resolution GRanges objects}
+\title{Merge GRanges objects}
 \usage{
 mergeGRangesData(
   ...,
   field = "score",
   multiplex = FALSE,
+  makeBRG = TRUE,
+  exact_overlaps = FALSE,
   ncores = detectCores()
 )
 }
 \arguments{
 \item{...}{Any number of GRanges objects in which signal (e.g. readcounts)
-are contained within metadata. GRanges not single-width will be coerced
-using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}. Lists of
-GRanges can also be passed, but they must be named lists if
-\code{multiplex = TRUE}. Multiple lists can be passed, but if any inputs
-are lists, then all inputs must be lists.}
+are contained within metadata. Lists of GRanges can also be passed, but
+they must be named lists if \code{multiplex = TRUE}. Multiple lists can be
+passed, but if any inputs are lists, then all inputs must be lists.}
 
 \item{field}{One or more \emph{input} metadata fields to be combined,
 typically the "score" field. Fields typically contain coverage information.
 If only a single field is given (i.e. all input GRanges use the same
 field), that same field will be used for the output. Otherwise, the
-\code{score} metadata field will be used by default. The output metadata
+\code{"score"} metadata field will be used by default. The output metadata
 fields are different if \code{multiplex} is enabled.}
 
 \item{multiplex}{When set to \code{FALSE} (the default), input GRanges are
@@ -32,6 +32,18 @@ reads from different experiments. When \code{multiplex = TRUE}, the input
 GRanges data are reversibly combined into a multiplexed GRanges object,
 such that each input GRanges object has its own metadata field in the
 output.}
+
+\item{makeBRG}{If \code{TRUE} (the default), the output GRanges will be made
+"basepair-resolution" via \code{\link[BRGenomics:makeGRangesBRG]{
+makeGRangesBRG}}.}
+
+\item{exact_overlaps}{By default (\code{FALSE}), any ranges that cover more
+than a single base are treated as "coverage" signal (see
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}). If
+\code{exact_overlaps = TRUE}, all input ranges are conserved exactly as
+they are; ranges are only combined if they overlap exactly, and the signal
+of any combined range is the sum of the input ranges that were merged.
+Using \code{exact_overlaps} will automatically set \code{makeBRG = FALSE}.}
 
 \item{ncores}{Number of cores to use for computations.}
 }
@@ -47,10 +59,10 @@ A disjoint, basepair-resolution (single-width) GRanges object
   input GRanges object.
 }
 \description{
-Merges 2 or more basepair-resolution (single-width) GRanges objects by
-combining all of their ranges and associated signal (e.g. readcounts). If
-\code{multiplex = TRUE}, the input datasets are reversibly combined into a
-multiplexed GRanges containing a field for each input dataset.
+Merges 2 or more GRanges objects by combining all of their ranges and
+associated signal (e.g. readcounts). If \code{multiplex = TRUE}, the input
+datasets are reversibly combined into a multiplexed GRanges containing a
+field for each input dataset.
 }
 \section{Subsetting a multiplexed GRanges object}{
  If \code{multiplex = TRUE},

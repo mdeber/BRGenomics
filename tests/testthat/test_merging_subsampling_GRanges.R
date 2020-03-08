@@ -22,10 +22,6 @@ test_that("Merging is non-destructive", {
 
 ps_10ranges <- PROseq[seq(1, 100, 10)] # ensure disjoint when resized below
 
-test_that("Merging non-single-width GRanges produces warning", {
-    expect_warning(mergeGRangesData(PROseq, resize(ps_10ranges, 2), ncores = 1))
-})
-
 test_that("Merging sums signals in overlaps", {
     merge_10ranges <- mergeGRangesData(PROseq, ps_10ranges, ncores = 1)
     expect_equal(length(PROseq), length(merge_10ranges))
@@ -65,6 +61,11 @@ test_that("Multiplexed merging works with listed input", {
     expect_equivalent(gr_multi, mergeGRangesData(list(gr1 = gr1),
                                                  list(gr2 = gr2),
                                                  multiplex = TRUE, ncores = 1))
+})
+
+test_that("Multiplexing non-single-width GRanges produces warning", {
+    expect_warning(mergeGRangesData(PROseq, resize(ps_10ranges, 2),
+                                    multiplex = TRUE, ncores = 1))
 })
 
 # Sampling GRanges --------------------------------------------------------
