@@ -115,7 +115,6 @@ makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
     # separate wide granges
     is_wide <- width(dataset.gr) > 1
     gr_wide <- dataset.gr[is_wide]
-    gr_bp <- dataset.gr[!is_wide]
 
     # make width 1, reverse map, and add metadata
     gp <- GPos(gr_wide)
@@ -124,7 +123,7 @@ makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
     names(mcols(gp)) <- names(mcols(gr_wide))
 
     # combine and sort
-    sort(c(gr_bp, GRanges(gp)))
+    sort(c(dataset.gr[!is_wide], GRanges(gp)))
 }
 
 #' @rdname makeGRangesBRG
