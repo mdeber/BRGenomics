@@ -186,10 +186,11 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 
 
 #' @importFrom GenomicRanges findOverlaps mcols
+#' @importFrom S4Vectors from to
 .get_cbr <- function(dataset.gr, regions.gr, field, NF) {
     hits <- findOverlaps(regions.gr, dataset.gr)
-    counts <- aggregate(mcols(dataset.gr)[[field]][hits@to],
-                        by = list(hits@from), FUN = sum)
+    counts <- aggregate(mcols(dataset.gr)[[field]][to(hits)],
+                        by = list(from(hits)), FUN = sum)
     names(counts) <- c("idx", "signal")
     counts.all <- rep(0L, length(regions.gr)) # include regions without hits
     counts.all[counts$idx] <- counts$signal
@@ -605,6 +606,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 
 #' @importFrom GenomicRanges start mcols
+#' @importFrom S4Vectors to
 .get_signal_mat <- function(hits, dataset.gr, regions.gr, binsize, FUN, field,
                             NF, melt, blacklist, xy.bl) {
 
@@ -617,7 +619,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     # find (x, y) = (region, position)
     xy <- .get_positions_in_regions(hits, dataset.gr, regions.gr)
-    mat[xy] <- mcols(dataset.gr)[[field]][hits@to]
+    mat[xy] <- mcols(dataset.gr)[[field]][to(hits)]
 
     if (!is.null(xy.bl)) # apply NA_blacklisting
         mat[xy.bl] <- NA
@@ -632,12 +634,13 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     return(mat)
 }
 
+#' @importFrom S4Vectors from to
 .get_positions_in_regions <- function(hits, dataset.gr, regions.gr) {
-    # (x = hits@from)
-    y1 <- start(dataset.gr[hits@to]) # site of signal
-    y2 <- start(resize(regions.gr, 1))[hits@from] # beginning of window
+    # (x = from(hits))
+    y1 <- start(dataset.gr[to(hits)]) # site of signal
+    y2 <- start(resize(regions.gr, 1))[from(hits)] # beginning of window
     y <- abs(y1 - y2) + 1 # position of signal within region
-    cbind(hits@from, y)
+    cbind(from(hits), y)
 }
 
 
@@ -984,12 +987,12 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
     }
 }
 
-
+#' @importFrom S4Vectors from to
 .get_dwidth <- function(regions, blacklist) {
     dwidth <- rep(0L, length(regions))
     hits <- findOverlaps(regions, blacklist)
-    bloverlap <- pintersect(regions[hits@from], blacklist[hits@to])
-    dwidth[hits@from] <- width(bloverlap)
+    bloverlap <- pintersect(regions[from(hits)], blacklist[to(hits)])
+    dwidth[from(hits)] <- width(bloverlap)
     dwidth
 }
 
