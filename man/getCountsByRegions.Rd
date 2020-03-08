@@ -2,7 +2,6 @@
 % Please edit documentation in R/signal_counting.R
 \name{getCountsByRegions}
 \alias{getCountsByRegions}
-\alias{.getCoverageByRegions}
 \title{Get signal counts in regions of interest}
 \usage{
 getCountsByRegions(
@@ -15,17 +14,6 @@ getCountsByRegions(
   region_names = NULL,
   expand_ranges = FALSE,
   ncores = detectCores()
-)
-
-.getCoverageByRegions(
-  dataset.gr,
-  regions.gr,
-  field,
-  NF,
-  blacklist,
-  melt,
-  region_names,
-  ncores
 )
 }
 \arguments{

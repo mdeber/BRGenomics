@@ -241,10 +241,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 # since there's no "revmap" option in findOverlapPairs, we set the names in
 #   pairs@second correspond to relevant index in regions.gr
 
-
-#' @rdname getCountsByRegions
 #' @importFrom parallel detectCores mcMap
-#' @export
 .getCoverageByRegions <- function(dataset.gr, regions.gr, field, NF, blacklist,
                                   melt, region_names, ncores) {
 
