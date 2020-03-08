@@ -131,9 +131,7 @@ makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
 #' @importFrom methods is
 #' @importFrom GenomicRanges width isDisjoint
 #' @export
-isBRG <- function(x, ncores = detectCores()) {
-    if (is.list(x) || is(x, "GRangesList"))
-        return(mclapply(x, isBRG, mc.cores = ncores))
+isBRG <- function(x) {
     is(x, "GRanges") && all(width(x) == 1) && isDisjoint(x)
 }
 
