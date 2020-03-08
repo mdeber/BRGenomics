@@ -59,7 +59,10 @@
 #' @seealso \code{\link[BRGenomics:getStrandedCoverage]{getStrandedCoverage}},
 #'   \code{\link[GenomicRanges:intra-range-methods]{GenomicRanges::resize()}}
 #' @export
-#' @importFrom GenomicRanges GRanges GPos mcols mcols<- isDisjoint findOverlaps
+#' @importFrom methods is
+#' @importFrom GenomicRanges width GPos mcols mcols<- isDisjoint findOverlaps
+#'   GRanges sort
+#' @importFrom S4Vectors from
 #' @examples
 #' if (.Platform$OS.type == "unix") {
 #'
@@ -103,21 +106,25 @@
 #' }
 makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
 
-    if (is.list(dataset.gr))
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList"))
         return(mclapply(dataset.gr, makeGRangesBRG, mc.cores = ncores))
 
     if (!isDisjoint(dataset.gr))
         stop("Input dataset.gr is not disjoint. See documentation")
 
-    # Make all widths = 1
-    gr_bp <- GRanges(GPos(dataset.gr))
+    # separate wide granges
+    is_wide <- width(dataset.gr) > 1
+    gr_wide <- dataset.gr[is_wide]
+    gr_bp <- dataset.gr[!is_wide]
 
-    # Add back all metadata
-    hits <- findOverlaps(dataset.gr, gr_bp) # find corresponding indices
-    mcols(gr_bp) <- mcols(dataset.gr)[hits@from, ]
-    names(mcols(gr_bp)) <- names(mcols(dataset.gr))
+    # make width 1, reverse map, and add metadata
+    gp <- GPos(gr_wide)
+    hits <- findOverlaps(gr_wide, gp)
+    mcols(gp) <- mcols(gr_wide)[from(hits), ]
+    names(mcols(gp)) <- names(mcols(gr_wide))
 
-    sort(gr_bp)
+    # combine and sort
+    sort(c(gr_bp, GRanges(gp)))
 }
 
 #' @rdname makeGRangesBRG
@@ -125,7 +132,9 @@ makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
 #' @importFrom methods is
 #' @importFrom GenomicRanges width isDisjoint
 #' @export
-isBRG <- function(x) {
+isBRG <- function(x, ncores = detectCores()) {
+    if (is.list(x) || is(x, "GRangesList"))
+        return(mclapply(x, isBRG, mc.cores = ncores))
     is(x, "GRanges") && all(width(x) == 1) && isDisjoint(x)
 }
 
@@ -156,6 +165,7 @@ isBRG <- function(x) {
 #' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}},
 #'   \code{\link[IRanges:coverage-methods]{GenomicRanges::coverage}}
 #' @export
+#' @importFrom methods is
 #' @importFrom GenomicRanges mcols
 #' @examples
 #' #--------------------------------------------------#
@@ -216,7 +226,7 @@ isBRG <- function(x) {
 getStrandedCoverage <- function(dataset.gr, field = "score",
                                 ncores = detectCores()) {
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         if (is.null(field))  field <- list(NULL)
         return(mcMap(getStrandedCoverage, dataset.gr, field, ncores = 1,
                      mc.cores = ncores))
@@ -288,6 +298,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #'
 #' @author Mike DeBerardine
 #' @export
+#' @importFrom methods is
 #' @importFrom GenomicRanges mcols mcols<- countOverlaps
 #' @importFrom parallel detectCores mcMap
 #' @examples
@@ -324,7 +335,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 
     .check_xor_args(n, prop)
 
-    if (is.list(dataset.gr)) {
+    if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         if (is.null(field))  field <- list(NULL)
         if (is.null(n))  n <- list(NULL)
         if (is.null(prop))  prop <- list(NULL)
@@ -463,6 +474,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export
 #' @importFrom parallel detectCores
+#' @importFrom methods is as
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -510,8 +522,12 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
                              makeBRG = TRUE, exact_overlaps = FALSE,
                              ncores = detectCores()) {
     data_in <- list(...)
-    if (any(vapply(data_in, is.list, logical(1))))
+    is_list <- function(x) is.list(x) || is(x, "GRangesList")
+    if (any(vapply(data_in, is_list, logical(1))))
         data_in <- unlist(data_in)
+
+    if (is(data_in, "GRangesList")) # no performance difference w/ unlist, etc.
+        data_in <- as(data_in, "list")
 
     # check field names match inputs
     if (length(field) == 1) {

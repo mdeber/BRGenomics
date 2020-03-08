@@ -7,7 +7,7 @@
 \usage{
 makeGRangesBRG(dataset.gr, ncores = detectCores())
 
-isBRG(x)
+isBRG(x, ncores = detectCores())
 }
 \arguments{
 \item{dataset.gr}{A disjoint GRanges object, or a list of such objects.}
