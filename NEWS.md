@@ -1,23 +1,31 @@
-## BRGenomics 0.99 Bioconductor Submission
+## BRGenomics 0.99.19
 
-[0.99.15]
+* Added support for non-basepair-resolution GRanges throughout, via the `expand_ranges` argument
+    + Substantial performance benefits for less-sparse datasets (e.g. whole read coverage)
+    + Supported everywhere, including counting functions, subsampling, merging, normalization, etc.
+* Rewrite of `mergeGRangesData()`: 
+    + Substantial performance improvements for most datasets
+    + No longer requires basepair-resolution GRanges objects
+    + Added options and flexibility for merging reads as well as coverage data
+* Add a `mergeReplicates()` function
+* `subsampleGRanges()` no longer returns a basepair-resolution GRanges by default
+* When `field=NULL`, `applyNFsGRanges()` no longer returns a basepair-resolution GRanges by default
+
+## BRGenomics 0.99.15
 
 * Add pre-filtering to counting functions for performance
 * Some additional clarification of readcounts vs. coverage signal in counting and import functions
-
-[0.99.14]
-
 * Change tidyChromosomes test
 * Remove indirect links in doc pages (use only exact names of man pages)
 
-[0.99.10]
+## BRGenomics 0.99.10
 
 * Code modifications to pass test builds on Windows:
     + Make all examples and tests single core
     + Internally (not exported) redefine mcMap (current implementation in package parallel needs to be modified)
     + In tests and examples, test if on Windows before attempting any bigWig file import
 
-[0.99.0]
+## BRGenomics 0.99.0 (Bioconductor submission)
 
 * For Bioconductor version requirements:
     + Change package versioning scheme
