@@ -24,6 +24,8 @@
 #' @param keep.X,keep.Y,keep.M,keep.nonstandard Logicals indicating which
 #'   non-autosomes should be kept. By default, sex chromosomes are kept, but
 #'   mitochondrial and non-standard chromosomes are removed.
+#' @param genome An optional string that, if supplied, will be used to set the
+#'   genome of \code{gr}.
 #'
 #' @return A GRanges object in which both ranges and \code{seqinfo} associated
 #'   with trimmed chromosomes have been removed.
@@ -59,11 +61,14 @@
 #'
 #' tidyChromosomes(gr, keep.nonstandard = TRUE)
 tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
-                            keep.nonstandard = FALSE) {
+                            keep.nonstandard = FALSE, genome = NULL) {
 
     if (is.list(gr) || is(gr, "GRangesList"))
         return(lapply(gr, tidyChromosomes, keep.X, keep.Y, keep.M,
-                      keep.nonstandard))
+                      keep.nonstandard, genome))
+
+    if (!is.null(genome))
+        genome(gr) <- genome
 
     chrom <- standardChromosomes(gr)
 

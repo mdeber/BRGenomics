@@ -9,7 +9,8 @@ tidyChromosomes(
   keep.X = TRUE,
   keep.Y = TRUE,
   keep.M = FALSE,
-  keep.nonstandard = FALSE
+  keep.nonstandard = FALSE,
+  genome = NULL
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ typically have a standard genome associated with it, e.g. \code{genome(gr)
 \item{keep.X, keep.Y, keep.M, keep.nonstandard}{Logicals indicating which
 non-autosomes should be kept. By default, sex chromosomes are kept, but
 mitochondrial and non-standard chromosomes are removed.}
+
+\item{genome}{An optional string that, if supplied, will be used to set the
+genome of \code{gr}.}
 }
 \value{
 A GRanges object in which both ranges and \code{seqinfo} associated
