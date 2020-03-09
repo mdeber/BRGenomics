@@ -165,6 +165,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 
 
 .checkdsnames <- function(ns, sample_names, nr, gene_names) {
+    # ns = number of samples; nr = number of regions
     if (length(sample_names) != ns)
         stop(.nicemsg("sample_names are required, and a name is required for
                       each element of dataset.list"))
@@ -437,11 +438,10 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
     already_sf <- !is.null(sizeFactors(dds))
 
-    if (when_sf == "early" & already_sf & !quiet) {
+    if (when_sf == "early" && already_sf && !quiet)
         warning("Overwriting previous sizeFactors", immediate. = TRUE)
-    }
 
-    if (when_sf == "late" & length(comparisons) > 1)
+    if (when_sf == "late" && length(comparisons) > 1)
         stop(message = .nicemsg("Length of sizeFactors not equal to number of
                                 samples in dds"))
 }
@@ -476,7 +476,6 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     args.results <- .merge_args(rqd = rqd, usr = args.results,
                                 exclude = c("object", "contrast",
                                             "alpha", "parallel"))
-
     if (!quiet) {
         do.call(DESeq2::results, args.results)
     } else {
@@ -511,7 +510,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     if (is.null(usr))
         return(as.list(rqd))
 
-    if (!class(usr) %in% c("list", "expression") | is.null(names(usr)))
+    if (!class(usr) %in% c("list", "expression") || is.null(names(usr)))
         stop(.nicemsg("If given, args.DESeq and args.results must be named lists
                       or R expressions containing argument names and values.
                       See documentation"))

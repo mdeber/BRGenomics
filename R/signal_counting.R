@@ -710,6 +710,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                       coverage data? Consider using getStrandedCoverage()"))
 
     # get hits early (so happens once for if multiple fields)
+    #   (actually pointless for coverage data...)
     #   this gets hits and trims overhangs
     names(regions.gr) <- seq_along(regions.gr)
     pairs <- findOverlapPairs(dataset.gr, regions.gr)
@@ -742,16 +743,16 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     multi_width <- length(unique(width(regions.gr))) > 1
 
     if (multi_width) {
-        .get_cvbp_mw(p_int, x, regions.gr, binsize, FUN, smw, field, NF,
-                     melt, blacklist, xy.bl)
+        .get_cvbp_mw(p_int, x, regions.gr, binsize, FUN, smw, field, NF, melt,
+                     blacklist, xy.bl)
     } else {
         if (smw != "error")
             # check is necessary because NA_blacklisting would fail otherwise,
             # but will give an error in every case for the sake of consistency
             stop(.nicemsg("simplify.multi.widths changed from default, but
                           regions.gr is not multiwidth"))
-        .get_cov_mat(p_int, x, regions.gr, binsize, FUN, field, NF,
-                     melt, blacklist, xy.bl)
+        .get_cov_mat(p_int, x, regions.gr, binsize, FUN, field, NF, melt,
+                     blacklist, xy.bl)
     }
 }
 

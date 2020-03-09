@@ -247,9 +247,8 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
     } else {
         cvg <- coverage(gr, weight = mcols(gr)[[field]])
     }
-
     cvg_gr <- GRanges(cvg, seqinfo = seqinfo(dataset.gr))
-    strand(cvg_gr) <- strand.i
+    strand(cvg_gr) <- strand.i # (setting within GRanges() fails if length=0)
     cvg_gr[score(cvg_gr) != 0]
 }
 
@@ -358,7 +357,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 
 .subsample_gr <- function(dataset.gr, n, prop, field, expand_ranges) {
     if (is.null(field)) {
-        if (is.null(n))  n <- floor(prop * length(dataset.gr))
+        if (is.null(n)) n <- floor(prop * length(dataset.gr))
         return(sample(dataset.gr, n))
     }
     signal_counts <- mcols(dataset.gr)[[field]]
@@ -370,8 +369,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         signal_counts <- .try_unnorm_signal(signal_counts, lcm)
     }
     nreads <- sum(signal_counts)
-    if (is.null(n))
-        n <- round(prop * nreads)
+    if (is.null(n)) n <- round(prop * nreads)
 
     if (expand_ranges) {
         # 1. Sample read numbers (integers 1 to nreads)
@@ -383,7 +381,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         #  - Get its number within each range (e.g. "2nd read in that range")
         #  - Get its position within each range (offset from start, in bp)
         idx.range <- findInterval(samp_reads + 1, csumreads)
-        read_in_range <- samp_reads - (c(0, csumreads)[idx.range]) #(add floor)
+        read_in_range <- samp_reads - ( c(0, csumreads)[idx.range] )
         pos_in_range <- ceiling( read_in_range / signal_counts[idx.range] )
 
         gr_sample <- shift(start(dataset.gr[idx.range]), pos_in_range)
@@ -558,6 +556,8 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 
     gr <- getStrandedCoverage(do.call(c, c(data_in, use.names = FALSE)),
                               field = "score", ncores = ncores)
+
+    # keep field name if only one given
     if (length(unique(field)) == 1)
         names(mcols(gr)) <- field[1]
 
@@ -673,9 +673,8 @@ mergeReplicates <- function(..., field = "score", sample_names = NULL,
         names(data_in) <- sample_names
 
     if (is.null(names(data_in))) {
-        exclude <- c("field", "multiplex", "ncores")
         in.names <- as.list(match.call())[-1]
-        names(data_in) <- in.names[!names(in.names) %in% exclude]
+        names(data_in) <- setdiff(in.names, c("field", "multiplex", "ncores"))
     }
 
     if (!all(grepl("_rep.+", names(data_in), perl = TRUE)))
@@ -698,8 +697,7 @@ mergeReplicates <- function(..., field = "score", sample_names = NULL,
 
     mrg <- function(basename) {
         idx <- grep(basename, names(data_in))
-        mergeGRangesData(data_in[idx], field = field[idx], multiplex = FALSE,
-                         ncores = ncores_in)
+        mergeGRangesData(data_in[idx], field = field[idx], ncores = ncores_in)
     }
     data_out <- mclapply(basenames, mrg, mc.cores = ncores_out)
     names(data_out) <- basenames

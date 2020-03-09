@@ -133,26 +133,24 @@ NULL
 #' @export
 #' @importFrom parallel detectCores mcMap
 #' @importFrom GenomicRanges width
-metaSubsample <- function(dataset.gr, regions.gr, binsize = 1,
-                          first.output.xval = 1,
-                          sample.name = deparse(substitute(dataset.gr)),
-                          n.iter = 1000, prop.sample = 0.1, lower = 0.125,
-                          upper = 0.875, field = "score", NF = NULL,
-                          remove.empty = FALSE, blacklist = NULL,
-                          zero_blacklisted = FALSE, expand_ranges = FALSE,
-                          ncores = detectCores()) {
-
+metaSubsample <- function(
+    dataset.gr, regions.gr, binsize = 1, first.output.xval = 1,
+    sample.name = deparse(substitute(dataset.gr)), n.iter = 1000,
+    prop.sample = 0.1, lower = 0.125, upper = 0.875, field = "score",
+    NF = NULL, remove.empty = FALSE, blacklist = NULL, zero_blacklisted = FALSE,
+    expand_ranges = FALSE, ncores = detectCores()
+) {
     if (length(unique(width(regions.gr))) > 1) # check ranges all same width
         stop(message = "Not all ranges in regions.gr are the same width")
 
     # Signal in each gene; matrix of dim = (ngenes, nbins), or list of matrices
-    signal.bins <- getCountsByPositions(dataset.gr, regions.gr,
-                                        binsize = binsize, field = field,
-                                        blacklist = blacklist,
-                                        NA_blacklisted = !zero_blacklisted,
-                                        expand_ranges = expand_ranges,
-                                        ncores = ncores)
-    if (is.list(signal.bins)) {
+    signal.bins <- getCountsByPositions(
+        dataset.gr, regions.gr, binsize = binsize, field = field,
+        blacklist = blacklist, NA_blacklisted = !zero_blacklisted,
+        expand_ranges = expand_ranges, ncores = ncores
+    )
+
+    if (is.list(signal.bins)) { # (if length(dataset.gr) > 1)
         if (length(sample.name) != length(signal.bins))
             sample.name <- names(signal.bins)
         if (length(sample.name) == 0)
@@ -234,8 +232,7 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     #    -> List of length = n.iter containing vectors of length = nbins
     # 3. Collapse list into matrix
     #    -> Matrix of dim = (nbins, n.iter)
-    idx.list <- replicate(n.iter, sample(ngenes, size = nsample),
-                          simplify = FALSE)
+    idx.list <- replicate(n.iter, sample(ngenes, nsample), simplify = FALSE)
     binavg.list <- mclapply(idx.list,
                             function(idx) colMeans(counts.mat[idx, ], TRUE),
                             mc.cores = ncores)
@@ -250,14 +247,14 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
         lower <- NF * apply(counts.mat[idx, ], 2, quantile, lower)
         upper <- NF * apply(counts.mat[idx, ], 2, quantile, upper)
     } else {
-        mean <- NF * apply(binavg.mat, 1, quantile, 0.5, names = FALSE)
+        mean <- NF * apply(binavg.mat, 1, median)
         lower <- NF * apply(binavg.mat, 1, quantile, lower, names = FALSE)
         upper <- NF * apply(binavg.mat, 1, quantile, upper, names = FALSE)
     }
 
     # Also return x-values, sample names for plotting; x-vals centered in bins
-    if (binsize == 1)  x <- first.output.xval + seq(0, nbins - 1)
-    if (binsize > 1)  x <- .binxval(nbins, binsize, first.output.xval)
+    if (binsize == 1) x <- first.output.xval + seq(0, nbins - 1)
+    if (binsize > 1) x <- .binxval(nbins, binsize, first.output.xval)
     return(data.frame(x, mean, lower, upper, sample.name))
 }
 
@@ -267,7 +264,6 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                 round(n.iter*lower) == 0.5*n.iter,
                 round(n.iter*upper) == 0.5*n.iter,
                 round(n.iter*upper) == n.iter)
-
     if (any(checks))
         stop("Insufficient iterations to obtain distinct values of quantiles")
 }
