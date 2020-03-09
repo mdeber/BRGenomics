@@ -61,10 +61,9 @@
 tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                             keep.nonstandard = FALSE) {
 
-    if (is.list(gr) | is(gr, "GRangesList")) {
+    if (is.list(gr) || is(gr, "GRangesList"))
         return(lapply(gr, tidyChromosomes, keep.X, keep.Y, keep.M,
                       keep.nonstandard))
-    }
 
     chrom <- standardChromosomes(gr)
 
@@ -78,7 +77,6 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
     } else {
         gr <- keepSeqlevels(gr, chrom, pruning.mode = "tidy")
     }
-
     sortSeqlevels(gr)
 }
 
@@ -158,6 +156,8 @@ NULL
 
 
 #' @rdname import-functions
+#' @param makeBRG If \code{TRUE} (the default), the output ranges are made
+#'   single-width using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export
 #' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
@@ -165,7 +165,8 @@ NULL
 #' @importFrom parallel detectCores mcMap
 import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                           keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
-                          keep.nonstandard = FALSE, ncores = detectCores()) {
+                          keep.nonstandard = FALSE, makeBRG = TRUE,
+                          ncores = detectCores()) {
 
     if (length(plus_file) > 1 || length(minus_file) > 1) {
         if (is.null(plus_file))  plus_file <- list(NULL)
@@ -196,7 +197,7 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
     gr <- .try_int_score(gr)
 
     # Make the width of each range equal to 1
-    gr <- makeGRangesBRG(gr)
+    if (makeBRG) gr <- makeGRangesBRG(gr)
 
     if (!is.null(genome)) {
         genome(gr) <- genome
@@ -204,8 +205,7 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                               keep.M = keep.M,
                               keep.nonstandard = keep.nonstandard)
     }
-
-    return(sort(gr))
+    sort(gr)
 }
 
 
@@ -409,7 +409,7 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     }
 
     # If no chunking
-    if (is.na(yield_size))  return(sort(GRanges(yfun(bf))))
+    if (is.na(yield_size)) return(sort(GRanges(yfun(bf))))
 
     # With chunking
     open(bf)
@@ -417,12 +417,12 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     finished <- function(x) length(x) == 0L || is.null(x)
 
     reads <- yfun(bf)
-    if (finished(reads))  return(GRanges())
+    if (finished(reads)) return(GRanges())
     reads <- list(reads)
 
     repeat {
         reads.i <- yfun(bf)
-        if (finished(reads.i))  break
+        if (finished(reads.i)) break
         reads <- append(reads, reads.i)
     }
     sort(GRanges(do.call(c, reads)))
