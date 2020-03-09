@@ -187,7 +187,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     method <- match.arg(method, c("SRPMC", "SNR", "RPM"))
 
-    if (!is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
+    if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList")) {
         name_in <- deparse(substitute(dataset.gr))
         dataset.gr <- list(dataset.gr)
         names(dataset.gr) <- name_in
@@ -490,7 +490,7 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                    expand_ranges = expand_ranges,
                                    ncores = ncores)
     if (RPM_units) {
-        if (is.null(ctrl_pattern) & is.null(ctrl_names))
+        if (is.null(ctrl_pattern) && is.null(ctrl_names))
             stop(.nicemsg("Must give either ctrl_pattern or ctrl_names argument
                           if using the RPM_units option"))
         # get RPM NF for negative controls
