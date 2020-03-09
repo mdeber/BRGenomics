@@ -182,7 +182,7 @@ genebodies <- function(genelist, start = 300, end = -300,
 #'
 #' @importFrom GenomicRanges split start end mcols<-
 #' @importFrom IRanges IRanges
-#' @importFrom methods is
+#' @importFrom methods is as
 #' @export
 #'
 #' @examples
@@ -258,7 +258,10 @@ genebodies <- function(genelist, start = 300, end = -300,
 #' aggregate(reads ~ sample*gene, df, FUN = sum)
 intersectByGene <- function(regions.gr, gene_names) {
 
-    if (is.list(regions.gr) || is(regions.gr, "GRangesList")) {
+    if (is.list(regions.gr))
+        regions.gr <- as(regions.gr, "GRangesList")
+
+    if (is(regions.gr, "GRangesList")) {
         names(regions.gr) <- gene_names
         regions.gr <- unlist(regions.gr)
         gene_names <- names(regions.gr)
@@ -295,11 +298,14 @@ intersectByGene <- function(regions.gr, gene_names) {
 #'   \code{FALSE}, segments from different genes can overlap.
 #'
 #' @importFrom GenomicRanges split reduce disjoin
-#' @importFrom methods is
+#' @importFrom methods is as
 #' @export
 reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
 
-    if (is.list(regions.gr) || is(regions.gr, "GRangesList")) {
+    if (is.list(regions.gr))
+        regions.gr <- as(regions.gr, "GRangesList")
+
+    if (is(regions.gr, "GRangesList")) {
         names(regions.gr) <- gene_names
         regions.gr <- unlist(reduce(regions.gr))
     } else {
@@ -432,13 +438,10 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 .get_maxsite <- function(dataset.gr, regions.gr, binsize, field,
                          expand_ranges) {
 
-    mat <- getCountsByPositions(dataset.gr = dataset.gr,
-                                regions.gr = regions.gr,
-                                binsize = binsize, field = field,
-                                expand_ranges = expand_ranges)
+    mat <- getCountsByPositions(dataset.gr, regions.gr, binsize = binsize,
+                                field = field, expand_ranges = expand_ranges)
     max_pos <- apply(mat, 1, which.max)
     max_scores <- apply(mat, 1, max)
-
     list(pos = max_pos, score = max_scores)
 }
 
@@ -447,15 +450,13 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 .get_maxsite_mw <- function(dataset.gr, regions.gr, binsize, field,
                             expand_ranges) {
 
-    countslist <- getCountsByPositions(dataset.gr = dataset.gr,
-                                       regions.gr = regions.gr,
-                                       binsize = binsize,
-                                       simplify.multi.widths = "list",
-                                       field = field,
-                                       expand_ranges = expand_ranges)
+    countslist <- getCountsByPositions(
+        dataset.gr = dataset.gr, regions.gr = regions.gr, binsize = binsize,
+        simplify.multi.widths = "list", field = field,
+        expand_ranges = expand_ranges
+    )
     max_pos <- vapply(countslist, which.max, integer(1))
     max_scores <- vapply(countslist, max, numeric(1))
-
     list(pos = max_pos, score = max_scores)
 }
 
@@ -538,12 +539,10 @@ subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   density = FALSE, keep.signal = FALSE,
                                   expand_ranges = FALSE) {
 
-    if (quantiles[1] == 1 | quantiles[2] == 0)
+    if (quantiles[1] == 1 || quantiles[2] == 0)
         return(regions.gr[0])
 
-    signal_counts <- getCountsByRegions(dataset.gr = dataset.gr,
-                                        regions.gr = regions.gr,
-                                        field = field,
+    signal_counts <- getCountsByRegions(dataset.gr, regions.gr, field = field,
                                         expand_ranges = expand_ranges)
 
     if (density)
