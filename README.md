@@ -21,6 +21,9 @@ Install development version from
 remotes::install_github("mdeber/BRGenomics@R3")
 ```
 
+*The `@R3` branch will install under R version \>=3.5, while the main
+branch requires R 4.0, which is still under development.*
+
 If you’re using Windows, [Rtools for
 Windows](https://cran.rstudio.com/bin/windows/Rtools/) is required.
 

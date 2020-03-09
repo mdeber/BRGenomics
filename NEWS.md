@@ -1,4 +1,4 @@
-## BRGenomics 0.99.21
+## BRGenomics 0.99.22
 
 * Added support for non-basepair-resolution GRanges throughout, via the `expand_ranges` argument
     + Substantial performance benefits for less-sparse datasets (e.g. whole read coverage)
@@ -11,6 +11,7 @@
 * Rewrite of `makeGRangesBRG` that significantly improves performance for sparser datasets (the datasets for which using the function makes the most sense)
 * `subsampleGRanges()` no longer returns a basepair-resolution GRanges by default
 * When `field=NULL`, `applyNFsGRanges()` no longer returns a basepair-resolution GRanges by default
+* Quietly adding support for `GRangesList` objects (not fully tested)
 
 ## BRGenomics 0.99.15
 
