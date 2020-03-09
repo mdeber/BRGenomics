@@ -14,6 +14,7 @@ import_bigWig(
   keep.Y = TRUE,
   keep.M = FALSE,
   keep.nonstandard = FALSE,
+  makeBRG = TRUE,
   ncores = detectCores()
 )
 
@@ -40,6 +41,9 @@ mitochondrial chromosomes are applied.}
 \item{keep.X, keep.Y, keep.M, keep.nonstandard}{Logicals indicating which
 non-autosomes should be kept. By default, sex chromosomes are kept, but
 mitochondrial and non-standard chromosomes are removed.}
+
+\item{makeBRG}{If \code{TRUE} (the default), the output ranges are made
+single-width using \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}}
 
 \item{ncores}{Number of cores to use, if importing multiple objects
 simultaneously.}
