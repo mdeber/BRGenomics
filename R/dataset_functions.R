@@ -365,7 +365,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
     if (expand_ranges)
         signal_counts <- signal_counts * width(dataset.gr)
     if (normed_signal <- any( round(signal_counts, 3) %% 1 != 0 )) {
-        lcm <- min(signal_counts)
+        lcm <- min(signal_counts[signal_counts != 0])
         signal_counts <- .try_unnorm_signal(signal_counts, lcm)
     }
     nreads <- sum(signal_counts)
@@ -650,10 +650,10 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 #'   naming scheme.
 #' @param ncores The number of cores to use. This function will try to maximize
 #'   the use of the \code{ncores} given, but care should be taken as
-#'   \code{mergeGRangesData} can be memory intensive.
+#'   \code{mergeGRangesData} can be memory intensive. Excessive memory usage can
+#'   cause dramatic reductions in performance.
 #'
-#'
-#' @return A list of GRanges objects (one for each replicate).
+#' @return A list of GRanges objects.
 #' @export
 #'
 #' @examples

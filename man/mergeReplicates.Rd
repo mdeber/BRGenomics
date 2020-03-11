@@ -27,10 +27,11 @@ naming scheme.}
 
 \item{ncores}{The number of cores to use. This function will try to maximize
 the use of the \code{ncores} given, but care should be taken as
-\code{mergeGRangesData} can be memory intensive.}
+\code{mergeGRangesData} can be memory intensive. Excessive memory usage can
+cause dramatic reductions in performance.}
 }
 \value{
-A list of GRanges objects (one for each replicate).
+A list of GRanges objects.
 }
 \description{
 This simple convenience function uses
