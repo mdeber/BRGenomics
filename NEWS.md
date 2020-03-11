@@ -1,4 +1,4 @@
-## BRGenomics 0.99.22
+## BRGenomics 0.99.23
 
 * Added support for non-basepair-resolution GRanges throughout, via the `expand_ranges` argument
     + Substantial performance benefits for less-sparse datasets (e.g. whole read coverage)
@@ -8,9 +8,10 @@
     + No longer requires basepair-resolution GRanges objects
     + Added options and flexibility for merging reads as well as coverage data
 * Add a `mergeReplicates()` function
-* Rewrite of `makeGRangesBRG` that significantly improves performance for sparser datasets (the datasets for which using the function makes the most sense)
+* Rewrite of `makeGRangesBRG()` that significantly improves performance for sparser datasets (the datasets for which using the function makes the most sense)
 * `subsampleGRanges()` no longer returns a basepair-resolution GRanges by default
 * When `field=NULL`, `applyNFsGRanges()` no longer returns a basepair-resolution GRanges by default
+* Add `use_bin_numbers` option to n-dimension binning functions; setting to false allows returning of bin values (the bin center) instead of the ordinal bin numbers (indexes)
 * Quietly adding support for `GRangesList` objects (not fully tested)
 
 ## BRGenomics 0.99.15
