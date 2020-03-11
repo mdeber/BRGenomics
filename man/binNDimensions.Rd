@@ -6,7 +6,12 @@
 \alias{densityInNdimensionalBins}
 \title{Generating and Aggregating Data Within N-dimensional Bins}
 \usage{
-binNdimensions(dims.df, nbins = 10, ncores = detectCores())
+binNdimensions(
+  dims.df,
+  nbins = 10,
+  use_bin_numbers = TRUE,
+  ncores = detectCores()
+)
 
 aggregateByNdimensionalBins(
   x,
@@ -17,10 +22,16 @@ aggregateByNdimensionalBins(
   ignore.na = TRUE,
   drop = FALSE,
   empty = NA,
+  use_bin_numbers = TRUE,
   ncores = detectCores()
 )
 
-densityInNdimensionalBins(dims.df, nbins = 10, ncores = detectCores())
+densityInNdimensionalBins(
+  dims.df,
+  nbins = 10,
+  use_bin_numbers = TRUE,
+  ncores = detectCores()
+)
 }
 \arguments{
 \item{dims.df}{A dataframe containing one or more columns of numerical data
@@ -29,6 +40,12 @@ for which bins will be generated.}
 \item{nbins}{Either a number giving the number of bins to use for all
 dimensions (default = 10), or a vector containing the number of bins to use
 for each dimension of input data given.}
+
+\item{use_bin_numbers}{A logical indicating if ordinal bin numbers should be
+returned (\code{TRUE}), or if in place of the bin number, the center value
+of that bin should be returned. For instance, if the first bin encompasses
+data from 0 to 4, with \code{use_bin_numbers = TRUE}, a 1 is returned, but
+when \code{FALSE}, 2 is returned.}
 
 \item{ncores}{Number of cores to use for computations.}
 

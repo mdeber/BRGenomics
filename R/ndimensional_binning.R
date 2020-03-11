@@ -21,6 +21,11 @@
 #' @param nbins Either a number giving the number of bins to use for all
 #'   dimensions (default = 10), or a vector containing the number of bins to use
 #'   for each dimension of input data given.
+#' @param use_bin_numbers A logical indicating if ordinal bin numbers should be
+#'   returned (\code{TRUE}), or if in place of the bin number, the center value
+#'   of that bin should be returned. For instance, if the first bin encompasses
+#'   data from 0 to 4, with \code{use_bin_numbers = TRUE}, a 1 is returned, but
+#'   when \code{FALSE}, 2 is returned.
 #' @param FUN A function to use for aggregating data within each bin.
 #' @param ... Additional arguments passed to \code{FUN}.
 #' @param ignore.na Logical indicating if \code{NA} values of \code{x} should be
@@ -119,7 +124,8 @@
 #' bin2d_cps_med[1:6, ]
 #'
 #' subset(bin2d_cps_med, is.finite(value))[1:6, ]
-binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
+binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
+                           ncores = detectCores()) {
 
     # check input bins
     n_dim <- ncol(dims.df)
@@ -131,12 +137,21 @@ binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
     # get bin divisions for each dimension, evenly spaced from min to max values
     getBreaks <- function(x, y) {
         xfin <- x[is.finite(x)]
-        seq(min(xfin), max(xfin), length = y)
+        seq(min(xfin), max(xfin), length = y + 1)
     }
     breaks <- mcMap(getBreaks, dims.df, nbins, mc.cores = ncores)
 
     # get bin indices for each datapoint along each dimension
-    bin_idx <- mcMap(findInterval, dims.df, breaks, mc.cores = ncores)
+    bin_idx <- mcMap(findInterval, dims.df, breaks, rightmost.closed = TRUE,
+                     mc.cores = ncores)
+
+    if (!use_bin_numbers) {
+        # get center value for each bin in each dimensions
+        get_centers <- function(x) sapply(seq_len(length(x) - 1),
+                                          function(i) mean(x[i:(i+1)]))
+        breaks_centers <- mclapply(breaks, get_centers, mc.cores = ncores)
+        bin_idx <- mcMap("[", breaks_centers, bin_idx) # get values for data
+    }
     names(bin_idx) <- paste0("bin.", names(dims.df))
     as.data.frame(bin_idx)
 }
@@ -149,7 +164,8 @@ binNdimensions <- function(dims.df, nbins = 10, ncores = detectCores()) {
 #' @export
 aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
                                         ignore.na = TRUE, drop = FALSE,
-                                        empty = NA, ncores = detectCores()) {
+                                        empty = NA, use_bin_numbers = TRUE,
+                                        ncores = detectCores()) {
     if (is.character(x))  {
         colx <- which(names(dims.df) == x)
         x <- dims.df[, colx]
@@ -169,7 +185,7 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     }
 
     # get bins for data
-    bins.df <- binNdimensions(dims.df, nbins, ncores)
+    bins.df <- binNdimensions(dims.df, nbins, use_bin_numbers, ncores)
 
     # only for this combination of arguments do we need to differentiate the
     # NAs that are returned by FUN from the NAs that result from empty bins
@@ -222,10 +238,11 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
 #' @importFrom parallel detectCores
 #' @export
 densityInNdimensionalBins <- function(dims.df, nbins = 10,
+                                      use_bin_numbers = TRUE,
                                       ncores = detectCores()) {
     # avoid unnecessary evaluations in the aggregate function
     x <- rep(0L, nrow(dims.df))
-    bins.df <- binNdimensions(dims.df, nbins, ncores)
+    bins.df <- binNdimensions(dims.df, nbins, use_bin_numbers, ncores)
     ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = length,
                          drop = FALSE)
     ag.bins$value[is.na(ag.bins$value)] <- 0
