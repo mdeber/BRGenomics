@@ -502,7 +502,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                      blacklist, xy.bl, ncores) {
 
     # function makes practical use of single-width dataset.gr
-    if (any(width(dataset.gr) != 1))
+    if (!isBRG(dataset.gr))
         stop(.nicemsg("ranges in dataset.gr are not all single-width. If they
                       should be expanded, set expand_ranges = TRUE, or otherwise
                       format them using makeGRangesBRG."))
