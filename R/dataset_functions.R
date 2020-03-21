@@ -364,7 +364,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 
     if (expand_ranges)
         signal_counts <- signal_counts * width(dataset.gr)
-    if (normed_signal <- any( round(signal_counts, 3) %% 1 != 0 )) {
+    if (normed_signal <- !.close_int(signal_counts)) {
         lcm <- min(signal_counts[signal_counts != 0])
         signal_counts <- .try_unnorm_signal(signal_counts, lcm)
     }
@@ -401,7 +401,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 
 .try_unnorm_signal <- function(signal_counts, lcm) {
     unnorm_signal <- signal_counts / lcm
-    if (!all( round(unnorm_signal, 3) %% 1 == 0 ))
+    if (!.close_int(unnorm_signal))
         stop(.nicemsg("Signal given in 'field' are not whole numbers, and unable
                       to infer a normalization factor."))
 

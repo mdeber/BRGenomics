@@ -13,6 +13,11 @@ mcMap <- function(f, ...) {
     strwrap(sprintf(...), prefix = " ", initial = "")
 }
 
+.close_int <- function(x) {
+    # for a numeric vector x, can it safely be coerced to integer?
+    all( abs(round(x) - x) < 10e-12 )
+}
+
 .binVector <- function(x, binsize = NULL, nbins = NULL, FUN = sum) {
     # superimpose evenly spaced bins over a vector, and perform FUN on them
     #   (output length = nbins)

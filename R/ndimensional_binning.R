@@ -137,7 +137,7 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
     # get bin divisions for each dimension, evenly spaced from min to max values
     getBreaks <- function(x, y) {
         xfin <- x[is.finite(x)]
-        seq(min(xfin), max(xfin), length = y + 1)
+        seq(min(xfin), max(xfin), length.out = y + 1)
     }
     breaks <- mcMap(getBreaks, dims.df, nbins, mc.cores = ncores)
 
@@ -149,9 +149,10 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
         # get center value for each bin in each dimensions
         get_centers <- function(x) sapply(seq_len(length(x) - 1),
                                           function(i) mean(x[i:(i+1)]))
-        breaks_centers <- mclapply(breaks, get_centers, mc.cores = ncores)
-        bin_idx <- mcMap("[", breaks_centers, bin_idx) # get values for data
+        break_centers <- mclapply(breaks, get_centers, mc.cores = ncores)
+        bin_idx <- mcMap("[", break_centers, bin_idx) # get values for data
     }
+
     names(bin_idx) <- paste0("bin.", names(dims.df))
     as.data.frame(bin_idx)
 }

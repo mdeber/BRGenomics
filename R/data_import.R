@@ -6,7 +6,7 @@
 #' @importFrom GenomicRanges score score<-
 .try_int_score <- function(gr) {
     # if scores are whole numbers, coerce them to integers
-    if (all( round(score(gr) %% 1, 3) == 0 ))
+    if (.close_int(score(gr)))
         score(gr) <- as.integer(score(gr))
     gr
 }
