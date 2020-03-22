@@ -146,8 +146,10 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
     if (!is.null(gene_names))
         discont.genes <- length(unique(gene_names)) != length(gene_names)
 
-    # Make column data (colData) for SummarizedExperiment
-    coldat <- .get_coldat(sample_names)
+    # Make colData for SummarizedExperiment
+    coldat <- data.frame(condition = sub("_rep.*", "", sample_names),
+                         replicate = sub(".*rep", "rep", sample_names),
+                         row.names = sample_names)
 
     # Make SummarizedExperiment object
     se <- .get_se(counts.df, regions.gr, gene_names, discont.genes, coldat)
@@ -180,11 +182,6 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
                       regions.gr"))
 }
 
-.get_coldat <- function(sample_names) {
-    data.frame(condition = sub("_rep.", "", sample_names),
-               replicate = sub(".*rep", "rep", sample_names),
-               row.names = sample_names)
-}
 
 #' @importFrom parallel mclapply
 #' @importFrom GenomicRanges width

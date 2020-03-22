@@ -26,17 +26,21 @@ dds <- getDESeqDataSet(ps_list, txs, quiet = TRUE, ncores = 1)
 test_that("can generate simple DESeqDataSet", {
     expect_is(dds, "DESeqDataSet")
     expect_equivalent(dim(dds), c( length(txs), length(ps_list) ))
-    expect_equal(dds@design, ~condition)
-    expect_equivalent(dds@rowRanges, txs)
+    expect_equal(design(dds), ~condition)
+    expect_equivalent(rowRanges(dds), txs)
 })
 
 test_that("metadata in simple DESeqDataSet correct", {
-    expect_equivalent(names(dds@colData), c("condition", "replicate"))
-    expect_equivalent(rownames(dds@colData), names(ps_list))
-    expect_equivalent(levels(dds@colData$condition), c("A", "B", "C"))
-    expect_equivalent(levels(dds@colData$replicate), c("rep1", "rep2"))
-    expect_equal(names(dds@assays), "counts")
-    expect_null(dds@NAMES)
+    expect_equivalent(names(colData(dds)), c("condition", "replicate"))
+    expect_equivalent(rownames(colData(dds)), names(ps_list))
+    # expect_equivalent(levels(colData(dds)$condition), c("A", "B", "C"))
+    expect_equivalent(unique(as.character(colData(dds)$condition)),
+                      c("A", "B", "C"))
+    # expect_equivalent(levels(colData(dds)$replicate), c("rep1", "rep2"))
+    expect_equivalent(unique(as.character(colData(dds)$replicate)),
+                      c("rep1", "rep2"))
+    expect_equal(names(assays(dds)), "counts")
+    expect_null(names(dds))
 })
 
 test_that("can use multicore to make DESeqDataSet", {
@@ -62,7 +66,7 @@ test_that("gene names, discontinuous ranges supported; ordering maintained", {
     expect_equivalent(dim(dds_dsc), c(length(unique(txs$gene_id)),
                                       length(ps_list)))
     expect_equivalent(colSums(assay(dds)), colSums(assay(dds_dsc)))
-    expect_equivalent(dds@colData, dds_dsc@colData)
+    expect_equivalent(colData(dds), colData(dds_dsc))
     expect_equivalent(rownames(assay(dds_dsc)), rowRanges(dds_dsc)$gene_id)
     expect_equivalent(rownames(assay(dds_dsc)), unique(txs$gene_id))
 })
