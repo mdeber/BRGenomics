@@ -33,7 +33,9 @@
 #' @param expand_ranges Logical indicating if ranges in \code{dataset.gr} should
 #'   be treated as descriptions of single molecules (\code{FALSE}), or if ranges
 #'   should be treated as representing multiple adjacent positions with the same
-#'   signal (\code{TRUE}). See details below.
+#'   signal (\code{TRUE}). If the ranges in \code{dataset.gr} do not all have a
+#'    width of 1, this option has a substantial effect on the results
+#'   returned. (See details).
 #' @param ncores Multiple cores will only be used if \code{dataset.gr} is a list
 #'   of multiple datasets, or if \code{length(field) > 1}.
 #'
@@ -74,9 +76,9 @@
 #'   each contain a signal of 2.
 #'
 #'   If the data truly represents basepair-resolution coverage, the "coverage
-#'   signal" is equivalent to readcounts. However, users should take caution if
-#'   the data is whole-read coverage, as the "coverage signal" is determined by
-#'   both the read counts as well as read lengths.
+#'   signal" is equivalent to readcounts. However, users should consider how
+#'   they interpret results from whole-read coverage, as the "coverage signal"
+#'   is determined by both the read counts as well as read lengths.
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
@@ -314,7 +316,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     idx <- as.integer(names(pairs@second))
 
     p_int <- pintersect(pairs, drop.nohit.ranges = TRUE)
-    cvg <- aggregate(mcols(p_int)[[field]], by = list(idx), FUN = sum)
+    p_int_sig <- mcols(p_int)[[field]] * width(p_int)
+    cvg <- aggregate(p_int_sig, by = list(idx), FUN = sum)
     names(cvg) <- c("idx", "signal")
     cvg.all <- rep(0L, length(regions.gr)) # include regions without hits
     cvg.all[cvg$idx] <- cvg$signal

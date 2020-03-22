@@ -337,25 +337,25 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         if (is.null(prop))  prop <- list(NULL)
 
         mcMap(.subsample_gr, dataset.gr, n, prop, field, expand_ranges,
-              mc.cores = ncores)
+              ncores = 1, mc.cores = ncores)
 
     } else if (length(field) > 1) {
         if (is.null(n))  n <- list(NULL)
         if (is.null(prop))  prop <- list(NULL)
 
         grl <- mcMap(.subsample_gr, list(dataset.gr), n, prop, field,
-                     expand_ranges, mc.cores = ncores)
+                     expand_ranges, ncores = 1, mc.cores = ncores)
         names(grl) <- field
         mergeGRangesData(grl, field = field, multiplex = TRUE, ncores = ncores)
 
     } else {
-        .subsample_gr(dataset.gr, n, prop, field, expand_ranges)
+        .subsample_gr(dataset.gr, n, prop, field, expand_ranges, ncores)
 
     }
 }
 
 
-.subsample_gr <- function(dataset.gr, n, prop, field, expand_ranges) {
+.subsample_gr <- function(dataset.gr, n, prop, field, expand_ranges, ncores) {
     if (is.null(field)) {
         if (is.null(n)) n <- floor(prop * length(dataset.gr))
         return(sample(dataset.gr, n))
@@ -384,8 +384,8 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
         read_in_range <- samp_reads - ( c(0, csumreads)[idx.range] )
         pos_in_range <- ceiling( read_in_range / signal_counts[idx.range] )
 
-        gr_sample <- shift(start(dataset.gr[idx.range]), pos_in_range)
-        gr_out <- getStrandedCoverage(gr_sample, field = NULL)
+        gr_sample <- shift(resize(dataset.gr[idx.range], 1), pos_in_range)
+        gr_out <- getStrandedCoverage(gr_sample, field = NULL, ncores = ncores)
         names(mcols(gr_out)) <- field
     } else {
         # avoid modifying GRanges, and sample associated indices (w/o replace)
@@ -437,14 +437,14 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #'   output.
 #' @param makeBRG If \code{TRUE} (the default), the output GRanges will be made
 #'   "basepair-resolution" via \code{\link[BRGenomics:makeGRangesBRG]{
-#'   makeGRangesBRG}}.
+#'   makeGRangesBRG}}. This is always set to code{FALSE} if
+#'   \code{exact_overlaps = TRUE}.
 #' @param exact_overlaps By default (\code{FALSE}), any ranges that cover more
 #'   than a single base are treated as "coverage" signal (see
 #'   \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}). If
 #'   \code{exact_overlaps = TRUE}, all input ranges are conserved exactly as
 #'   they are; ranges are only combined if they overlap exactly, and the signal
 #'   of any combined range is the sum of the input ranges that were merged.
-#'   Using \code{exact_overlaps} will automatically set \code{makeBRG = FALSE}.
 #' @param ncores Number of cores to use for computations.
 #'
 #' @return A disjoint, basepair-resolution (single-width) GRanges object
@@ -552,7 +552,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 .merge_gr <- function(data_in, field, makeBRG, ncores) {
 
     if (any(field != "score"))
-        mcMap(.rename_field_score, data_in, field, mc.cores = ncores)
+        data_in <- mcMap(.rename_field_score, data_in, field, mc.cores = ncores)
 
     gr <- getStrandedCoverage(do.call(c, c(data_in, use.names = FALSE)),
                               field = "score", ncores = ncores)
@@ -648,6 +648,8 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 #' @param sample_names Optional character vector with which to rename the
 #'   datasets. This is useful if the sample names do not conform to the "_rep"
 #'   naming scheme.
+#' @param makeBRG,exact_overlaps See \code{\link[BRGenomics:mergeGRangesData]{
+#'   mergeGRangesData}}.
 #' @param ncores The number of cores to use. This function will try to maximize
 #'   the use of the \code{ncores} given, but care should be taken as
 #'   \code{mergeGRangesData} can be memory intensive. Excessive memory usage can
@@ -664,6 +666,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 #'                 b_rep2 = PROseq[seq(4, length(PROseq), 4)])
 #' mergeReplicates(ps_list, ncores = 1)
 mergeReplicates <- function(..., field = "score", sample_names = NULL,
+                            makeBRG = TRUE, exact_overlaps = FALSE,
                             ncores = detectCores()) {
     data_in <- list(...)
     if (any(vapply(data_in, is.list, logical(1))))
@@ -697,7 +700,8 @@ mergeReplicates <- function(..., field = "score", sample_names = NULL,
 
     mrg <- function(basename) {
         idx <- grep(basename, names(data_in))
-        mergeGRangesData(data_in[idx], field = field[idx], ncores = ncores_in)
+        mergeGRangesData(data_in[idx], field = field[idx], makeBRG = makeBRG,
+                         exact_overlaps = exact_overlaps, ncores = ncores_in)
     }
     data_out <- mclapply(basenames, mrg, mc.cores = ncores_out)
     names(data_out) <- basenames

@@ -8,6 +8,8 @@ mergeReplicates(
   ...,
   field = "score",
   sample_names = NULL,
+  makeBRG = TRUE,
+  exact_overlaps = FALSE,
   ncores = detectCores()
 )
 }
@@ -24,6 +26,9 @@ datasets.}
 \item{sample_names}{Optional character vector with which to rename the
 datasets. This is useful if the sample names do not conform to the "_rep"
 naming scheme.}
+
+\item{makeBRG, exact_overlaps}{See \code{\link[BRGenomics:mergeGRangesData]{
+mergeGRangesData}}.}
 
 \item{ncores}{The number of cores to use. This function will try to maximize
 the use of the \code{ncores} given, but care should be taken as

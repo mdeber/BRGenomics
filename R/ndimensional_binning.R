@@ -24,7 +24,7 @@
 #' @param use_bin_numbers A logical indicating if ordinal bin numbers should be
 #'   returned (\code{TRUE}), or if in place of the bin number, the center value
 #'   of that bin should be returned. For instance, if the first bin encompasses
-#'   data from 0 to 4, with \code{use_bin_numbers = TRUE}, a 1 is returned, but
+#'   data from 1 to 3, with \code{use_bin_numbers = TRUE}, a 1 is returned, but
 #'   when \code{FALSE}, 2 is returned.
 #' @param FUN A function to use for aggregating data within each bin.
 #' @param ... Additional arguments passed to \code{FUN}.
@@ -50,7 +50,9 @@
 #'
 #'   \code{binNdimensions} returns the bin numbers themselves. The output
 #'   dataframe has the same dimensions as the input \code{dims.df}, but each
-#'   input data has been replaced by its bin number (an integer).
+#'   input data has been replaced by its bin number (an integer). If
+#'   code{use_bin_numbers = FALSE}, the center points of the bins are returned
+#'   instead of the bin numbers.
 #'
 #'   \code{aggregateByNdimensionalBins} summarizes some input data \code{x} in
 #'   each combination of bins, i.e. in each n-dimensional bin. Each row of the
@@ -112,7 +114,7 @@
 #'
 #' bin2d_cps[1:6, ]
 #'
-#' subset(bin2d_cps, is.finite(value))[1:6, ]
+#' subset(bin2d_cps, is.finite(counts_cps))[1:6, ]
 #'
 #' #--------------------------------------------------#
 #' # get median cps reads for those bins
@@ -123,7 +125,7 @@
 #'
 #' bin2d_cps_med[1:6, ]
 #'
-#' subset(bin2d_cps_med, is.finite(value))[1:6, ]
+#' subset(bin2d_cps_med, is.finite(counts_cps))[1:6, ]
 binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
                            ncores = detectCores()) {
 
@@ -145,10 +147,17 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
     bin_idx <- mcMap(findInterval, dims.df, breaks, rightmost.closed = TRUE,
                      mc.cores = ncores)
 
+    # address infinite values
+    bin_idx <- lapply(bin_idx, function(x) {
+        x[x == 0] <- NA
+        x
+    })
+
     if (!use_bin_numbers) {
         # get center value for each bin in each dimensions
-        get_centers <- function(x) sapply(seq_len(length(x) - 1),
-                                          function(i) mean(x[i:(i+1)]))
+        get_centers <- function(x) vapply(seq_len(length(x) - 1),
+                                          function(i) mean(x[i:(i+1)]),
+                                          numeric(1))
         break_centers <- mclapply(breaks, get_centers, mc.cores = ncores)
         bin_idx <- mcMap("[", break_centers, bin_idx) # get values for data
     }
@@ -168,14 +177,9 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
                                         empty = NA, use_bin_numbers = TRUE,
                                         ncores = detectCores()) {
     if (is.character(x))  {
-        colx <- which(names(dims.df) == x)
-        x <- dims.df[, colx]
-        dims.df <- dims.df[, -colx]
-    }
-    if (ignore.na) {
-        idx <- !is.na(x)
-        x <- x[idx]
-        dims.df <- dims.df[idx, ]
+        colx <- which(names(dims.df) %in% x)
+        x <- dims.df[colx]
+        dims.df <- dims.df[-colx]
     }
 
     # if x is a dataframe, keep the original names
@@ -183,6 +187,12 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
         x.df <- data.frame(value = x)
     } else {
         x.df <- x
+    }
+
+    if (ignore.na) {
+        idx <- apply(x.df, 1, function(x) all(!is.na(x)))
+        x.df <- x.df[idx, , drop = FALSE]
+        dims.df <- dims.df[idx, , drop = FALSE]
     }
 
     # get bins for data
@@ -219,8 +229,8 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     bin_comb <- lapply(bins.df, function(x) sort(unique(x)))
     df <- expand.grid(bin_comb)
 
-    # make list of vectors of dimension values for...
     ndim <- ncol(bins.df)
+    # make list of vectors of dimension values for...
     usedbins <- do.call(pc, as.list(ag.bins[seq_len(ndim)])) # ...used bins
     allbins <- do.call(pc, as.list(df)) # ...all possible bins
 

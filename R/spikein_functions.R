@@ -149,13 +149,13 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     if (is.null(field))
         stop(.nicemsg("Cannot use field = NULL when expand_ranges = TRUE.
                       expand_ranges is for collapsed coverage objects, which
-                      always have associated signal position"))
+                      always have associated signal for each position"))
 
     cl <- mcMap(function(x, field) {
-        si <- seqnames(x) %in% spike_chrom
+        si <- as.logical(seqnames(x) %in% spike_chrom)
         data.frame(total_reads = sum( mcols(x)[[field]] * width(x)),
-                   exp_reads = sum( mcols(x[!si])[[field]] * width(x)[!si]),
-                   spike_reads = sum( mcols(x[si])[[field]] * width(x)[si]))
+                   exp_reads = sum( mcols(x)[[field]][!si] * width(x)[!si]),
+                   spike_reads = sum( mcols(x)[[field]][si] * width(x)[si]))
     }, dataset.list, field, mc.cores = ncores)
 
     names(cl) <- snames
