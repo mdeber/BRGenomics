@@ -1,6 +1,6 @@
 ## BRGenomics 0.99.25
 
-* Bug fixes with `expand_ranges` arguments affecting `getCountsByRegion()`, `subsampleGRanges()`, and `getSpikeInNFs()`
+* Bug fixes with `expand_ranges` arguments affecting `getCountsByRegions()`, `subsampleGRanges()`, and `getSpikeInNFs()`
 * Expanded testing, particularly for `expand_ranges` arguments and `import_bam()`
 * Added options in `mergeReplicates()`
 * Various small doc updates and minor internal changes

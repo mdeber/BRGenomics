@@ -1,6 +1,6 @@
 ---
 title: "Basepair-Resolution Analysis with BRGenomics"
-subtitle: "_Straightforward and efficient tools for analyzing genomics data_"
+subtitle: "_Straightforward tools for high-resolution genomics data_"
 author:
   name: Mike DeBerardine
   email: mike.deberardine@gmail.com

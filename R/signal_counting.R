@@ -658,7 +658,6 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 
 
-#' @rdname getCountsByPositions
 #' @importFrom parallel mcMap
 #' @importFrom GenomicRanges GPos findOverlaps
 .getCoverageByPositions <- function(dataset.gr, regions.gr, binsize, FUN,
