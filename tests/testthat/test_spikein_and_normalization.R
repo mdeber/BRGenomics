@@ -70,6 +70,28 @@ test_that("can get spike-in counts for multiple fields", {
     expect_equivalent(s_counts[1:2, -1], mix_counts[2:1, -1])
 })
 
+test_that("spike in counts with expand_ranges", {
+    grl_exp <- lapply(grl, function(x) {
+        ranges(x) <- IRanges(start = c(1, 4, 5, 7),
+                             end   = c(3, 4, 6, 9))
+        x
+    })
+    exp_total <- sapply(grl_exp, function(x) sum(score(x) * width(x)))
+    exp_exp <- sapply(grl_exp, function(x) sum(score(x)[1:2] * width(x)[1:2]))
+    exp_spk <- sapply(grl_exp, function(x) sum(score(x)[3:4] * width(x)[3:4]))
+
+    exp_counts <- getSpikeInCounts(grl_exp,
+                                   si_names = c("spikechr1", "spikechr2"),
+                                   expand_ranges = TRUE,
+                                   ncores = 1)
+    expect_equivalent(exp_counts$total_reads, exp_total)
+    expect_equivalent(exp_counts$exp_reads, exp_exp)
+    expect_equivalent(exp_counts$spike_reads, exp_spk)
+
+    expect_error(getSpikeInCounts(grl_exp, si_pattern = "spike",
+                                  field = NULL, expand_ranges = TRUE))
+})
+
 
 # test subsetting by spike-in reads ---------------------------------------
 
@@ -106,6 +128,12 @@ test_that("RPM normalization works", {
                             ncores = 1)
     expect_is(nf_rpm, "numeric")
     expect_true(all(nf_rpm * er == 1e6))
+})
+
+test_that("RPM normalization for single GRanges object", {
+    nf_rpm <- getSpikeInNFs(grl[[1]], si_pattern = "spike", method = "RPM",
+                            ncores = 1)
+    expect_equal(nf_rpm * er[1], 1e6)
 })
 
 test_that("simple spike-in read normalization", {

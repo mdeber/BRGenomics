@@ -35,15 +35,15 @@ output.}
 
 \item{makeBRG}{If \code{TRUE} (the default), the output GRanges will be made
 "basepair-resolution" via \code{\link[BRGenomics:makeGRangesBRG]{
-makeGRangesBRG}}.}
+makeGRangesBRG}}. This is always set to code{FALSE} if
+\code{exact_overlaps = TRUE}.}
 
 \item{exact_overlaps}{By default (\code{FALSE}), any ranges that cover more
 than a single base are treated as "coverage" signal (see
 \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}). If
 \code{exact_overlaps = TRUE}, all input ranges are conserved exactly as
 they are; ranges are only combined if they overlap exactly, and the signal
-of any combined range is the sum of the input ranges that were merged.
-Using \code{exact_overlaps} will automatically set \code{makeBRG = FALSE}.}
+of any combined range is the sum of the input ranges that were merged.}
 
 \item{ncores}{Number of cores to use for computations.}
 }

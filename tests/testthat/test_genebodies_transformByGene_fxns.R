@@ -96,7 +96,7 @@ testfun <- function(gn, disjoin = FALSE, exp) {
     all(names(out) == names(exp)) & all(ranges(out) == ex.r)
 }
 
-test_that("reduceByGene works with disjoin = FALSE", {
+test_that("with disjoin = FALSE", {
     expect_true(testfun(c("a", "a", "a", "a"), exp = list(a = 1:5,
                                                           a = 7:11)))
     expect_true(testfun(c("a", "a", "a", "b"), exp = list(a = 1:5,
@@ -109,7 +109,7 @@ test_that("reduceByGene works with disjoin = FALSE", {
                                                           b = 7:11)))
 })
 
-test_that("reduceByGene works with disjoin = TRUE", {
+test_that("with disjoin = TRUE", {
     disjoin <- TRUE
     expect_true(testfun(c("a", "a", "a", "a"), disjoin, exp = list(a = 1:5,
                                                                    a = 7:11)))
@@ -127,16 +127,32 @@ test_that("reduceByGene works with disjoin = TRUE", {
 end(rbg_gr)[1] <- 10
 testfun <- testfun
 
-test_that("reduceByGene correctly keeps all unambiguous segments", {
+test_that("all unambiguous segments kept", {
     expect_true(testfun(c("a", "b", "b", "b"),
                         exp = list(a = 1:10, b = 3:5, b = 7:11)))
     expect_true(testfun(c("a", "b", "b", "b"), disjoin = TRUE,
                         list(a = 1:2, a = 6, b = 11)))
 })
 
+test_that("list/GRangesList inputs", {
+    test_list <- function(gn, dj) {
+        rbg_grl <- lapply(unique(gn), function(n) rbg_gr[which(gn == n)])
+        redux <- reduceByGene(rbg_gr, gene_names = gn, disjoin = dj)
+        lredux <- reduceByGene(rbg_grl, gene_names = c("a", "b"), disjoin = dj)
+        expect_identical(redux, lredux)
+    }
+    test_list(c("a", "b", "b", "b"), FALSE)
+    test_list(c("a", "a", "b", "b"), FALSE)
+    test_list(c("a", "a", "a", "b"), FALSE)
+    test_list(c("a", "b", "b", "b"), TRUE)
+    test_list(c("a", "a", "b", "b"), TRUE)
+    test_list(c("a", "a", "a", "b"), TRUE)
+})
 
 
 # intersectByGene fxn -----------------------------------------------------
+
+context("intersectByGene")
 
 grint <- GRanges(seqnames = "chr1",
                  ranges = IRanges(start = c(1, 3, 6, 7),
@@ -150,7 +166,7 @@ testfun <- function(gn, exp) {
     all(names(out) == names(exp)) & all(ranges(out) == ex.r)
 }
 
-test_that("intersectByGene works", {
+test_that("intersections returned", {
     expect_true(testfun(c("a", "b", "b", "b"), list(a = 1:4, b = 7:8)))
     expect_true(testfun(c("a", "a", "b", "b"), list(a = 3:4, b = 7:8)))
     expect_true(testfun(c("a", "a", "a", "b"), list(b = 7:8)))
@@ -159,7 +175,20 @@ test_that("intersectByGene works", {
     expect_true(length(intersectByGene(grint, c("a", "a", "a", "a"))) == 0)
 })
 
-
+test_that("list/GRangesList input", {
+    test_list <- function(gn) {
+        rbg_grl <- lapply(unique(gn), function(n) rbg_gr[which(gn == n)])
+        gint <- intersectByGene(rbg_gr, gene_names = gn)
+        lgint <- intersectByGene(rbg_grl, gene_names = c("a", "b"))
+        expect_identical(gint, lgint)
+    }
+    test_list(c("a", "b", "b", "b"))
+    test_list(c("a", "a", "b", "b"))
+    test_list(c("a", "a", "a", "b"))
+    test_list(c("a", "b", "b", "b"))
+    test_list(c("a", "a", "b", "b"))
+    test_list(c("a", "a", "a", "b"))
+})
 
 
 

@@ -174,6 +174,9 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                           ncores = detectCores()) {
 
     if (length(plus_file) > 1 || length(minus_file) > 1) {
+        if (!is.null(plus_file) && !is.null(minus_file))
+            if (length(plus_file) != length(minus_file))
+                stop("plus_file and minus_file are not the same length")
         if (is.null(plus_file))  plus_file <- list(NULL)
         if (is.null(minus_file))  minus_file <- list(NULL)
         if (is.null(genome))  genome <- list(NULL)
@@ -182,20 +185,16 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                      mc.cores = ncores))
     }
 
-    p_gr <- GRanges() # initialize
-    m_gr <- GRanges()
-
+    p_gr <- m_gr <- GRanges() # initialize
     if (!is.null(plus_file)) {
         p_gr <- import.bw(plus_file)
         strand(p_gr) <- "+"
     }
-
     if (!is.null(minus_file)) {
         m_gr <- import.bw(minus_file)
         score(m_gr) <- abs(score(m_gr)) # make scores positive
         strand(m_gr) <- "-"
     }
-
     suppressWarnings( gr <- c(p_gr, m_gr) )
 
     # scores are imported as doubles by default; if whole numbers, make integers
@@ -225,6 +224,9 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                             keep.nonstandard = FALSE, ncores = detectCores()) {
 
     if (length(plus_file) > 1 || length(minus_file) > 1) {
+        if (!is.null(plus_file) && !is.null(minus_file))
+            if (length(plus_file) != length(minus_file))
+                stop("plus_file and minus_file are not the same length")
         if (is.null(plus_file))  plus_file <- list(NULL)
         if (is.null(minus_file))  minus_file <- list(NULL)
         if (is.null(genome))  genome <- list(NULL)
@@ -233,8 +235,7 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                      mc.cores = ncores))
     }
 
-    p_gr <- GRanges() # initialize
-    m_gr <- GRanges()
+    p_gr <- m_gr <- GRanges() # initialize
     if (!is.null(plus_file)) {
         p_gr <- import.bedGraph(plus_file)
         strand(p_gr) <- "+"
@@ -396,8 +397,9 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     return(gr)
 }
 
-#' @import Rsamtools
-#' @importFrom GenomicAlignments readGAlignmentPairs readGAlignments
+# # @importFrom GenomicAlignments readGAlignmentPairs readGAlignments
+
+#' @import Rsamtools GenomicAlignments
 #' @importFrom GenomicRanges GRanges
 .import_bam <- function(file, paired_end, yield_size, mapq) {
     ## This function avoids any use of bpiterate(), as we've had problems;
@@ -406,31 +408,35 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     # Get parameters
     bf <- BamFile(file, yieldSize = yield_size)
     param <- ScanBamParam(mapqFilter = mapq)
-    if (is.null(paired_end))  paired_end <- .quick_check_paired(file)
-    if (paired_end) {
-        yfun <- function(x) readGAlignmentPairs(x, param = param)
+    if (is.null(paired_end))
+        paired_end <- .quick_check_paired(file)
+
+    fxn <- if (paired_end) readGAlignmentPairs else readGAlignments
+    yfun <- function(x) fxn(x, param = param)
+
+    if (is.na(yield_size)) {
+        # No chunking
+        return(sort(GRanges(yfun(bf))))
+
     } else {
-        yfun <- function(x) readGAlignments(x, param = param)
+        # With chunking
+        open(bf)
+        on.exit(close(bf))
+        finished <- function(x) length(x) == 0L || is.null(x)
+
+        reads <- yfun(bf)
+        if (finished(reads)) # early exit if no reads found
+            return(GRanges())
+        reads <- list(reads)
+
+        repeat {
+            reads.i <- yfun(bf)
+            if (finished(reads.i))
+                break
+            reads <- append(reads, reads.i)
+        }
+        return(sort(GRanges(do.call(c, reads))))
     }
-
-    # If no chunking
-    if (is.na(yield_size)) return(sort(GRanges(yfun(bf))))
-
-    # With chunking
-    open(bf)
-    on.exit(close(bf))
-    finished <- function(x) length(x) == 0L || is.null(x)
-
-    reads <- yfun(bf)
-    if (finished(reads)) return(GRanges())
-    reads <- list(reads)
-
-    repeat {
-        reads.i <- yfun(bf)
-        if (finished(reads.i)) break
-        reads <- append(reads, reads.i)
-    }
-    sort(GRanges(do.call(c, reads)))
 }
 
 #' @import Rsamtools

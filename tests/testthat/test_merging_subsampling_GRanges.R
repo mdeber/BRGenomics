@@ -68,6 +68,110 @@ test_that("Multiplexing non-single-width GRanges produces warning", {
                                     multiplex = TRUE, ncores = 1))
 })
 
+
+test_that("one or more alternate field names", {
+    # if all the same, keep the name
+    ls_rename <- Map(function(gr, nm) {
+        mcols(gr) <- setNames(mcols(gr)[1], nm)
+        gr
+    }, list(gr1, gr2), "signal")
+
+    out_rename <- mergeGRangesData(ls_rename, field = "signal", ncores = 1)
+    expect_equal(names(mcols(out_rename)), "signal")
+
+    # if multiple, use "score"
+    ls_2names <- Map(function(gr, nm) {
+        mcols(gr) <- setNames(mcols(gr)[1], nm)
+        gr
+    }, list(gr1, gr2), c("gr1", "gr2"))
+
+    out_2names <- mergeGRangesData(ls_2names, field = c("gr1", "gr2"),
+                                   ncores = 1)
+    expect_equal(names(mcols(out_2names)), "score")
+    expect_identical(ranges(out_rename), ranges(out_2names))
+})
+
+
+# Merging Exact -----------------------------------------------------------
+
+context("Merging exact ranges")
+
+data("PROseq_paired")
+plist <- list(A = PROseq_paired,
+              B = head(PROseq_paired, 5),
+              C = tail(PROseq_paired, 5))
+
+test_that("Merging exact ranges works", {
+    mrg_exact <- mergeGRangesData(plist, makeBRG = FALSE, exact_overlaps = TRUE,
+                                  ncores = 1)
+
+    expect_identical(ranges(mrg_exact), ranges(PROseq_paired))
+    idx_overlap <- c(1:5, length(PROseq_paired) - (0:4))
+    expect_identical(score(mrg_exact[-idx_overlap]),
+                     score(PROseq_paired[-idx_overlap]))
+    expect_equivalent(score(mrg_exact)[idx_overlap],
+                      score(PROseq_paired)[idx_overlap] * 2)
+})
+
+test_that("partial overlaps not merged", {
+    partial_o <- list(PROseq_paired, shift(PROseq_paired, 3))
+    mrg_po <- mergeGRangesData(partial_o, exact_overlaps = TRUE)
+    c_po <- c(PROseq_paired, shift(PROseq_paired, 3))
+    expect_equal(sum(score(mrg_po)),
+                 sum(score(c_po)))
+    expect_equal(length(mrg_po), length(unique(c_po)))
+    expect_true(length(mrg_po) < length(c_po))
+})
+
+test_that("makeBRG will not occur after exact ranges merge", {
+    mrg_exact_brg <- mergeGRangesData(plist, makeBRG = TRUE,
+                                      exact_overlaps = TRUE, ncores = 1)
+
+    expect_true(!isBRG(mrg_exact_brg))
+})
+
+
+
+# Merge Replicates Function -----------------------------------------------
+
+ps_list <- list(A_rep1 = PROseq[seq(1, length(PROseq), 6)],
+                A_rep2 = PROseq[seq(4, length(PROseq), 6)],
+                B_rep1 = PROseq[seq(2, length(PROseq), 6)],
+                B_rep2 = PROseq[seq(5, length(PROseq), 6)],
+                C_rep1 = PROseq[seq(3, length(PROseq), 6)],
+                C_rep2 = PROseq[seq(6, length(PROseq), 6)])
+
+context("merging replicates")
+
+mrg_rep <- mergeReplicates(ps_list, ncores = 1)
+
+test_that("valid replicates merged", {
+    expect_is(mrg_rep, "list")
+    expect_identical(names(mrg_rep), c("A", "B", "C"))
+    expect_identical(sum(score(mrg_rep[[1]])),
+                     sum(score(ps_list[[1]]) + score(ps_list[[2]])))
+})
+
+test_that("rename option applied", {
+    new_names <- setNames(sapply(names(ps_list), tolower), NULL)
+    mrg_rep_rename <- mergeReplicates(ps_list, sample_names = new_names,
+                                      ncores = 1)
+    expect_identical(names(mrg_rep_rename), c("a", "b", "c"))
+
+    # with no named input
+    expect_identical(mrg_rep_rename,
+                     mergeReplicates(setNames(ps_list, NULL),
+                                     sample_names = new_names, ncores = 1))
+})
+
+test_that("error for invalid names", {
+    new_names <- sub("rep", "not", names(ps_list))
+    expect_error(mergeReplicates(ps_list, sample_names = new_names,
+                                 ncores = 1))
+})
+
+
+
 # Sampling GRanges --------------------------------------------------------
 
 context("Random subsampling GRanges data")
@@ -132,4 +236,12 @@ test_that("error when non-simple normalization", {
     norm_mix <- c(norm_1, norm_2)
 
     expect_error(subsampleGRanges(norm_mix, prop = 0.1))
+})
+
+test_that("sampling with expand ranges", {
+    pscov <- getStrandedCoverage(PROseq, ncores = 1)
+    ps_tenth_exp <- subsampleGRanges(pscov, prop = 0.1, expand_ranges = TRUE,
+                                     ncores = 1)
+    expect_equal(sum(score(ps_tenth)),
+                 sum(score(ps_tenth_exp) * width(ps_tenth_exp)))
 })

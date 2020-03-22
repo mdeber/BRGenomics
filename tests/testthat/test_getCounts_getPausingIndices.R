@@ -12,6 +12,15 @@ ps_list <- list(A_rep1 = PROseq[seq(1, length(PROseq), 6)],
                 C_rep1 = PROseq[seq(3, length(PROseq), 6)],
                 C_rep2 = PROseq[seq(6, length(PROseq), 6)])
 
+# for testing collapsed ranges (i.e. "stranded coverage" or similar)
+pscov <- getStrandedCoverage(PROseq, ncores = 1)
+
+pscov_list <- list(A_rep1 = pscov[seq(1, length(pscov), 6)],
+                   A_rep2 = pscov[seq(4, length(pscov), 6)],
+                   B_rep1 = pscov[seq(2, length(pscov), 6)],
+                   B_rep2 = pscov[seq(5, length(pscov), 6)],
+                   C_rep1 = pscov[seq(3, length(pscov), 6)],
+                   C_rep2 = pscov[seq(6, length(pscov), 6)])
 
 # getCountsByRegions ------------------------------------------------------
 
@@ -88,6 +97,88 @@ test_that("blacklisting works", {
     test_bl[2] <- 0
     expect_equivalent(blcounts, test_bl)
 })
+
+
+
+# CBR with Range Expansion ------------------------------------------------
+
+context("signal counting with range expansion")
+
+test_that("expanding ranges gives correct counts", {
+    test_counts_exp <- getCountsByRegions(pscov, txs_dm6_chr4,
+                                          expand_ranges = TRUE)
+    expect_identical(test_counts, test_counts_exp)
+})
+
+test_that("failure to expand gives wrong counts", {
+    expect_equivalent(test_counts[2], 59)
+    expect_equivalent(getCountsByRegions(pscov, txs_dm6_chr4[2]), 54)
+})
+
+test_that("melt option works for single sample", {
+    mcounts <- getCountsByRegions(PROseq, txs_dm6_chr4, melt = TRUE, ncores = 1)
+    mcountsexp <- getCountsByRegions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                     melt = TRUE, ncores = 1)
+    expect_identical(mcountsexp, mcounts)
+})
+
+pscov_rename <- pscov
+names(mcols(pscov_rename)) <- "signal"
+
+test_that("expand_ranges with alternative metadata fields", {
+    expect_message(getCountsByRegions(pscov_rename, txs_dm6_chr4,
+                                      expand_ranges = TRUE))
+    expect_equivalent(test_counts, getCountsByRegions(pscov_rename,
+                                                      txs_dm6_chr4,
+                                                      expand_ranges = TRUE,
+                                                      field = "signal"))
+})
+
+pscov_rename$posnum <- seq_along(pscov_rename)
+
+test_that("expand ranges counts over multiple metadata fields", {
+    counts_multiple <- getCountsByRegions(pscov_rename, txs_dm6_chr4,
+                                          field = c("signal", "posnum"),
+                                          expand_ranges = TRUE,
+                                          ncores = 1)
+    expect_is(counts_multiple, "data.frame")
+    expect_equivalent(counts_multiple$signal, test_counts)
+})
+
+
+countsl_exp <- getCountsByRegions(pscov_list, txs_dm6_chr4,
+                                  expand_ranges = TRUE, ncores = 1)
+
+test_that("expanded ranges counting over a list", {
+    expect_is(countsl_exp, "data.frame")
+    expect_equal(names(pscov_list), names(countsl_exp))
+    expect_equal(nrow(countsl_exp), length(txs_dm6_chr4))
+    expect_equal(sum(sapply(countsl_exp, sum)), sum(test_counts))
+
+    # with nfs
+    countsl_exp_nf <- getCountsByRegions(pscov_list, txs_dm6_chr4, NF = 1:6,
+                                         expand_ranges = TRUE, ncores = 1)
+    expect_equivalent(countsl_exp_nf, as.data.frame(Map("*", countsl_exp, 1:6)))
+})
+
+test_that("melt option works for list from expanded ranges", {
+    mcountsl_exp <- getCountsByRegions(pscov_list, txs_dm6_chr4, melt = TRUE,
+                                       expand_ranges = TRUE, ncores = 1)
+    expect_is(mcountsl_exp, "data.frame")
+    expect_equivalent(names(mcountsl_exp), c("region", "signal", "sample"))
+    expect_equivalent(subset(mcountsl_exp, sample == "B_rep1")$signal,
+                      countsl_exp[, "B_rep1"])
+})
+
+test_that("blacklisting works with expanded ranges", {
+    blcounts <- getCountsByRegions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                   blacklist = bl)
+
+    test_bl <- test_counts
+    test_bl[2] <- 0
+    expect_equivalent(blcounts, test_bl)
+})
+
 
 # getCountsByPositions ----------------------------------------------------
 
@@ -186,23 +277,27 @@ test_that("can get NA-padded counts matrix for multi-width regions", {
     expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
 })
 
+# melt:
+countsdf <- getCountsByPositions(PROseq, txs_pr, melt = TRUE)
+# melt + multiple fields:
+fieldcountsdf <- getCountsByPositions(ps_rename, txs_pr,
+                                      field = c("signal", "posnum"),
+                                      melt = TRUE, ncores = 1)
+# melt + multi-width regions:
+meltlist <- getCountsByPositions(PROseq, txs_dm6_chr4,
+                                 simplify.multi.widths = "list",
+                                 melt = TRUE)
+
 test_that("melting option works", {
-    countsdf <- getCountsByPositions(PROseq, txs_pr, melt = TRUE)
     expect_equivalent(as.vector(t(countsmat)), countsdf$signal)
     expect_equal(ncol(countsdf), 3)
 
     # for multiple fields
-    fieldcountsdf <- getCountsByPositions(ps_rename, txs_pr,
-                                          field = c("signal", "posnum"),
-                                          melt = TRUE, ncores = 1)
     expect_is(fieldcountsdf, "data.frame")
     expect_equal(ncol(fieldcountsdf), 4) # has sample names now
     expect_equivalent(unique(fieldcountsdf[,4]), c("signal", "posnum"))
 
     # for multi-width regions
-    meltlist <- getCountsByPositions(PROseq, txs_dm6_chr4,
-                                     simplify.multi.widths = "list",
-                                     melt = TRUE)
     expect_is(meltlist, "data.frame")
     expect_equal(ncol(meltlist), 3)
     expect_equivalent(unlist(countslist), meltlist[, 3])
@@ -262,6 +357,191 @@ test_that("multiwidth, blacklisting over list works", {
     blclna <- getCountsByPositions(PROseq, txs_dm6_chr4, blacklist = bl,
                                    simplify.multi.widths = "list",
                                    NA_blacklisted = TRUE)
+    expect_true(all(is.na(blclna[[2]])))
+    expect_equivalent(blcl[[1]], blclna[[1]])
+    expect_equivalent(blcl[[3]], blclna[[3]])
+})
+
+
+
+# CBP with Range Expansion ------------------------------------------------
+
+context("Counting signal at positions with expanded ranges")
+
+test_that("error if expand_ranges not set with collapsed input", {
+    expect_error(getCountsByPositions(pscov, txs_pr))
+})
+
+countsmat_exp <- getCountsByPositions(pscov, txs_pr, expand_ranges = TRUE)
+
+test_that("counts matrix correct with range expansion", {
+    expect_identical(countsmat, countsmat_exp)
+})
+
+test_that("melt option for countsmatrix with range expansion", {
+    countsmelt <- getCountsByPositions(pscov, txs_pr, expand_ranges = TRUE,
+                                       melt = TRUE)
+    expect_is(countsmelt, "data.frame")
+    expect_equal(ncol(countsmelt), 3)
+    expect_equal(length(countsmat), nrow(countsmelt))
+    expect_equivalent(as.vector(t(countsmat)), countsmelt[,3])
+})
+
+test_that("counts matrix with range expansion & multiple metadata fields", {
+    fieldcounts <- getCountsByPositions(pscov_rename, txs_pr,
+                                        field = c("signal", "posnum"),
+                                        expand_ranges = TRUE, ncores = 1)
+    expect_is(fieldcounts, "list")
+    expect_equivalent(names(fieldcounts), c("signal", "posnum"))
+    expect_is(fieldcounts[[1]], "matrix")
+    expect_is(fieldcounts[[2]], "matrix")
+    expect_equivalent(fieldcounts[[1]], countsmat)
+    # with normalization factor
+    expect_equivalent(fieldcounts[[2]] * 0.5,
+                      getCountsByPositions(pscov_rename, txs_pr,
+                                           field = c("signal", "posnum"),
+                                           expand_ranges = TRUE, NF = c(1, 0.5),
+                                           ncores = 1)[[2]])
+})
+
+test_that("counts matrix with list input & range expansion", {
+    countsl <- getCountsByPositions(pscov_list, txs_pr, expand_ranges = TRUE,
+                                    ncores = 1)
+    expect_is(countsl, "list")
+    expect_equivalent(names(countsl), names(pscov_list))
+    expect_is(countsl[[1]], "matrix")
+    expect_equivalent(dim(countsmat), dim(countsl[[1]]))
+
+    arr3d <- simplify2array(countsl)
+    expect_equivalent(apply(arr3d, 1:2, sum), countsmat)
+})
+
+test_that("with range expansion, melt list input to single dataframe", {
+    countslmelt <- getCountsByPositions(pscov_list, txs_pr,
+                                        expand_ranges = TRUE, melt = TRUE,
+                                        ncores = 1)
+    expect_is(countslmelt, "data.frame")
+    expect_equal(ncol(countslmelt), 4)
+    expect_equivalent(unique(countslmelt[,4]), names(pscov_list))
+})
+
+test_that("expanded ranges, error if multi-width is not explicit", {
+    expect_error(getCountsByPositions(pscov, txs_dm6_chr4,
+                                      expand_ranges = TRUE))
+})
+
+countslist_exp <- getCountsByPositions(pscov, txs_dm6_chr4,
+                                       expand_ranges = TRUE,
+                                       simplify.multi.widths = "list")
+
+test_that("can get list from multi-width counts matrix", {
+    expect_identical(countslist, countslist_exp)
+
+    # with normalization factor
+    expect_equivalent(countslist_exp[[1]] * 0.5,
+                      getCountsByPositions(pscov, txs_dm6_chr4,
+                                           expand_ranges = TRUE,
+                                           simplify.multi.widths = "list",
+                                           NF = 0.5)[[1]])
+})
+
+test_that("expand ranges, get 0-padded counts matrix for multi-width", {
+    padmat <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                   simplify.multi.widths = "pad 0")
+    expect_is(padmat, "matrix")
+    expect_equivalent(dim(padmat),
+                      c(length(txs_dm6_chr4), max(width(txs_dm6_chr4))))
+    expect_equivalent(sapply(countslist, sum), rowSums(padmat))
+})
+
+test_that("expand ranges, NA-padded counts matrix for multi-width", {
+    padmat <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                   simplify.multi.widths = "pad NA")
+    expect_is(padmat, "matrix")
+    expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
+})
+
+test_that("expand_ranges, melting option works", {
+    expect_identical(countsdf, getCountsByPositions(pscov, txs_pr,
+                                                    expand_ranges = TRUE,
+                                                    melt = TRUE))
+    # for multiple fields
+    fieldcountsdfexp <- getCountsByPositions(pscov_rename, txs_pr,
+                                             field = c("signal", "posnum"),
+                                             expand_ranges = TRUE, melt = TRUE,
+                                             ncores = 1)
+    expect_is(fieldcountsdfexp, "data.frame")
+    expect_equal(ncol(fieldcountsdf), 4) # has sample names now
+    expect_equivalent(unique(fieldcountsdfexp[,4]), c("signal", "posnum"))
+    expect_identical(subset(fieldcountsdf, sample == "signal")$signal,
+                     subset(fieldcountsdfexp, sample == "signal")$signal)
+
+    # for multi-width regions
+    expect_identical(meltlist,
+                     getCountsByPositions(pscov, txs_dm6_chr4,
+                                     simplify.multi.widths = "list",
+                                     expand_ranges = TRUE, melt = TRUE))
+})
+
+test_that("expand ranges, error on incorrect simplify argument", {
+    expect_error(getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                      simplify.multi.widths = "notright"))
+
+    # can't set argument if not multiwidth (not my ideal...)
+    expect_error(getCountsByPositions(pscov, txs_pr, epand_ranges = TRUE,
+                                      simplify.multi.widths = "list"))
+})
+
+test_that("expand ranges, error on empty regions", {
+    expect_error(getCountsByPositions(pscov, txs_pr[0], expand_ranges = TRUE,
+                                      ncores = 1))
+})
+
+test_that("expand ranges, arbitrary binning operations", {
+    binsums <- getCountsByPositions(pscov, txs_pr, binsize = 10, FUN = sum,
+                                    expand_ranges = TRUE)
+    expect_is(binsums, "matrix")
+    expect_equivalent(rowSums(binsums), rowSums(countsmat))
+    expect_equivalent(dim(binsums), c(length(txs_dm6_chr4), 10))
+
+    binmeans <- getCountsByPositions(pscov, txs_pr, binsize = 10, FUN = mean,
+                                     expand_ranges = TRUE)
+    expect_is(binmeans, "matrix")
+    expect_equivalent(which(binsums == 0), which(binmeans == 0))
+    expect_true(sum(binsums) != sum(binmeans))
+
+    binmedians <- getCountsByPositions(pscov, txs_pr, binsize = 10,
+                                       FUN = function(x) quantile(x, 0.5),
+                                       expand_ranges = TRUE)
+    expect_is(binmedians, "matrix")
+    expect_equivalent(dim(binmedians), dim(binsums))
+    expect_false(all(rowSums(binmedians) == 0))
+    expect_false(all((binmedians == 0) == (binmeans == 0)))
+})
+
+test_that("expand ranges with blacklisting", {
+    blcbp <- getCountsByPositions(pscov, txs_pr, expand_ranges = TRUE,
+                                  blacklist = bl)
+
+    test_bl <- countsmat
+    test_bl[2,] <- 0
+    expect_equivalent(blcbp, test_bl)
+
+    blcbpna <- getCountsByPositions(pscov, txs_pr, expand_ranges = TRUE,
+                                    blacklist = bl, NA_blacklisted = TRUE)
+    expect_true(all(is.na(blcbpna[2,])))
+})
+
+
+test_that("expand ranges + multiwidth, blacklisting over list works", {
+    blcl <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                 blacklist = bl, simplify.multi.widths = "list")
+    expect_is(blcl, "list")
+    expect_true(all(blcl[[2]] == 0))
+
+    blclna <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+                                   blacklist = bl, NA_blacklisted = TRUE,
+                                   simplify.multi.widths = "list")
     expect_true(all(is.na(blclna[[2]])))
     expect_equivalent(blcl[[1]], blclna[[1]])
     expect_equivalent(blcl[[3]], blclna[[3]])

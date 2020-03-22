@@ -5,8 +5,12 @@ library(BRGenomics)
 
 data("PROseq_paired")
 paired_3p_ends <- resize(PROseq_paired, 1, fix = "end")
-paired_3p_cov <- getStrandedCoverage(paired_3p_ends, ncores = 1)
 
+# for testing lists
+paired_5p_ends <- resize(PROseq_paired, 1, fix = "start")
+plist <- list(p3 = paired_3p_ends, p5 = paired_5p_ends)
+
+paired_3p_cov <- getStrandedCoverage(paired_3p_ends, ncores = 1)
 
 test_that("Stranded coverage makes stranded GRanges", {
     expect_is(paired_3p_cov, "GRanges")
@@ -58,6 +62,14 @@ test_that("error on invalid field", {
     expect_error(getStrandedCoverage(paired_3p_ends, "wrongname", ncores = 1))
 })
 
+plistcov <- getStrandedCoverage(plist, ncores = 1)
+
+test_that("stranded coverage works over lists", {
+    expect_is(plistcov, "list")
+    expect_equal(length(plistcov), 2)
+    expect_identical(names(plistcov), names(plist))
+    expect_identical(plistcov$p3, paired_3p_cov)
+})
 
 # Test makeGRangesBRG -----------------------------------------------------
 
@@ -84,4 +96,11 @@ test_that("Can make single-width GRanges", {
 test_that("BPresGRanges preserves input information", {
     expect_equal(length(paired_3p_bpres), sum(width(paired_3p_cov)))
     expect_equal(sum_3pcov_by_width, sum(score(paired_3p_bpres)))
+})
+
+test_that("makeBRG for a list", {
+    plist_brg <- makeGRangesBRG(plistcov, ncores = 1)
+    expect_is(plist_brg, "list")
+    expect_identical(names(plist_brg), names(plistcov))
+    expect_identical(plist_brg[[1]], paired_3p_bpres)
 })

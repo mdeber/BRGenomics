@@ -44,7 +44,7 @@ for each dimension of input data given.}
 \item{use_bin_numbers}{A logical indicating if ordinal bin numbers should be
 returned (\code{TRUE}), or if in place of the bin number, the center value
 of that bin should be returned. For instance, if the first bin encompasses
-data from 0 to 4, with \code{use_bin_numbers = TRUE}, a 1 is returned, but
+data from 1 to 3, with \code{use_bin_numbers = TRUE}, a 1 is returned, but
 when \code{FALSE}, 2 is returned.}
 
 \item{ncores}{Number of cores to use for computations.}
@@ -91,7 +91,9 @@ These functions take in data along 1 or more dimensions, and for
 
   \code{binNdimensions} returns the bin numbers themselves. The output
   dataframe has the same dimensions as the input \code{dims.df}, but each
-  input data has been replaced by its bin number (an integer).
+  input data has been replaced by its bin number (an integer). If
+  code{use_bin_numbers = FALSE}, the center points of the bins are returned
+  instead of the bin numbers.
 
   \code{aggregateByNdimensionalBins} summarizes some input data \code{x} in
   each combination of bins, i.e. in each n-dimensional bin. Each row of the
@@ -150,7 +152,7 @@ bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df,
 
 bin2d_cps[1:6, ]
 
-subset(bin2d_cps, is.finite(value))[1:6, ]
+subset(bin2d_cps, is.finite(counts_cps))[1:6, ]
 
 #--------------------------------------------------#
 # get median cps reads for those bins
@@ -161,7 +163,7 @@ bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
 
 bin2d_cps_med[1:6, ]
 
-subset(bin2d_cps_med, is.finite(value))[1:6, ]
+subset(bin2d_cps_med, is.finite(counts_cps))[1:6, ]
 }
 \author{
 Mike DeBerardine

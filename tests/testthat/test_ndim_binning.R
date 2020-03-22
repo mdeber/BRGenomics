@@ -1,6 +1,9 @@
 context("N-dimensional binning")
 library(BRGenomics)
 
+
+# Test binning ------------------------------------------------------------
+
 data("PROseq")
 data("txs_dm6_chr4")
 
@@ -16,8 +19,9 @@ counts_gb <- counts_gb[idx]
 
 df <- data.frame(pr = counts_pr, gb = counts_gb)
 
+bin_deciles <- binNdimensions(df, nbins = 10, ncores = 1)
+
 test_that("names given in input are used in output", {
-    bin_deciles <- binNdimensions(df, nbins = 10, ncores = 1)
     expect_equivalent(names(bin_deciles), c("bin.pr", "bin.gb"))
 })
 
@@ -31,6 +35,29 @@ test_that("can use different nbins for different dimensions", {
     bin_3d <- binNdimensions(df3, nbins = c(10, 15, 20), ncores = 1)
     expect_is(bin_3d, "data.frame")
     expect_equivalent(sapply(bin_3d, max), c(10, 15, 21))
+})
+
+test_that("use bin centers, not numbers", {
+    bin_deciles <- binNdimensions(df, nbins = 10, ncores = 1)
+    bindec_centers <- binNdimensions(df, nbins = 10, use_bin_numbers = FALSE,
+                                     ncores = 1)
+
+    # remake bins in test, and use bin_deciles to index them
+    # check for bin.pr
+    bins.pr <- seq(min(df$pr), max(df$pr), length.out = 10+1) # make bins
+    centers.pr <- sapply(1:( length(bins.pr)-1 ),
+                         function(i) median(bins.pr[i:(i+1)]))
+
+    expect_equivalent(bindec_centers$bin.pr,
+                      centers.pr[bin_deciles$bin.pr])
+
+    # check for bin.gb
+    bins.gb <- seq(min(df$gb), max(df$gb), length.out = 10+1) # make bins
+    centers.gb <- sapply(1:( length(bins.gb)-1 ),
+                         function(i) median(bins.gb[i:(i+1)]))
+
+    expect_equivalent(bindec_centers$bin.gb,
+                      centers.gb[bin_deciles$bin.gb])
 })
 
 
@@ -47,8 +74,8 @@ test_that("can aggregate in ndimensional bins", {
 
     # test using x = column name
     dfplus <- df
-    dfplus$agvar <- seq_len(nrow(df))
-    mbinsp <- aggregateByNdimensionalBins("agvar", dfplus, ncores = 1)
+    dfplus$value <- seq_len(nrow(df))
+    mbinsp <- aggregateByNdimensionalBins("value", dfplus, ncores = 1)
     expect_identical(mean_bins, mbinsp)
 })
 

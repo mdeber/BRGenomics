@@ -49,7 +49,9 @@ the regions in \code{regions.gr}. If left as \code{NULL}, indices of
 \item{expand_ranges}{Logical indicating if ranges in \code{dataset.gr} should
 be treated as descriptions of single molecules (\code{FALSE}), or if ranges
 should be treated as representing multiple adjacent positions with the same
-signal (\code{TRUE}). See details below.}
+signal (\code{TRUE}). If the ranges in \code{dataset.gr} do not all have a
+ width of 1, this option has a substantial effect on the results
+returned. (See details).}
 
 \item{ncores}{Multiple cores will only be used if \code{dataset.gr} is a list
 of multiple datasets, or if \code{length(field) > 1}.}
@@ -102,9 +104,9 @@ overlapping each region, while \code{expand_regions = TRUE} will calculate
   each contain a signal of 2.
 
   If the data truly represents basepair-resolution coverage, the "coverage
-  signal" is equivalent to readcounts. However, users should take caution if
-  the data is whole-read coverage, as the "coverage signal" is determined by
-  both the read counts as well as read lengths.
+  signal" is equivalent to readcounts. However, users should consider how
+  they interpret results from whole-read coverage, as the "coverage signal"
+  is determined by both the read counts as well as read lengths.
 }
 
 \examples{
