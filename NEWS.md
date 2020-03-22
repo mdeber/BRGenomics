@@ -1,3 +1,10 @@
+## BRGenomics 0.99.25
+
+* Bug fixes with `expand_ranges` arguments affecting `getCountsByRegion()`, `subsampleGRanges()`, and `getSpikeInNFs()`
+* Expanded testing, particularly for `expand_ranges` arguments and `import_bam()`
+* Added options in `mergeReplicates()`
+* Various small doc updates and minor internal changes
+
 ## BRGenomics 0.99.23
 
 * Added support for non-basepair-resolution GRanges throughout, via the `expand_ranges` argument
@@ -23,15 +30,15 @@
 
 ## BRGenomics 0.99.10
 
-* Code modifications to pass test builds on Windows:
+* Code modifications to pass Bioconductor test builds on Windows:
     + Make all examples and tests single core
     + Internally (not exported) redefine mcMap (current implementation in package parallel needs to be modified)
     + In tests and examples, test if on Windows before attempting any bigWig file import
 
-## BRGenomics 0.99.0 (Bioconductor submission)
+## BRGenomics 0.99.0
 
-* For Bioconductor version requirements:
-    + Change package versioning scheme
+* Changes for Bioconductor submission:
+    + Move to package versioning 0.99.x
     + Update R requirement to version 4.0
     + Add new branch `R3` to allow users to install under R version >=3.5
 * Various minor formatting changes to codebase

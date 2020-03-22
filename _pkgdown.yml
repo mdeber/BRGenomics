@@ -1,5 +1,8 @@
 destination: ../mdeber.github.io/
 
+template:
+  params:
+    bootswatch: flatly
+
 toc:
   depth: 1
-

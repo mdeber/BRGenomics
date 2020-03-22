@@ -234,7 +234,6 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 }
 
 
-
 # For coverage-signal-counting methods:
 # pintersect(findOverlapPairs) will both make a hits-like object, and
 #   trim the data ranges down to not "overhang" the hit region;
@@ -243,6 +242,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #   multiple regions and be trimmed in multiple ways)
 # since there's no "revmap" option in findOverlapPairs, we set the names in
 #   pairs@second correspond to relevant index in regions.gr
+
 
 #' @importFrom parallel detectCores mcMap
 .getCoverageByRegions <- function(dataset.gr, regions.gr, field, NF, blacklist,
@@ -661,7 +661,6 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #' @rdname getCountsByPositions
 #' @importFrom parallel mcMap
 #' @importFrom GenomicRanges GPos findOverlaps
-#' @export
 .getCoverageByPositions <- function(dataset.gr, regions.gr, binsize, FUN,
                                     simplify.multi.widths, field, NF, blacklist,
                                     NA_blacklisted, melt, ncores) {
