@@ -1,4 +1,4 @@
-## BRGenomics 0.99.3
+## BRGenomics 0.99.30
 
 * Change all `ncores` options to default to `getOption("mc.cores", 2L)`
 * Rename n-dimensional binning functions `aggregateByNdimBins()` and 

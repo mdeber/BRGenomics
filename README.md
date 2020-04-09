@@ -21,7 +21,7 @@ installed directly from Bioconductor:
 BiocManager::install("BRGenomics")
 ```
 
-Alternatively, the latest development version can be installed from  
+Alternatively, the latest development version can be installed from
 [GitHub](https://github.com/mdeber/BRGenomics):
 
 ``` r
@@ -30,8 +30,8 @@ remotes::install_github("mdeber/BRGenomics@R3")
 ```
 
 *BRGenomics (and Bioconductor 3.11) require R version 4.0 (release April
-24, 2020). Installing the `R3` branch, as shown above, is required to
-install under R \>= 3.5*
+24, 2020). Installing the `R3` branch, as shown above, can be installed
+under R \>= 3.5*
 
 If you install the development version from Github and you’re using
 Windows, [Rtools for
@@ -52,7 +52,11 @@ data<sup>\[1\]</sup>.
 
 ## To Do
 
-  - Convert method dispatch to S4 generics
+  - Convert several functions into S4 generics
+      - *Note that in future versions, the names of the first argument
+        of certain functions may change, but their order/utility will
+        not. I.e., functions with with the first argument `dataset.gr`
+        may become `x`*
   - Formalize support for `GRangesList` objects (progress underway)
   - Write methods for `BigWigFile`/`BigWigFileList` objects (to avoid
     loading data into memory)

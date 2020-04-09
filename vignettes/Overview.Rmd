@@ -17,7 +17,7 @@ abstract: |
   analysis of high-throughput sequencing data. The included functions are geared 
   toward analyzing basepair-resolution sequencing data, the properties of which 
   are exploited to increase performance and user-friendliness. We leverage 
-  standard Bioconductor methods and classes to maximize compatability with its 
+  standard Bioconductor methods and classes to maximize compatibility with its 
   rich ecoystem of bioinformatics tools, and we aim to make BRGenomics 
   sufficient for most post-alignment data processing. Common data processing and
   analytical steps are turned into fast-running one-liners that can be 
@@ -44,7 +44,7 @@ fast-running one-liners
 * Exploit the properties of basepair-resolution data to optimize performance and 
 increase user-friendliness
 * Use process forking to make use of multicore processors 
-* Maximize compatability with Bioconductor's rich ecosystem of analysis 
+* Maximize compatibility with Bioconductor's rich ecosystem of analysis 
 software, in addition to leveraging the traditional strengths of R in statistics 
 and data visualization
 * Fully replace the `bigWig` R package

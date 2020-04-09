@@ -42,7 +42,7 @@ ps_reads
 ```
 
 By default, `import_bam()` combines identical reads into the same range, and 
-the `score` metadata column indicatea the number of perfectly-overlapping 
+the `score` metadata column indicates the number of perfectly-overlapping 
 alignments. This means that the total number of alignments (reads) is equal to 
 the sum of the score:
 

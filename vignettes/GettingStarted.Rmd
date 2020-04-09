@@ -52,10 +52,10 @@ how many cores your processor has, run `parallel::detectCores()`.
 
 While performance can be memory constrained in some cases (and thus actually 
 hampered by excessive parallelization), substantial performance benefits can be
-acheived by maximizing parallelization. 
+achieved by maximizing parallelization. 
 
 However, parallel processing is not available on Windows. To maintain 
-compatability, all code in this vignette as well as the example code in the 
+compatibility, all code in this vignette as well as the example code in the 
 documentation is to use a single core, i.e. `ncores = 1`.
   
 # Included Datasets
@@ -107,7 +107,7 @@ with no filtering of any kind.
 For users who are unfamiliar with GRanges objects, this section demonstrates a 
 number of basic operations. 
 
-A quick summary of the general strcture: Each element of a GRanges object is 
+A quick summary of the general structure: Each element of a GRanges object is 
 called a "range". As you can see above, each range consists of several 
 components: `seqnames`, `ranges`, and `strand`. These essential attributes are 
 all found to the left of the vertical divider above; everything to the right of 
@@ -115,7 +115,7 @@ that divider is an optional, metadata attribute.
 
 The core attributes can be accessed using the functions `seqnames()`, 
 `ranges()`, and `strand()`. All metadata can be accessed using `mcols()`, and 
-individual columns are accessable with the `$` operator. The only reserved 
+individual columns are accessible with the `$` operator. The only reserved 
 metadata column is the `score` column, which is just like any other metadata 
 column, except that users can use the `score()` function to assess it.
 
@@ -156,7 +156,7 @@ txs_dm6_chr4[2]
 
 \ 
 
-Select 4 transcipts:
+Select 4 transcripts:
 
 ```{r}
 tx4 <- txs_dm6_chr4[c(1, 10, 200, 300)]

@@ -75,7 +75,7 @@ We can also remove the spike-in reads from our data:
 removeSpikeInReads(grl[1:2], si_pattern = "spike", ncores = 1)
 ```
 
-And if we wanted to isolate the spike-in reads, there is an analagous 
+And if we wanted to isolate the spike-in reads, there is an analogous 
 `getSpikeInReads()` function.
 
 # The Spike-in Normalization Factor
@@ -172,7 +172,7 @@ getSpikeInNFs(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 1)
 By default, normalization factors utilize __batch normalization__, such that in 
 any replicate (identified by the characters following "rep" in the sample 
 names), the negative control is RPM normalized, and the other conditions are 
-normlized to the within-replicate negative control (see the documentation for 
+normalized to the within-replicate negative control (see the documentation for 
 further details).
 
 Currently, batch normalization requires the sample names end with strings 
@@ -189,7 +189,7 @@ spike-in reads, and normalize the readcounts:
 spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1", ncores = 1)
 ```
 
-# Normalization by Subsampling 
+# Normalization by Sub-sampling 
 
 ## Rationale
 
@@ -236,14 +236,14 @@ sum(score(sreads.gene_i))
 plot(x = 1:width(gene_i), 
      y = getCountsByPositions(sreads.gene_i, gene_i),
      type = "h", ylim = c(0, 20),
-     main = "PRO-seq (downsampled)",
-     xlab = "Distance from TSS", ylab = "Downsampled PRO-seq Reads")
+     main = "PRO-seq (down-sampled)",
+     xlab = "Distance from TSS", ylab = "Down-sampled PRO-seq Reads")
 
 plot(x = 1:width(gene_i), 
      y = getCountsByPositions(reads.gene_i, gene_i),
      type = "h",  ylim = c(0, 20),
-     main = "PRO-seq (downscaled)", 
-     xlab = "Distance from TSS",  ylab = "Downscaled PRO-seq Reads")
+     main = "PRO-seq (down-scaled)", 
+     xlab = "Distance from TSS",  ylab = "Down-scaled PRO-seq Reads")
 ```
 
 The two plots above come from the same data, and contain the same quantity of 
@@ -267,7 +267,7 @@ condition. Having equivalent sequencing depth across those two conditions is
 effectively a technical artifact, and down-scaling the signal by multiplication 
 can cause the visual challenges observed above.
 
-## Subsampling for Normalization
+## Sub-sampling for Normalization
 
 To address the above concerns, we've included a function `subsampleBySpikeIn()` 
 to randomly sample reads to match the normalized signal proportions between 
@@ -286,5 +286,5 @@ getSpikeInNFs(grl, si_pattern = "spike", method = "SNR", batch_norm = FALSE,
 subsampleBySpikeIn(grl, si_pattern = "spike", batch_norm = FALSE, ncores = 1)
 ```
 
-Normalization by subsampling sacrifices information to reduce biases across 
+Normalization by sub-sampling sacrifices information to reduce biases across 
 datasets.

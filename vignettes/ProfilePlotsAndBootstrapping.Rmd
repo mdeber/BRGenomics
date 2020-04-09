@@ -48,13 +48,13 @@ plot(x = 1:ncol(countmatrix_pr),
 
 ## Drawbacks
 
-One drawback of using the arithmatic mean is that means are not robust to 
+One drawback of using the arithmetic mean is that means are not robust to 
 outliers. In other words, the mean signal at any position is liable to be 
 determined by a small number of highly influential points. This is especially 
 problematic for high dynamic range data like PRO-seq.
 
 It's common to see this issue addressed through the use medians/quantiles in 
-place of arithmatic means. However, observe what happens as we plot the median 
+place of arithmetic means. However, observe what happens as we plot the median 
 signal across our gene list using several different gene-filtering thresholds:
 
 ```{r, fig.height=7, fig.width=6}
@@ -81,7 +81,7 @@ your data. However, it's important to keep in mind how unexpressed genes can
 affect the median. A common rule of thumb is that a given cell is only apt to 
 express around half of its genes; if that holds true, the median of an 
 unfiltered genelist will be close to zero, and could be insensitive to changes 
-occuring at expressed genes. 
+occurring at expressed genes. 
 
 # The Rationale for Bootstrapping 
 
@@ -97,14 +97,14 @@ for each position is the median of the sampled means.
 One feature of bootstrapping is that it is robust to outliers. But more than 
 that, the a bootstrapped mean provides an _expectation_ for what the mean signal 
 would be for any arbitrary group of genes, and associated with that expectation 
-is a measure of uncertainty. By taking quantiles of the subsampled means _other 
+is a measure of uncertainty. By taking quantiles of the sub-sampled means _other 
 than_ the median (the expected value), we can estimate the extent to which the 
 mean varies across arbitrary groups of genes. 
 
-For example, the 75th percentile of the subsampled means is a number for which, 
+For example, the 75th percentile of the sub-sampled means is a number for which, 
 25% of the time, we calculated a higher mean. Similarly, a 90% confidence 
 interval about the bootstrapped mean encompasses all values between the 5th and 
-95th percentiles of the subsampled means.
+95th percentiles of the sub-sampled means.
 
 # Generating and Plotting Metaprofiles
 
@@ -189,6 +189,6 @@ ggplot(bm_list.df, aes(x, mean, color = sample.name)) +
 ```
 
 _Bear in mind that the above confidence intervals are ignoring 70% of the 
-subsampling experiments, which is excessive. More reasonable parameters would 
+sub-sampling experiments, which is excessive. More reasonable parameters would 
 reveal how lacking this data is, i.e. how un-confident we are that there is a 
 robust difference in the mean signal at various positions._ 
