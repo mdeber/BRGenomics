@@ -1,0 +1,130 @@
+---
+title: "DESeq2 with Global Perturbations"
+package: BRGenomics
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  BiocStyle::pdf_document:
+    toc: true
+vignette: |
+  %\VignetteIndexEntry{DESeq2 with Global Perturbations}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+# Using DESeq2 for Pairwise Differential Expression
+
+## Rationale 
+
+DESeq2's default treatment of data relies on the assumption that genewise 
+estimates of dispersion are largely unchanged across samples. While this 
+assumption holds for a typical RNA-seq data, it can be violated if there are 
+samples within the `DESeqDataSet` object for which there are meaningful signal 
+changes across a majority of regions of interest. 
+
+The BRGenomics functions `getDESeqDataSet()` and `getDESeqResults()` are simple 
+and flexible wrappers for making pairwise comparisons between individual 
+samples, without relying on the assumption of globally-similar dispersion 
+estimates. In particular, `getDESeqResults()` follows the logic that the 
+presence of a dataset $X$ within the `DESeqDataSet` object will not affect the 
+comparison of datasets $Y$ and $Z$.
+
+While the intuition above is appealing, users should note that if the 
+globally-similar dispersions assumption _does_ hold, then DESeq2's default 
+behavior should be more sensitive in its estimates of genewise dispersion. In 
+this case, users can still take advantage of the convenience of the BRGenomics 
+function `getDESeqDataSet()`, but they should subsequently call 
+`DESeq2::DESeq()` and `DESeq2::results()` directly.
+
+If the globally-similar dispersions assumption is violated, but something beyond 
+simple pairwise comparisons is desired (e.g. group comparisons or additional 
+model terms), we note that, with some prying, DESeq2 can be used without "blind 
+dispersion estimation" (see the DESeq2 manual).
+
+## Formatting Data for DESeq2
+
+Just like the functions that generate batch-normalized spike-in normalization 
+factors, the DESeq-oriented functions require that the names of the input 
+datasets end in `"rep1"`, `"rep2"`, etc. 
+
+Let's first make a toy list of multiple datasets to compare:
+
+```{r, message = FALSE}
+library(BRGenomics)
+data("PROseq")
+```
+
+```{r}
+ps_list <- lapply(1:6, function(i) PROseq[seq(i, length(PROseq), 6)])
+names(ps_list) <- c("A_rep1", "A_rep2", 
+                    "B_rep1", "B_rep2",
+                    "C_rep1", "C_rep2")
+```
+
+```{r}
+ps_list[1:2]
+names(ps_list)
+```
+
+As you can see, the names all end in "repX", where X indicates the replicate. 
+Replicates will be grouped by anything that follows "rep". If the sample names 
+do not conform to this standard, the `sample_names` argument can be used to 
+rename the samples within the call to `getDESeqDataSet()`.
+
+```{r}
+data("txs_dm6_chr4")
+```
+
+```{r}
+dds <- getDESeqDataSet(ps_list, txs_dm6_chr4,
+                       gene_names = txs_dm6_chr4$gene_id,
+                       ncores = 1)
+dds
+```
+
+Notice that the `dim` attribute of the `DESeqDataSet` object is `c(111, 6)`. 
+There are 6 samples, but `length(txs_dm6_chr4)` is not 111. This is because we 
+provided gene names to `getDESeqDataSet()`, which were non-unique. The feature 
+being exploited here is for use with __discontinuous gene regions__, _not for 
+multiple overlapping transcript isoforms_. 
+
+---
+
+__By default, `getDESeqDataSet()` will combine counts across all ranges 
+belonging to a gene, but if they overlap, they will be counted twice. For 
+addressing issues related to overlaps, see the `reduceByGene()` and 
+`intersectByGene()` functions.__
+
+---
+
+We could have added normalization factors, which DESeq2 calls "size factors", in 
+the call to `getDESeqDataSet()`, or we can supply them to `getDESeqResults()` 
+below. (Supplying them twice will overwrite the previous size factors). 
+
+_Important note on normalization factors:_ DESeq2 "size factors" are the 
+_inverse_ of BRGenomics normalization factors. So if you calculate normalization 
+factors with `NF <- getSpikeInNFs(...)`, set `sizeFactors <- 1/NF`.
+
+## Getting DESeq2 Results
+
+Generating DESeq2 results is simple:
+
+```{r}
+getDESeqResults(dds, contrast.numer = "B", contrast.denom = "A",
+                quiet = TRUE, ncores = 1)
+```
+
+We can also make multiple pairwise-comparisons by ignoring the `contrast.numer` 
+and `contrast.denom` arguments, and instead using the `comparisons` argument. 
+The resulting list of results is named according to the comparisons:
+
+```{r}
+comparison_list <- list(c("B", "A"), 
+                        c("C", "A"),
+                        c("C", "B"))
+dsres <- getDESeqResults(dds, comparisons = comparison_list,
+                         quiet = TRUE, ncores = 1)
+names(dsres)
+dsres$C_vs_B
+```

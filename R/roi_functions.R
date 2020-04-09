@@ -79,8 +79,8 @@ genebodies <- function(genelist, start = 300, end = -300,
                        fix.start = "start", fix.end = "end",
                        min.window = 0) {
 
-    if (!all(c(fix.start, fix.end) %in% c("start", "end")))
-        stop("fix.start and fix.end must be 'start' or 'end'")
+    fix.start <- match.arg(fix.start, c("start", "end", "center"))
+    fix.end <- match.arg(fix.end, c("end", "start", "center"))
 
     if (fix.start == "end" & fix.end == "start")
         stop("cannot have fix.end = start when fix.start = end")
@@ -88,7 +88,7 @@ genebodies <- function(genelist, start = 300, end = -300,
     if ((fix.start == fix.end) & (end <= start))
         stop("If fix.end = fix.start, end must be greater than start")
 
-    if (any(as.character(strand(genelist)) == "*")) {
+    if ("*" %in% levels(droplevels(strand(genelist)))) {
         warning("Unstranded ranges were found and removed from genelist")
         genelist <- subset(genelist, strand != "*")
     }

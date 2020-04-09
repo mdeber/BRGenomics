@@ -16,7 +16,7 @@ getCountsByPositions(
   NA_blacklisted = FALSE,
   melt = FALSE,
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{
@@ -136,7 +136,8 @@ countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
 round(countsmat[10:15, ], 1)
 }
 \seealso{
-\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
+\code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}},
+  \code{\link[BRGenomics:bootstrap-signal-by-position]{metaSubsample}}
 }
 \author{
 Mike DeBerardine

@@ -13,7 +13,7 @@ getSpikeInCounts(
   field = "score",
   sample_names = NULL,
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
 removeSpikeInReads(
@@ -21,7 +21,7 @@ removeSpikeInReads(
   si_pattern = NULL,
   si_names = NULL,
   field = "score",
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
 getSpikeInReads(
@@ -29,7 +29,7 @@ getSpikeInReads(
   si_pattern = NULL,
   si_names = NULL,
   field = "score",
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{

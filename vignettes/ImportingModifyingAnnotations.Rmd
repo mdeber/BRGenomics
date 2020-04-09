@@ -1,0 +1,171 @@
+---
+title: "Importing & Modifying Annotations"
+package: BRGenomics
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  BiocStyle::pdf_document:
+    toc: true
+vignette: |
+  %\VignetteIndexEntry{Importing and Modifying Annotations}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+# Importing Annotations with rtracklayer
+
+Importing genomics files is accomplished using the `rtracklayer` package, which 
+contains a variety of functions and options for importing and exporting.
+
+```{r, eval = FALSE}
+# import bed file
+genelist <- import.bed("~/data/genelists/genes.bed")
+
+# import gff
+genelist <- import.gff("~/data/genelists/genes.gff")
+
+# export a bed file after modifying
+export.bed(genelist, "~/data/genelists/filtered_genes.bed")
+```
+
+# Defining Regions Using the genebodies Function
+
+One of the more useful `GenomicRanges` functions is the `promoters()` function, 
+which returns ranges centered on the strand-specific start of the input ranges:
+
+```{r, message = FALSE}
+library(BRGenomics)
+```
+
+```{r}
+data("txs_dm6_chr4")
+tx4 <- txs_dm6_chr4[c(1, 10, 200, 300)]
+tx4
+```
+
+```{r}
+tx4_pr <- promoters(tx4, upstream = 50, downstream = 100)
+tx4_pr
+width(tx4_pr)
+```
+
+BRGenomics ships with a more flexible alternative function called 
+`genebodies()`. While `promoters()` has the arguments `upstream` and 
+`downstream`, which take only positive values, the `genebodies()` function uses 
+`start` and `end` arguments that can be positive or negative, and arguments 
+`fix.start` and `fix.end` for determining whether to define the positions in 
+relation to the (strand-specific) beginning or ends of genes.
+
+Below, we demonstrate several uses of the `genebodies()` function, using a list 
+of transcripts which start at a transcription start site (TSS) and end at a 
+cleavage and polyadenylation site (CPS).
+
+---
+
+Original regions:
+
+```{r}
+tx4
+```
+
+\ 
+
+Genebody regions from 300 bp downstream of the TSS to 300 bp upstream of the 
+CPS:
+
+```{r}
+genebodies(tx4, start = 300, end = -300)
+```
+
+By default, `fix.start = "start"` and `fix.end = "end"`. But we can change 
+either of them to define ranges based solely on the beginnings or ends of the
+input regions.
+
+Get promoter regions from 50 bp upstream to 100 bp downstream of the TSS:
+
+```{r}
+genebodies(tx4, -50, 100, fix.end = "start")
+```
+
+\ 
+
+Regions from 100 bp upstream of to 50 bp upstream of the TSS:
+
+```{r}
+genebodies(tx4, -100, -50, fix.end = "start")
+```
+
+\ 
+
+Regions from 1kb upstream of the CPS to 1kb downstream of the CPS
+
+```{r}
+genebodies(tx4, -1000, 1000, fix.start = "end")
+```
+
+\ 
+
+Regions within the first 10kb downstream of the CPS:
+
+```{r}
+genebodies(tx4, 0, 10000, fix.start = "end")
+```
+
+\ 
+
+# Modify-By-Gene
+
+The `reduceByGene()` and `intersectByGene()` are two other useful functions, 
+which perform two common tasks very efficiently.
+
+## reduceByGene
+
+`reduceByGene()` takes all ranges that share the same gene name (e.g. different
+transcript isoforms) and combines them such that all positions are represented.
+
+```{r}
+txs <- txs_dm6_chr4[order(txs_dm6_chr4$gene_id)] # sort by gene_id
+txs[1:10]
+```
+
+```{r}
+reduceByGene(txs, gene_names = txs$gene_id)
+```
+
+By default, the gene names are maintained as the names of the rows (ranges) in
+the output. To set them into metadata again, we could run:
+
+```{r}
+txs_redux <- reduceByGene(txs, gene_names = txs$gene_id)
+txs_redux$gene_id <- names(txs_redux)
+names(txs_redux) <- NULL
+txs_redux
+```
+
+Note that `reduceByGene()` is not guaranteed to produce a single range per 
+gene, but will produce the fewest number of ranges required to represent all 
+input positions.
+
+Also note that while the output ranges for a given gene are disjoint, it is 
+possible for ranges from different genes to overlap one another.
+
+To make all ranges disjoint (no position overlapped more than once), set
+`disjoin = TRUE`.
+
+## intersectByGene
+
+While `reduceByGene()` creates a comprehensive representation of all input 
+ranges (e.g. a "union" of the set of input ranges), `intersectByGene()` outputs 
+only the consensus region, i.e. the region that is shared across all the ranges 
+of a particular gene.
+
+```{r}
+txs[1:10]
+txs_insxt <- intersectByGene(txs, gene_names = txs$gene_id)
+txs_insxt[order(names(txs_insxt))]
+```
+
+Unlike `reduceByGene()`, `intersectByGene()` is guaranteed to return no more 
+than 1 range per gene. However, genes for which no consensus is possible (i.e. 
+no single range can overlap every input range) are dropped from the genelist.

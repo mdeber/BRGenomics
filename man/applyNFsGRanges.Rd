@@ -4,7 +4,12 @@
 \alias{applyNFsGRanges}
 \title{Apply normalization factors to GRanges object}
 \usage{
-applyNFsGRanges(dataset.gr, NF, field = "score", ncores = detectCores())
+applyNFsGRanges(
+  dataset.gr,
+  NF,
+  field = "score",
+  ncores = getOption("mc.cores", 2L)
+)
 }
 \arguments{
 \item{dataset.gr}{A GRanges object with signal data in one or more metadata

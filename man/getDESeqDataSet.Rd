@@ -13,7 +13,7 @@ getDESeqDataSet(
   field = "score",
   blacklist = NULL,
   expand_ranges = FALSE,
-  ncores = detectCores(),
+  ncores = getOption("mc.cores", 2L),
   quiet = FALSE
 )
 }

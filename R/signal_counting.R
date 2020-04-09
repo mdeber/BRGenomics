@@ -83,7 +83,6 @@
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByPositions]{getCountsByPositions}}
 #'
-#' @importFrom parallel detectCores
 #' @export
 #'
 #' @examples
@@ -103,7 +102,7 @@
 getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
                                NF = NULL, blacklist = NULL, melt = FALSE,
                                region_names = NULL, expand_ranges = FALSE,
-                               ncores = detectCores()) {
+                               ncores = getOption("mc.cores", 2L)) {
 
     FXN <- if (expand_ranges) .getCoverageByRegions else .getCountsByRegions
 
@@ -244,7 +243,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #   pairs@second correspond to relevant index in regions.gr
 
 
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 .getCoverageByRegions <- function(dataset.gr, regions.gr, field, NF, blacklist,
                                   melt, region_names, ncores) {
 
@@ -395,9 +394,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'   \code{NA}.
 #'
 #' @author Mike DeBerardine
-#' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
+#' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}},
+#'   \code{\link[BRGenomics:bootstrap-signal-by-position]{metaSubsample}}
 #'
-#' @importFrom parallel detectCores
 #' @export
 #'
 #' @examples
@@ -441,7 +440,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  field = "score", NF = NULL, blacklist = NULL,
                                  NA_blacklisted = FALSE, melt = FALSE,
                                  expand_ranges = FALSE,
-                                 ncores = detectCores()) {
+                                 ncores = getOption("mc.cores", 2L)) {
 
     FXN <- if (expand_ranges) .getCoverageByPositions else .getCountsByPositions
 
@@ -904,7 +903,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getCountsByRegions]{getCountsByRegions}}
 #' @export
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 #' @importFrom methods is
 #'
 #' @examples
@@ -951,7 +950,8 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                               field = "score", length.normalize = TRUE,
                               remove.empty = FALSE, blacklist = NULL,
                               melt = FALSE, region_names = NULL,
-                              expand_ranges = FALSE, ncores = detectCores()) {
+                              expand_ranges = FALSE,
+                              ncores = getOption("mc.cores", 2L)) {
 
     if (length(promoters.gr) != length(genebodies.gr))
         stop(message = .nicemsg("Number of ranges in promoters.gr not equal to

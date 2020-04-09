@@ -3,7 +3,8 @@
 # ------------------------------------------------------------------------- #
 
 mcMap <- function(f, ...) {
-    # Current windows fxn passes directly to Map, putting mc.cores in the dots
+    # Current windows fxn passes directly to Map, putting mc.cores in the dots;
+    # -> Contacted R-for-Windows devs & this will be fixed in next release
     f <- match.fun(f)
     mcmapply(f, ..., SIMPLIFY = FALSE, mc.silent = TRUE)
 }

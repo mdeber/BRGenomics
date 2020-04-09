@@ -10,7 +10,7 @@ subsampleGRanges(
   prop = NULL,
   field = "score",
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{

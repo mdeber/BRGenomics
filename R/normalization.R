@@ -105,7 +105,6 @@
 #'   \code{\link[BRGenomics:applyNFsGRanges]{applyNFsGRanges}},
 #'   \code{\link[BRGenomics:subsampleBySpikeIn]{subsampleBySpikeIn}}
 #' @export
-#' @importFrom parallel detectCores
 #' @importFrom methods is
 #'
 #' @examples
@@ -185,7 +184,8 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                           method = c("SRPMC", "SNR", "RPM"), batch_norm = TRUE,
                           ctrl_pattern = NULL, ctrl_names = NULL,
                           field = "score", sample_names = NULL,
-                          expand_ranges = FALSE, ncores = detectCores()) {
+                          expand_ranges = FALSE,
+                          ncores = getOption("mc.cores", 2L)) {
 
     method <- match.arg(method, c("SRPMC", "SNR", "RPM"))
 
@@ -282,7 +282,6 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 }
 
 
-#' @importFrom parallel detectCores
 #' @importFrom methods is
 #' @rdname getSpikeInNFs
 #' @export
@@ -291,7 +290,7 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                batch_norm = TRUE, ctrl_pattern = NULL,
                                ctrl_names = NULL, field = "score",
                                sample_names = NULL, expand_ranges = FALSE,
-                               ncores = detectCores()) {
+                               ncores = getOption("mc.cores", 2L)) {
 
     if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList"))
         dataset.gr <- list(dataset.gr)
@@ -332,7 +331,7 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @return A GRanges object, or a list of GRanges objects.
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 #' @importFrom methods is
 #' @export
 #'
@@ -363,7 +362,7 @@ spikeInNormGRanges <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' applyNFsGRanges(gr_multi, NF = c(2, 3), field = c("gr1", "gr2"),
 #'                 ncores = 1)
 applyNFsGRanges <- function(dataset.gr, NF, field = "score",
-                            ncores = detectCores()) {
+                            ncores = getOption("mc.cores", 2L)) {
 
     if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList"))
         dataset.gr <- list(dataset.gr)
@@ -414,7 +413,7 @@ applyNFsGRanges <- function(dataset.gr, NF, field = "score",
 #' @seealso \code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}},
 #'   \code{\link[BRGenomics:getSpikeInNFs]{getSpikeInNFs}}
 #'
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 #' @export
 #'
 #' @examples
@@ -468,7 +467,8 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                                ctrl_pattern = NULL, ctrl_names = NULL,
                                batch_norm = TRUE, RPM_units = FALSE,
                                field = "score", sample_names = NULL,
-                               expand_ranges = FALSE, ncores = detectCores()) {
+                               expand_ranges = FALSE,
+                               ncores = getOption("mc.cores", 2L)) {
 
     if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList"))
         dataset.gr <- list(dataset.gr)

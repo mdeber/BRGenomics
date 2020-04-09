@@ -5,7 +5,7 @@
 \alias{isBRG}
 \title{Constructing and checking for base-pair resolution GRanges objects}
 \usage{
-makeGRangesBRG(dataset.gr, ncores = detectCores())
+makeGRangesBRG(dataset.gr, ncores = getOption("mc.cores", 2L))
 
 isBRG(x)
 }

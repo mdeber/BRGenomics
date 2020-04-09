@@ -4,7 +4,11 @@
 \alias{getStrandedCoverage}
 \title{Get strand-specific coverage}
 \usage{
-getStrandedCoverage(dataset.gr, field = "score", ncores = detectCores())
+getStrandedCoverage(
+  dataset.gr,
+  field = "score",
+  ncores = getOption("mc.cores", 2L)
+)
 }
 \arguments{
 \item{dataset.gr}{A GRanges object either containing ranges for each read, or

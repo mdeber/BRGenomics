@@ -167,11 +167,11 @@ NULL
 #' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                           keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
                           keep.nonstandard = FALSE, makeBRG = TRUE,
-                          ncores = detectCores()) {
+                          ncores = getOption("mc.cores", 2L)) {
 
     if (length(plus_file) > 1 || length(minus_file) > 1) {
         if (!is.null(plus_file) && !is.null(minus_file))
@@ -218,10 +218,11 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 #' @import rtracklayer
 #' @importFrom GenomicRanges score score<- strand<-
 #' @importFrom GenomeInfoDb genome<-
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                             keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
-                            keep.nonstandard = FALSE, ncores = detectCores()) {
+                            keep.nonstandard = FALSE,
+                            ncores = getOption("mc.cores", 2L)) {
 
     if (length(plus_file) > 1 || length(minus_file) > 1) {
         if (!is.null(plus_file) && !is.null(minus_file))
@@ -378,22 +379,26 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     gr <- .import_bam(file, paired_end, yieldSize, mapq)
 
     # Apply Options
-    if (revcomp || !all(shift == 0))  is_plus <- as.character(strand(gr)) == "+"
+    if (revcomp || !all(shift == 0))
+        is_plus <- as.character(strand(gr)) == "+"
     if (revcomp) {
         strand(gr) <- "+"
         strand(gr)[is_plus] <- "-"
         is_plus <- !is_plus
     }
-    if (!all(shift == 0))  suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
+    if (!all(shift == 0))
+        suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
     if (trim.to != "whole") {
         opt <- paste0("opt.", trim.to)
         opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
         gr <- resize(gr, width = 1, fix = opt.arg[[opt]])
     }
-    if (ignore.strand)  strand(gr) <- "*"
+    if (ignore.strand)
+        strand(gr) <- "*"
 
     gr <- sort(gr)
-    if (!is.null(field))  gr <- .collapse_reads(gr, field)
+    if (!is.null(field))
+        gr <- .collapse_reads(gr, field)
     return(gr)
 }
 

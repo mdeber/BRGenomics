@@ -15,7 +15,7 @@ import_bigWig(
   keep.M = FALSE,
   keep.nonstandard = FALSE,
   makeBRG = TRUE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
 import_bedGraph(
@@ -26,7 +26,7 @@ import_bedGraph(
   keep.Y = TRUE,
   keep.M = FALSE,
   keep.nonstandard = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{

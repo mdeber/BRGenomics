@@ -16,7 +16,7 @@ getSpikeInNFs(
   field = "score",
   sample_names = NULL,
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
 spikeInNormGRanges(
@@ -30,7 +30,7 @@ spikeInNormGRanges(
   field = "score",
   sample_names = NULL,
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{
@@ -94,16 +94,16 @@ readcounts spike-in normalized.
   most portable and generalizable. Experimental Reads Per Spike-in read (RPS)
   are calculated for each sample, \eqn{i}:
 
-  \deqn{RPS_i=\frac{experimental\_reads_i}{
-  spikein\_reads_i}}{RPS_i = experimental.reads_i / spikein.reads_i}
+  \deqn{RPS_i=\frac{experimental\_reads_i}{ spikein\_reads_i}}{RPS_i =
+  experimental.reads_i / spikein.reads_i}
 
   RPS for each sample is divided by RPS for the negative control, which
   measures the change in total material vs. the negative control. This global
   adjustment is applied to standard RPM normalization for each sample:
 
   \deqn{NF_i=\frac{RPS_i}{RPS_{control}} \cdot \frac{1 x
-  10^6}{experimental\_reads_i}}{
-  NF_i = (RPS_i / RPS_ctrl) x (1e6 / experimental.reads_i)}
+  10^6}{experimental\_reads_i}}{ NF_i = (RPS_i / RPS_ctrl) x (1e6 /
+  experimental.reads_i)}
 
   Thus, the negative control(s) are simply RPM-normalized, while the other
   conditions are in equivalent, directly-comparable units ("Reads Per Million
@@ -125,8 +125,8 @@ readcounts spike-in normalized.
   make the spike-in read counts match the sample with the lowest number of
   spike-in reads:
 
-  \deqn{NF_i=\frac{min(spikein\_reads)}{spikein\_reads_i}}{
-  NF_i = min(spikein.reads) / spikein.reads_i}
+  \deqn{NF_i=\frac{min(spikein\_reads)}{spikein\_reads_i}}{ NF_i =
+  min(spikein.reads) / spikein.reads_i}
 
   If \code{batch_norm = TRUE}, such normalization factors are calculated
   within each batch, but a final batch (replicate) adjustment is performed
@@ -144,8 +144,8 @@ readcounts spike-in normalized.
  A simple convenience wrapper
   for calculating normalization factors for RPM normalization:
 
-  \deqn{NF_i=\frac{1 x 10^6}{experimental\_reads_i}}{
-  NF_i = 1e6 / experimental.reads_i}
+  \deqn{NF_i=\frac{1 x 10^6}{experimental\_reads_i}}{ NF_i = 1e6 /
+  experimental.reads_i}
 
   If spike-in reads are present, they're removed before the normalization
   factors are calculated.
@@ -226,7 +226,9 @@ spikeInNormGRanges(grl, si_pattern = "spike", ctrl_pattern = "gr1",
                    ncores = 1)
 }
 \seealso{
-\code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}}
+\code{\link[BRGenomics:getSpikeInCounts]{getSpikeInCounts}},
+  \code{\link[BRGenomics:applyNFsGRanges]{applyNFsGRanges}},
+  \code{\link[BRGenomics:subsampleBySpikeIn]{subsampleBySpikeIn}}
 }
 \author{
 Mike DeBerardine

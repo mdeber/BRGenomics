@@ -131,14 +131,14 @@ NULL
 
 #' @rdname bootstrap-signal-by-position
 #' @export
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 #' @importFrom GenomicRanges width
 metaSubsample <- function(
     dataset.gr, regions.gr, binsize = 1, first.output.xval = 1,
     sample.name = deparse(substitute(dataset.gr)), n.iter = 1000,
     prop.sample = 0.1, lower = 0.125, upper = 0.875, field = "score",
     NF = NULL, remove.empty = FALSE, blacklist = NULL, zero_blacklisted = FALSE,
-    expand_ranges = FALSE, ncores = detectCores()
+    expand_ranges = FALSE, ncores = getOption("mc.cores", 2L)
 ) {
     if (length(unique(width(regions.gr))) > 1) # check ranges all same width
         stop(message = "Not all ranges in regions.gr are the same width")
@@ -207,13 +207,13 @@ metaSubsample <- function(
 
 #' @rdname bootstrap-signal-by-position
 #' @export
-#' @importFrom parallel mclapply detectCores
+#' @importFrom parallel mclapply
 #' @importFrom stats quantile
 metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                                 sample.name = NULL, n.iter = 1000,
                                 prop.sample = 0.1, lower = 0.125, upper = 0.875,
                                 NF = 1, remove.empty = FALSE,
-                                ncores = detectCores()) {
+                                ncores = getOption("mc.cores", 2L)) {
     # Check that enough iterations are given for meaningful quantiles
     if (n.iter != 1) .check_iter(n.iter, lower, upper)
     if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]

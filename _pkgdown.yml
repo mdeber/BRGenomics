@@ -1,8 +1,41 @@
 destination: ../mdeber.github.io/
+url: https://mdeber.github.io
 
 template:
   params:
     bootswatch: flatly
 
-toc:
-  depth: 1
+navbar:
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: Overview
+      href: articles/Overview.html
+    - text: Guides
+      menu:
+      - text: Getting Started
+        href: articles/GettingStarted.html
+      - text: Importing & Modifying Annotations
+        href: articles/ImportingModifyingAnnotations.html
+      - text: Importing & Processing Data
+        href: articles/ImportingProcessingData.html
+      - text: Signal Counting
+        href: articles/SignalCounting.html
+      - text: Analyzing Multiple Datasets
+        href: articles/AnalyzingMultipleDatasets.html
+      - text: Profile Plots & Bootstrapping
+        href: articles/ProfilePlotsAndBootstrapping.html
+      - text: Spike-in Normalization
+        href: articles/SpikeInNormalization.html
+      - text: DESeq2 with Global Perturbations
+        href: articles/DESeq2WithGlobalPerturbations.html
+      - text: Sequence Extraction
+        href: articles/SequenceExtraction.html
+    - text: Documentation
+      href: reference/index.html
+    - text: Changelog
+      href: news/index.html
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/mdeber/BRGenomics
+

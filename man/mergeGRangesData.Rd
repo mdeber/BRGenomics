@@ -10,7 +10,7 @@ mergeGRangesData(
   multiplex = FALSE,
   makeBRG = TRUE,
   exact_overlaps = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{

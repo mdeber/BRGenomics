@@ -1,0 +1,264 @@
+---
+title: "Getting Started"
+package: BRGenomics
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  BiocStyle::pdf_document:
+    toc: true
+vignette: |
+  %\VignetteIndexEntry{Getting Started}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+# Installation
+
+As of Bioconductor 3.11 (release date April 28, 2020), BRGenomics can be 
+installed directly from Bioconductor:
+
+```{r, eval = FALSE}
+# install.packages("BiocManager")
+BiocManager::install("BRGenomics")
+```
+
+Alternatively, the latest development version can be installed from  
+[GitHub](https://github.com/mdeber/BRGenomics):
+
+```{r, eval = FALSE}
+# install.packages("remotes")
+remotes::install_github("mdeber/BRGenomics@R3")
+```
+
+_BRGenomics (and Bioconductor 3.11) require R version 4.0 (release April 24, 
+2020). Installing the `R3` branch, as shown above, is required to install under
+R 3.x._
+
+If you install the development version from Github and you're using Windows, 
+[Rtools for Windows](https://cran.rstudio.com/bin/windows/Rtools/) is required.
+
+# Parallel Processing
+
+By default, many BRGenomics functions use multicore processing as implemented in 
+the `parallel` package. BRGenomics functions that can be parallelized always
+contain the argument `ncores`. If not specified, the default is to use the
+global option "mc.cores" (the same option used by the `parallel` package), or
+2 if that option is not set.
+
+If you wanted to change the global default to 4 cores, for example, you would
+run `options(mc.cores = 4)` at the start of your R session. If you're unsure
+how many cores your processor has, run `parallel::detectCores()`.
+
+While performance can be memory constrained in some cases (and thus actually 
+hampered by excessive parallelization), substantial performance benefits can be
+acheived by maximizing parallelization. 
+
+However, parallel processing is not available on Windows. To maintain 
+compatability, all code in this vignette as well as the example code in the 
+documentation is to use a single core, i.e. `ncores = 1`.
+  
+# Included Datasets
+
+BRGenomics ships with an example dataset of PRO-seq data from Drosophila 
+melanogaster^[Hojoong Kwak, Nicholas J. Fuda, Leighton J. Core, John T. Lis 
+(2013). Precise Maps of RNA Polymerase Reveal How Promoters Direct Initiation 
+and Pausing. _Science_  __339__(6122): 950–953. 
+https://doi.org/10.1126/science.1229386]. PRO-seq is a basepair-resolution 
+method that uses 3'-end sequencing of nascent RNA to map the locations of 
+actively engaged RNA polymerases. 
+
+To keep the dataset small, we've only included reads mapping to the fourth 
+chromosome^[Chromosome 4 in Drosophila, often referred to as the "dot" 
+chromosome, is very small and contains very few genes].
+
+The included datasets can be accessed using the `data()` function:
+
+```{r, message=FALSE}
+library(BRGenomics)
+```
+
+```{r}
+data("PROseq")
+PROseq
+```
+
+Notice that the data is contained within a `GRanges` object. GRanges objects, 
+from the `r Biocpkg("GenomicRanges")` package, are very easy to work with, and 
+are supported by a plethora of useful functions and packages.
+
+The structure of the data will be described later on (in section 
+_"Basepair-Resolution GRanges Objects"_). For now, we'll just note that both 
+annotations (e.g. genelists) and data are contained using the same GRanges 
+class.
+
+We've included an example genelist to accompany the PRO-seq data:
+
+```{r}
+data("txs_dm6_chr4")
+txs_dm6_chr4
+```
+
+The GRanges above contains all Flybase annotated transcripts from chromosome 4, 
+with no filtering of any kind.
+
+# Basic Operations on GRanges
+
+For users who are unfamiliar with GRanges objects, this section demonstrates a 
+number of basic operations. 
+
+A quick summary of the general strcture: Each element of a GRanges object is 
+called a "range". As you can see above, each range consists of several 
+components: `seqnames`, `ranges`, and `strand`. These essential attributes are 
+all found to the left of the vertical divider above; everything to the right of 
+that divider is an optional, metadata attribute. 
+
+The core attributes can be accessed using the functions `seqnames()`, 
+`ranges()`, and `strand()`. All metadata can be accessed using `mcols()`, and 
+individual columns are accessable with the `$` operator. The only reserved 
+metadata column is the `score` column, which is just like any other metadata 
+column, except that users can use the `score()` function to assess it.
+
+All of the above functions are both "getters" and "setters", e.g. `strand(x)` 
+returns the strand information, and `strand(x) <- "+"` assigns it.
+
+These and other operations are demonstrated below.
+
+---
+
+_To learn more about GRanges objects, including a general overview of their 
+components, see the useful vignette [_An Introduction to the GenomicRanges 
+Package_](
+https://bioconductor.org/packages/release/bioc/vignettes/GenomicRanges/inst/doc/GenomicRangesIntroduction.html). 
+Alternatively, see the archived materials from the 2018 Bioconductor workshop [_Solving Common Bioinformatic Challenges Using GenomicRanges_](
+https://bioconductor.github.io/BiocWorkshops/solving-common-bioinformatic-challenges-using-genomicranges.html). 
+Note that this package will implement and streamline a number of common 
+operations, but users should still have a basic familiarity with GRanges 
+objects._
+
+---
+
+\ 
+
+Get the length of the genelist:
+
+```{r}
+length(txs_dm6_chr4) 
+```
+
+\ 
+
+Select the 2nd transcript:
+
+```{r}
+txs_dm6_chr4[2]
+```
+
+\ 
+
+Select 4 transcipts:
+
+```{r}
+tx4 <- txs_dm6_chr4[c(1, 10, 200, 300)]
+tx4
+```
+
+\ 
+
+Get the lengths of the first 4 transcripts:
+
+```{r}
+width(tx4)
+```
+
+\ 
+
+Get a dataframe of the metadata for the first 4 transcripts:
+
+```{r}
+mcols(tx4)
+```
+
+\ 
+
+Access a single metadata column for the first 4 transcripts:
+
+```{r}
+mcols(tx4)[, 2]
+mcols(tx4)[, "gene_id"]
+tx4$gene_id
+tx4_names <- tx4$tx_name
+tx4_names
+```
+
+\ 
+
+Get the first gene_id (a metadata element):
+
+```{r}
+tx4$gene_id[1]
+```
+
+\ 
+
+Remove a metadata column:
+
+```{r}
+mcols(tx4) <- mcols(tx4)[, -1]
+tx4
+```
+
+\ 
+
+Rename metadata:
+
+```{r}
+names(mcols(tx4)) <- "gene_id"
+tx4
+```
+
+\ 
+
+Add metadata; same as access methods (`mcols()[]`, `mcols()$`, or simply `$`):
+
+```{r}
+tx4$tx_name <- tx4_names
+tx4
+```
+
+\ 
+
+Modify metadata:
+
+```{r}
+tx4$gene_id[1] <- "gene1"
+tx4$tx_name <- 1:4
+tx4
+```
+
+\ 
+
+Get beginning of ranges (not strand specific):
+
+```{r}
+start(tx4)
+```
+
+\ 
+
+Get beginning of ranges (strand specific):
+
+```{r}
+tx4_tss <- resize(tx4, width = 1, fix = "start")
+tx4_tss
+start(tx4_tss)
+```
+
+\ 
+
+Remove all metadata:
+
+```{r}
+mcols(tx4) <- NULL
+tx4
+```

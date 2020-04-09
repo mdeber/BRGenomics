@@ -15,7 +15,7 @@ getPausingIndices(
   melt = FALSE,
   region_names = NULL,
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{

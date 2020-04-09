@@ -22,7 +22,6 @@
 #'   readcounts, and spike-in readcounts.
 #' @author Mike DeBerardine
 #'
-#' @importFrom parallel detectCores
 #' @importFrom methods is
 #' @import GenomicRanges
 #' @export
@@ -74,7 +73,8 @@
 #' getSpikeInReads(grl, si_pattern = "spike", ncores = 1)
 getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                              field = "score", sample_names = NULL,
-                             expand_ranges = FALSE, ncores = detectCores()) {
+                             expand_ranges = FALSE,
+                             ncores = getOption("mc.cores", 2L)) {
 
     if (!is.list(dataset.gr) && !is(dataset.gr, "GRangesList")) {
         name_in <- deparse(substitute(dataset.gr))
@@ -168,7 +168,8 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @rdname getSpikeInCounts
 #' @export
 removeSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
-                               field = "score", ncores = detectCores()) {
+                               field = "score",
+                               ncores = getOption("mc.cores", 2L)) {
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
 
     if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
@@ -184,7 +185,8 @@ removeSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @rdname getSpikeInCounts
 #' @export
 getSpikeInReads <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
-                            field = "score", ncores = detectCores()) {
+                            field = "score",
+                            ncores = getOption("mc.cores", 2L)) {
     spike_chrom <- .get_spike_chrom(dataset.gr, si_pattern, si_names, ncores)
 
     if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {

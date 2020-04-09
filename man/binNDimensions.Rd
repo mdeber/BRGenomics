@@ -2,18 +2,18 @@
 % Please edit documentation in R/ndimensional_binning.R
 \name{binNdimensions}
 \alias{binNdimensions}
-\alias{aggregateByNdimensionalBins}
-\alias{densityInNdimensionalBins}
+\alias{aggregateByNdimBins}
+\alias{densityInNdimBins}
 \title{Generating and Aggregating Data Within N-dimensional Bins}
 \usage{
 binNdimensions(
   dims.df,
   nbins = 10,
   use_bin_numbers = TRUE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
-aggregateByNdimensionalBins(
+aggregateByNdimBins(
   x,
   dims.df,
   nbins = 10,
@@ -23,14 +23,14 @@ aggregateByNdimensionalBins(
   drop = FALSE,
   empty = NA,
   use_bin_numbers = TRUE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
-densityInNdimensionalBins(
+densityInNdimBins(
   dims.df,
   nbins = 10,
   use_bin_numbers = TRUE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{
@@ -95,18 +95,18 @@ These functions take in data along 1 or more dimensions, and for
   code{use_bin_numbers = FALSE}, the center points of the bins are returned
   instead of the bin numbers.
 
-  \code{aggregateByNdimensionalBins} summarizes some input data \code{x} in
-  each combination of bins, i.e. in each n-dimensional bin. Each row of the
-  output dataframe is a unique combination of the input bins (i.e. each
+  \code{aggregateByNdimBins} summarizes some input data \code{x} in each
+  combination of bins, i.e. in each n-dimensional bin. Each row of the output
+  dataframe is a unique combination of the input bins (i.e. each
   n-dimensional bin), and the output columns are identical to those in
   \code{dims.df}, with the addition of one or more columns containing the
   aggregated data in each n-dimensional bin. If the input \code{x} was a
   vector, the column is named "value"; if the input \code{x} was a dataframe,
   the column names from \code{x} are maintained.
 
-  \code{densityInNdimensionalBins} returns a dataframe just like
-  \code{aggregateByNdimensionalBins}, except the "value" column contains the
-  number of observations that fall into each n-dimensional bin.
+  \code{densityInNdimBins} returns a dataframe just like
+  \code{aggregateByNdimBins}, except the "value" column contains the number
+  of observations that fall into each n-dimensional bin.
 }
 \examples{
 data("PROseq") # import included PROseq data
@@ -138,8 +138,7 @@ bin3d[1:6, ]
 # get number of genes in each bin
 #--------------------------------------------------#
 
-bin_counts <- densityInNdimensionalBins(df, nbins = 20,
-                                        ncores = 1)
+bin_counts <- densityInNdimBins(df, nbins = 20, ncores = 1)
 
 bin_counts[1:6, ]
 
@@ -147,8 +146,8 @@ bin_counts[1:6, ]
 # get mean cps reads in bins of promoter and genebody reads
 #--------------------------------------------------#
 
-bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df,
-                                         nbins = 20, ncores = 1)
+bin2d_cps <- aggregateByNdimBins("counts_cps", df, nbins = 20,
+                                 ncores = 1)
 
 bin2d_cps[1:6, ]
 
@@ -158,8 +157,8 @@ subset(bin2d_cps, is.finite(counts_cps))[1:6, ]
 # get median cps reads for those bins
 #--------------------------------------------------#
 
-bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
-                                             FUN = median, ncores = 1)
+bin2d_cps_med <- aggregateByNdimBins("counts_cps", df, nbins = 20,
+                                     FUN = median, ncores = 1)
 
 bin2d_cps_med[1:6, ]
 

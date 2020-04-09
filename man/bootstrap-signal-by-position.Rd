@@ -22,7 +22,7 @@ metaSubsample(
   blacklist = NULL,
   zero_blacklisted = FALSE,
   expand_ranges = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 
 metaSubsampleMatrix(
@@ -36,7 +36,7 @@ metaSubsampleMatrix(
   upper = 0.875,
   NF = 1,
   remove.empty = FALSE,
-  ncores = detectCores()
+  ncores = getOption("mc.cores", 2L)
 )
 }
 \arguments{

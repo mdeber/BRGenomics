@@ -1,0 +1,266 @@
+---
+title: "Importing & Processing Data"
+package: BRGenomics
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  BiocStyle::pdf_document:
+    toc: true
+vignette: |
+  %\VignetteIndexEntry{Importing and Processing Data}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+BRGenomics provides several functions for conveniently importing and processing 
+BAM, bigWig, bedGraph files.
+
+# Importing BAM Files
+
+The `import_bam()` function provides a number of options for filtering and 
+processing bam files. BRGenomics includes an example BAM file with a small 
+number of reads from the included PRO-seq data. The file's local location can 
+be found (on your computer) as follows:
+
+```{r, message = FALSE}
+library(BRGenomics)
+```
+
+```{r}
+bfile <- system.file("extdata", "PROseq_dm6_chr4.bam", 
+                     package = "BRGenomics")
+```
+
+Because PRO-seq data is sequenced in the 3'-to-5' direction of the original RNA 
+molecule, we'll use the `revcomp` option to reverse-complement all the input 
+reads. We'll also set a minimum MAPQ score of 20:
+
+```{r}
+ps_reads <- import_bam(bfile, mapq = 20, revcomp = TRUE, paired_end = FALSE)
+ps_reads
+```
+
+By default, `import_bam()` combines identical reads into the same range, and 
+the `score` metadata column indicatea the number of perfectly-overlapping 
+alignments. This means that the total number of alignments (reads) is equal to 
+the sum of the score:
+
+```{r}
+sum(score(ps_reads))
+```
+
+Alternatively, you can import each read as its own range by setting `field = 
+NULL`:
+
+```{r}
+reads_expanded <- import_bam(bfile, mapq = 20, revcomp = TRUE, 
+                             field = NULL, paired_end = FALSE)
+ps_reads[1:8]
+reads_expanded[1:8]
+```
+
+Notice that reads 5-7 are now identical, rather than combined into a single 
+range with a score = 3.
+
+```{r}
+length(reads_expanded) == sum(score(ps_reads))
+```
+
+Many BRGenomics function have a `field` argument, and setting `field = NULL` 
+will treat each range has a single read. 
+
+## Example: Importing PRO-seq BAM files at Basepair Resolution
+
+We can use the `import_bam()` function to extract the positions of interest 
+from BAM files. Below, we construct an import function for PRO-seq data that 
+returns a basepair-resolution GRanges object.
+
+In PRO-seq, a "run-on" reaction is performed in which actively engaged RNA 
+polymerases incorporate a biotinylated nucleotide at the 3' end of a nascent 
+RNA. Our base of interest is therefore the base immediately preceding the RNA 3' 
+end, as this was the original position of a polymerase active site.
+
+The processing options in `import_bam()` are applied in the same order that 
+they're listed in the documentation page. Following this order, we will apply 
+the options:
+
+1. Filter reads by a minimum MAPQ score 
+2. Take the reverse complement
+3. Shift reads upstream by 1 base
+4. Extract the 3' base
+
+```{r}
+ps <- import_bam(bfile, 
+                 mapq = 20, 
+                 revcomp = TRUE,
+                 shift = -1,
+                 trim.to = "3p",
+                 paired_end = FALSE)
+ps
+```
+
+_Note that for paired-end data, `import_bam()` will automatically filter 
+unmatched read pairs._
+
+Notice that the number of ranges in `ps` is not the same as for `ps_reads`, in 
+which we imported the entire read lengths:
+
+```{r, collapse = TRUE}
+length(ps_reads)
+length(ps)
+```
+
+This is because identical positions are collapsed together after applying the 
+processing options. However, we can check that all of the same reads are 
+represented:
+
+```{r, collapse = TRUE}
+sum(score(ps)) == sum(score(ps_reads))
+```
+
+And we can check that collapsing identical positions has created a 
+basepair-resolution GRanges object:
+
+```{r, collapse = TRUE}
+isBRG(ps)
+```
+
+## Pre-formatted Input Functions
+
+For convenience, we've included several functions with default options for 
+several kinds of data, including `import_bam_PROseq()`, `import_bam_PROcap()`, 
+and `import_bam_ATACseq()`, the latter of which corrects for the 9 bp offset 
+between Tn5 insertion sites.^[Jason D. Buenrostro, Paul G. Giresi, Lisa C. 
+Zaba, Howard Y. Chang, William J. Greenleaf (2013). Transposition of native 
+chromatin for fast and sensitive epigenomic profiling of open chromatin, 
+dna-binding proteins and nucleosome position. \emph{Nature Methods} 10: 
+1213–1218. \url{https://doi.org/10.1038/nmeth.2688}]
+
+## Example: Converting BAMs to bigWigs
+
+In conjunction with export functions from the `r Biocpkg("rtracklayer")` 
+package, we can use the functions described above to write a post-alignment 
+pipeline for generating bigWig files for PRO-seq data:
+
+```{r, eval=FALSE}
+# import bam, automatically applying processing steps for PRO-seq
+ps <- import_bam_PROseq(bfile, mapq = 30, paired_end = FALSE)
+
+# separate strands, and make minus-strand scores negative
+ps_plus <- subset(ps, strand == "+")
+ps_minus <- subset(ps, strand == "-")
+score(ps_minus) <- -score(ps_minus)
+
+# use rtracklayer to export bigWig files
+export.bw(ps_plus, "~/Data/PROseq_plus.bw")
+export.bw(ps_minus, "~/Data/PROseq_minus.bw")
+```
+
+## Performance Considerations
+
+For single-ended bam files, import is much faster if the bam files are sorted 
+and indexed (i.e. by `samtools index`).
+
+For paired-end files, we assume that collating (`samtools collate`) or sorting
+by name is faster.
+
+Additionally, while single-ended files can often be imported "all at once"
+(particularly if sorted and indexed), processing paired-end data is more memory
+intensive, and requires breaking up the file into chunks for processing. For 
+this, use the `yieldSize` argument.
+
+For example, to process 500 thousands reads at a time, set the 
+`yieldSize = 5e5`.
+
+# Importing bedGraphs and bigWigs
+
+bedGraph and bigWig files are efficient and portable, but unstranded 
+representations of basepair-resolution genomics data. 
+
+As compared to `rtracklayer::import.bedGraph()`, the BRGenomics function 
+`import_bedGraph()` imports both plus-strand and minus-strand files as a single 
+object, and has options for filtering out odd chromosomes, mitochondrial 
+chromosomes, and sex chromosomes.
+
+```{r}
+# local paths to included bedGraph files
+bg.p <- system.file("extdata", "PROseq_dm6_chr4_plus.bedGraph",
+                    package = "BRGenomics")
+bg.m <- system.file("extdata", "PROseq_dm6_chr4_minus.bedGraph",
+                    package = "BRGenomics")
+
+import_bedGraph(bg.p, bg.m, genome = "dm6")
+```
+
+The `import_bigWig()` function provides the same added functionality as 
+compared to `rtracklayer::import.bw()`, but also removes run-length compression 
+and returns a basepair-resolution GRanges object by default.
+
+```{r}
+# local paths to included bigWig files
+bw.p <- system.file("extdata", "PROseq_dm6_chr4_plus.bw",
+                    package = "BRGenomics")
+bw.m <- system.file("extdata", "PROseq_dm6_chr4_minus.bw",
+                    package = "BRGenomics")
+
+import_bigWig(bw.p, bw.m, genome = "dm6")
+```
+
+Conversion to a basepair-resolution GRanges object can be turned off by setting
+`makeBRG = FALSE`.
+
+# Merging GRanges Data
+
+Biological replicates are best used to independently reproduce and measure 
+effects, and therefore we often want to handle them separately. However, there 
+are times when combining replicates can allow for more sensitive measurements, 
+assuming that the replicates are highly concordant.
+
+The `mergeGRangesData()` function can be used to combine basepair-resolution 
+GRanges objects.
+
+We'll break up the included PRO-seq data into a list of toy datasets:
+
+```{r}
+ps_list <- lapply(1:6, function(i) ps[seq(i, length(ps), 6)])
+names(ps_list) <- c("A_rep1", "A_rep2", 
+                    "B_rep1", "B_rep2",
+                    "C_rep1", "C_rep2")
+```
+
+```{r}
+ps_list[1:2]
+names(ps_list)
+```
+
+We can pass a list of GRanges objects directly as an argument:
+
+```{r}
+mergeGRangesData(ps_list, ncores = 1)
+```
+
+Or we can pass any number of individual GRanges objects as arguments:
+
+```{r}
+merge_ps <- mergeGRangesData(ps_list[[1]], ps_list[[2]], ps, ncores = 1)
+merge_ps
+```
+
+_Note that the output is also a basepair-resolution GRanges object:_
+
+```{r, collapse = TRUE}
+isBRG(merge_ps)
+```
+
+\ 
+
+## Merging Replicates
+
+The `mergeReplicates()` function makes combining replicates particularly 
+simple:
+
+```{r}
+mergeReplicates(ps_list, ncores = 1)
+```
+

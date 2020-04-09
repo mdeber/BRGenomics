@@ -54,22 +54,22 @@
 #'   code{use_bin_numbers = FALSE}, the center points of the bins are returned
 #'   instead of the bin numbers.
 #'
-#'   \code{aggregateByNdimensionalBins} summarizes some input data \code{x} in
-#'   each combination of bins, i.e. in each n-dimensional bin. Each row of the
-#'   output dataframe is a unique combination of the input bins (i.e. each
+#'   \code{aggregateByNdimBins} summarizes some input data \code{x} in each
+#'   combination of bins, i.e. in each n-dimensional bin. Each row of the output
+#'   dataframe is a unique combination of the input bins (i.e. each
 #'   n-dimensional bin), and the output columns are identical to those in
 #'   \code{dims.df}, with the addition of one or more columns containing the
 #'   aggregated data in each n-dimensional bin. If the input \code{x} was a
 #'   vector, the column is named "value"; if the input \code{x} was a dataframe,
 #'   the column names from \code{x} are maintained.
 #'
-#'   \code{densityInNdimensionalBins} returns a dataframe just like
-#'   \code{aggregateByNdimensionalBins}, except the "value" column contains the
-#'   number of observations that fall into each n-dimensional bin.
+#'   \code{densityInNdimBins} returns a dataframe just like
+#'   \code{aggregateByNdimBins}, except the "value" column contains the number
+#'   of observations that fall into each n-dimensional bin.
 #'
 #' @author Mike DeBerardine
 #' @export
-#' @importFrom parallel detectCores mcMap mclapply
+#' @importFrom parallel mcMap mclapply
 #' @examples
 #' data("PROseq") # import included PROseq data
 #' data("txs_dm6_chr4") # import included transcripts
@@ -100,8 +100,7 @@
 #' # get number of genes in each bin
 #' #--------------------------------------------------#
 #'
-#' bin_counts <- densityInNdimensionalBins(df, nbins = 20,
-#'                                         ncores = 1)
+#' bin_counts <- densityInNdimBins(df, nbins = 20, ncores = 1)
 #'
 #' bin_counts[1:6, ]
 #'
@@ -109,8 +108,8 @@
 #' # get mean cps reads in bins of promoter and genebody reads
 #' #--------------------------------------------------#
 #'
-#' bin2d_cps <- aggregateByNdimensionalBins("counts_cps", df,
-#'                                          nbins = 20, ncores = 1)
+#' bin2d_cps <- aggregateByNdimBins("counts_cps", df, nbins = 20,
+#'                                  ncores = 1)
 #'
 #' bin2d_cps[1:6, ]
 #'
@@ -120,14 +119,14 @@
 #' # get median cps reads for those bins
 #' #--------------------------------------------------#
 #'
-#' bin2d_cps_med <- aggregateByNdimensionalBins("counts_cps", df, nbins = 20,
-#'                                              FUN = median, ncores = 1)
+#' bin2d_cps_med <- aggregateByNdimBins("counts_cps", df, nbins = 20,
+#'                                      FUN = median, ncores = 1)
 #'
 #' bin2d_cps_med[1:6, ]
 #'
 #' subset(bin2d_cps_med, is.finite(counts_cps))[1:6, ]
 binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
-                           ncores = detectCores()) {
+                           ncores = getOption("mc.cores", 2L)) {
 
     # check input bins
     n_dim <- ncol(dims.df)
@@ -168,14 +167,12 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
 
 
 
-
 #' @rdname binNdimensions
-#' @importFrom parallel detectCores
 #' @export
-aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
-                                        ignore.na = TRUE, drop = FALSE,
-                                        empty = NA, use_bin_numbers = TRUE,
-                                        ncores = detectCores()) {
+aggregateByNdimBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
+                                ignore.na = TRUE, drop = FALSE, empty = NA,
+                                use_bin_numbers = TRUE,
+                                ncores = getOption("mc.cores", 2L)) {
     if (is.character(x))  {
         colx <- which(names(dims.df) %in% x)
         x <- dims.df[colx]
@@ -246,11 +243,9 @@ aggregateByNdimensionalBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
 
 
 #' @rdname binNdimensions
-#' @importFrom parallel detectCores
 #' @export
-densityInNdimensionalBins <- function(dims.df, nbins = 10,
-                                      use_bin_numbers = TRUE,
-                                      ncores = detectCores()) {
+densityInNdimBins <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
+                              ncores = getOption("mc.cores", 2L)) {
     # avoid unnecessary evaluations in the aggregate function
     x <- rep(0L, nrow(dims.df))
     bins.df <- binNdimensions(dims.df, nbins, use_bin_numbers, ncores)

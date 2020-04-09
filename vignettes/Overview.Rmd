@@ -1,0 +1,95 @@
+---
+title: "Basepair-Resolution Analysis with BRGenomics"
+subtitle: "_Straightforward tools for high-resolution genomics data_"
+author:
+  name: Mike DeBerardine
+  email: mike.deberardine@gmail.com
+package: BRGenomics
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  BiocStyle::pdf_document:
+    toc: true
+abstract: |
+  BRGenomics is designed to help users avoid code repetition by providing 
+  efficient and tested functions to accomplish common, discrete tasks in the 
+  analysis of high-throughput sequencing data. The included functions are geared 
+  toward analyzing basepair-resolution sequencing data, the properties of which 
+  are exploited to increase performance and user-friendliness. We leverage 
+  standard Bioconductor methods and classes to maximize compatability with its 
+  rich ecoystem of bioinformatics tools, and we aim to make BRGenomics 
+  sufficient for most post-alignment data processing. Common data processing and
+  analytical steps are turned into fast-running one-liners that can be 
+  simultaneously applied across numerous datasets. BRGenomics is 
+  fully-documented, and we aim it to be beginner-friendly.
+  
+vignette: |
+  %\VignetteIndexEntry{Overview}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+# Motivation
+
+This package is designed to:
+
+* Replace the use of command-line utilities for most post-alignment processing, 
+e.g. `bedtools` and `deeptools`
+* Be easy-to-use and easy-to-install, without requiring external dependencies, 
+e.g. `hitslib` or the kent source utilities from the UCSC genome browser
+* Allow users to string together common analysis pipelines with simple, 
+fast-running one-liners
+* Avoid code repetition by providing tested and validated code
+* Exploit the properties of basepair-resolution data to optimize performance and 
+increase user-friendliness
+* Use process forking to make use of multicore processors 
+* Maximize compatability with Bioconductor's rich ecosystem of analysis 
+software, in addition to leveraging the traditional strengths of R in statistics 
+and data visualization
+* Fully replace the `bigWig` R package
+
+# Features
+
+* Process and import bedGraph, bigWig, and bam files quickly and easily, with 
+several pre-configured defaults for typical uses
+* Count and filter spike-in reads
+* Calculate spike-in normalization factors using several methods and options, 
+including options for batch normalization
+* Count reads by regions of interest
+* Count reads at positions within regions of interest, at single-base resolution 
+or in larger bins, and generate count matrices for heatmapping
+* Calculate bootstrapped signal (e.g. readcount) profiles with confidence 
+intervals (i.e. meta-profiles)
+* Modify gene regions (e.g. extract promoters or genebody regions) using a 
+single simple and straightforward function
+* Conveniently and efficiently call `DESeq2` to calculate differential 
+expression in a manner that is robust to global changes^[Avoid the default 
+behavior of calculating genewise dispersion across all samples present, which is 
+invalid if any experimental condition causes broad changes]
+  + Use non-contiguous genes in `DESeq2` analysis, e.g. to exclude of specific 
+  sites/peaks from the analysis (not usually supported by DESeq2)
+  + Efficiently generate results across a list of comparisons
+* Support for blacklisting throughout, and proper accounting of blacklisted 
+sites in relevant calculations
+* Users interact with an intuitive and computationally efficient data structure 
+(the "basepair resolution `GRanges`" object), which is already supported by a 
+rich, user-friendly suite of tools that greatly simplify working with datasets 
+and annotations
+
+# Coming Soon
+
+Data processing:
+
+* Summarizing and plotting replicate correlations
+* Function to use random read sampling to assess if sequencing depth sufficient 
+to stabilize arbitrary calculations (so a user can supply anonymous function to 
+calculate things like rank expression, power analysis or differential expression 
+by DESeq2, pausing indices, etc.)
+
+Signal counting and analysis:
+
+* Two-stranded meta-profile calculations
+* Automated generation of a list of DESeq2 comparisons using all possible 
+combinations; all possible permutations; or by defining a simple hierarchy of 
+each-vs-one comparisons

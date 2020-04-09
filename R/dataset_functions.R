@@ -104,7 +104,7 @@
 #'     all(score(undo) == score(bw))
 #'
 #' }
-makeGRangesBRG <- function(dataset.gr, ncores = detectCores()) {
+makeGRangesBRG <- function(dataset.gr, ncores = getOption("mc.cores", 2L)) {
 
     if (is.list(dataset.gr) || is(dataset.gr, "GRangesList"))
         return(mclapply(dataset.gr, makeGRangesBRG, mc.cores = ncores))
@@ -221,7 +221,7 @@ isBRG <- function(x) {
 #'
 #' getStrandedCoverage(PROseq[idx], ncores = 1)
 getStrandedCoverage <- function(dataset.gr, field = "score",
-                                ncores = detectCores()) {
+                                ncores = getOption("mc.cores", 2L)) {
 
     if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         if (is.null(field))  field <- list(NULL)
@@ -296,7 +296,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #' @export
 #' @importFrom methods is
 #' @importFrom GenomicRanges mcols mcols<- countOverlaps
-#' @importFrom parallel detectCores mcMap
+#' @importFrom parallel mcMap
 #' @examples
 #' data("PROseq") # load included PROseq data
 #'
@@ -326,8 +326,9 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
 #' # Alternatively
 #' ps_sample <- sample(PROseq, 0.1 * length(PROseq))
 #' length(ps_sample)
-subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
-                             expand_ranges = FALSE, ncores = detectCores()) {
+subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL,
+                             field = "score", expand_ranges = FALSE,
+                             ncores = getOption("mc.cores", 2L)) {
 
     .check_xor_args(n, prop)
 
@@ -402,8 +403,8 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 .try_unnorm_signal <- function(signal_counts, lcm) {
     unnorm_signal <- signal_counts / lcm
     if (!.close_int(unnorm_signal))
-        stop(.nicemsg("Signal given in 'field' are not whole numbers, and unable
-                      to infer a normalization factor."))
+        stop(.nicemsg("Signal given in 'field' are not whole numbers, and
+                      unable to infer a normalization factor."))
 
     warning(.nicemsg("Signal given in 'field' are not whole numbers. A
                      normalization factor was inferred based on the lowest
@@ -468,7 +469,6 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:makeGRangesBRG]{makeGRangesBRG}}
 #' @export
-#' @importFrom parallel detectCores
 #' @importFrom methods is as
 #' @examples
 #' data("PROseq") # load included PROseq data
@@ -515,7 +515,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL, field = "score",
 #' subset(multi.gr, gr1 > 0, select = gr1)
 mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
                              makeBRG = TRUE, exact_overlaps = FALSE,
-                             ncores = detectCores()) {
+                             ncores = getOption("mc.cores", 2L)) {
     data_in <- list(...)
     is_list <- function(x) is.list(x) || is(x, "GRangesList")
     if (any(vapply(data_in, is_list, logical(1))))
@@ -667,7 +667,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 #' mergeReplicates(ps_list, ncores = 1)
 mergeReplicates <- function(..., field = "score", sample_names = NULL,
                             makeBRG = TRUE, exact_overlaps = FALSE,
-                            ncores = detectCores()) {
+                            ncores = getOption("mc.cores", 2L)) {
     data_in <- list(...)
     if (any(vapply(data_in, is.list, logical(1))))
         data_in <- unlist(data_in)

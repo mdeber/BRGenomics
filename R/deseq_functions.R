@@ -90,7 +90,6 @@
 #' gene names.
 #'
 #' @export
-#' @importFrom parallel detectCores
 #' @importFrom DESeq2 DESeqDataSet sizeFactors<-
 #'
 #' @author Mike DeBerardine
@@ -127,8 +126,8 @@
 getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
                             gene_names = NULL, sizeFactors = NULL,
                             field = "score", blacklist = NULL,
-                            expand_ranges = FALSE, ncores = detectCores(),
-                            quiet = FALSE) {
+                            expand_ranges = FALSE,
+                            ncores = getOption("mc.cores", 2L), quiet = FALSE) {
 
     # Get counts dataframe for all samples in each range of regions.gr
     counts.df <- getCountsByRegions(dataset.list, regions.gr, field = field,
@@ -299,7 +298,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #'   \code{\link[DESeq2:results]{DESeq2::results}}
 #' @export
 #' @importFrom DESeq2 sizeFactors sizeFactors<-
-#' @importFrom parallel detectCores mclapply
+#' @importFrom parallel mclapply
 #'
 #' @examples
 #' #--------------------------------------------------#
@@ -354,7 +353,7 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                             comparisons = NULL, sizeFactors = NULL,
                             alpha = 0.1, args.DESeq = NULL, args.results = NULL,
-                            ncores = detectCores(), quiet = FALSE) {
+                            ncores = getOption("mc.cores", 2L), quiet = FALSE) {
 
     # check inputs
     comparisons <- .check_args(match.call(), comparisons, quiet)
@@ -419,8 +418,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
     if (!(class_ok & lengths_ok))
         stop(.nicemsg("comparisons provided as input, but it's not a list of
-                      length = 2 character vectors, or a dataframe of characters
-                      with 2 columns"))
+                      length = 2 character vectors, or a dataframe of
+                      characters with 2 columns"))
     comparisons
 }
 
@@ -508,9 +507,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         return(as.list(rqd))
 
     if (!class(usr) %in% c("list", "expression") || is.null(names(usr)))
-        stop(.nicemsg("If given, args.DESeq and args.results must be named lists
-                      or R expressions containing argument names and values.
-                      See documentation"))
+        stop(.nicemsg("If given, args.DESeq and args.results must be named
+                      lists or R expressions containing argument names and
+                      values. See documentation"))
     usr <- as.expression(usr)
     usr <- usr[!names(usr) %in% exclude]
     as.list(c(rqd, usr))

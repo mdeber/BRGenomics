@@ -1,0 +1,80 @@
+---
+title: "SequenceExtraction"
+package: BRGenomics
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  BiocStyle::pdf_document:
+    toc: true
+vignette: |
+  %\VignetteIndexEntry{Sequence Extraction}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+In this section, we'll give one more example showing the benefit of Bioconductor 
+integration by using the `Biostrings` package to extract sequences given by 
+GRanges objects.
+
+```{r, message = FALSE}
+library(BRGenomics)
+library(Biostrings)
+```
+
+We've included a twobit file of sequences, although users can use fasta files, 
+as well.
+
+```{r}
+# get path to included 2bit file
+sfile <- system.file("extdata", "dm6_chr4chrM.2bit",
+                     package = "BRGenomics")
+```
+
+We could import the entire sequence using the rtracklayer `import()` function, 
+which will figure out the file format and import a suitable object. In this 
+case, a `DNAStringSet`:
+
+```{r}
+seq_chr4 <- import(sfile)
+seq_chr4
+```
+
+_We included mitochondrial DNA to demonstrate how the DNAStringSet treats 
+multiple chromosomes._
+
+However, we don't need to import all the sequences. Instead, we can make a 
+`TwoBitFile` object that points to the file, and extract desired sequences from 
+it directly using the `getSeq()` function:
+
+```{r}
+data("txs_dm6_chr4")
+txs_pr <- promoters(txs_dm6_chr4, 0, 100)
+```
+
+```{r}
+seq_txs_pr <- getSeq(TwoBitFile(sfile), txs_pr)
+seq_txs_pr
+```
+
+The sequences are stranded as well, such that if a plus and minus strand gene 
+overlapped perfectly, the minus strand sequence would be the reverse complement 
+of the plus strand sequence.
+
+The Biostrings package itself is richly featured, and we'll demonstrate only a 
+couple functions below. This functionality is extended by packages like 
+`ggseqlogo`, for example, which plots sequence logos directly from 
+DNAStringSets.
+
+```{r}
+RNAStringSet(seq_txs_pr)
+suppressWarnings(translate(seq_txs_pr))
+oligonucleotideFrequency(seq_txs_pr[1:5], width = 1)
+oligonucleotideFrequency(seq_txs_pr[1:5], width = 2)
+```
+
+```{r}
+tss_seq <- getSeq(TwoBitFile(sfile), promoters(txs_dm6_chr4, 4, 4))
+tsspwm <- PWM(tss_seq)
+tsspwm
+```
