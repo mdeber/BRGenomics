@@ -318,7 +318,7 @@ reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
 
         # drop ranges with multiple mappings, unless from the same gene
         gn <- lapply(regions.gr$revmap, function(i) unique(gene_names[i]))
-        idx <- lengths(gn) == 1 # ranges to keep
+        idx <- lengths(gn) == 1L # ranges to keep
         regions.gr <- regions.gr[idx]
         regions.gr$revmap <- NULL
         names(regions.gr) <- unlist(gn[idx])

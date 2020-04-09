@@ -2,7 +2,6 @@
 % Please edit documentation in R/signal_counting.R
 \name{getCountsByPositions}
 \alias{getCountsByPositions}
-\alias{.getCoverageByPositions}
 \title{Get signal counts at each position within regions of interest}
 \usage{
 getCountsByPositions(
@@ -18,20 +17,6 @@ getCountsByPositions(
   melt = FALSE,
   expand_ranges = FALSE,
   ncores = detectCores()
-)
-
-.getCoverageByPositions(
-  dataset.gr,
-  regions.gr,
-  binsize,
-  FUN,
-  simplify.multi.widths,
-  field,
-  NF,
-  blacklist,
-  NA_blacklisted,
-  melt,
-  ncores
 )
 }
 \arguments{

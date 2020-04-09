@@ -18,9 +18,9 @@ Description: This package provides useful and efficient utilites for the
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: FALSE
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Depends:
-    R (>= 3.5),
+    R (>= 4.0),
     rtracklayer,
     GenomeInfoDb,
     S4Vectors

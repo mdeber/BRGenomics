@@ -233,10 +233,10 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     # 3. Collapse list into matrix
     #    -> Matrix of dim = (nbins, n.iter)
     idx.list <- replicate(n.iter, sample(ngenes, nsample), simplify = FALSE)
-    binavg.list <- mclapply(idx.list,
-                            function(idx) colMeans(counts.mat[idx, ], TRUE),
-                            mc.cores = ncores)
-    binavg.mat <- matrix(unlist(binavg.list), ncol = n.iter)
+    binavg <- mclapply(idx.list,
+                       function(idx) colMeans(counts.mat[idx, ], na.rm = TRUE),
+                       mc.cores = ncores)
+    binavg.mat <- matrix(unlist(binavg), ncol = n.iter)
 
     # calculate final outputs
     if (n.iter == 1) {
@@ -244,12 +244,14 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
                          bootstrapped"))
         idx <- unlist(idx.list)
         mean <- NF * binavg.mat
-        lower <- NF * apply(counts.mat[idx, ], 2, quantile, lower)
-        upper <- NF * apply(counts.mat[idx, ], 2, quantile, upper)
+        lower <- NF * apply(counts.mat[idx, ], 2, quantile, lower, na.rm = TRUE)
+        upper <- NF * apply(counts.mat[idx, ], 2, quantile, upper, na.rm = TRUE)
     } else {
-        mean <- NF * apply(binavg.mat, 1, median)
-        lower <- NF * apply(binavg.mat, 1, quantile, lower, names = FALSE)
-        upper <- NF * apply(binavg.mat, 1, quantile, upper, names = FALSE)
+        mean <- NF * apply(binavg.mat, 1, median, na.rm = TRUE)
+        lower <- NF * apply(binavg.mat, 1, quantile, lower,
+                            na.rm = TRUE, names = FALSE)
+        upper <- NF * apply(binavg.mat, 1, quantile, upper,
+                            na.rm = TRUE, names = FALSE)
     }
 
     # Also return x-values, sample names for plotting; x-vals centered in bins

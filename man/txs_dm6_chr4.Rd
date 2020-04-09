@@ -4,11 +4,13 @@
 \name{txs_dm6_chr4}
 \alias{txs_dm6_chr4}
 \title{Ensembl transcripts for Drosophila melanogaster, dm6, chromosome 4.}
-\format{A GRanges object with 339 ranges and 2 metadata columns:
+\format{
+A GRanges object with 339 ranges and 2 metadata columns:
 \describe{
   \item{tx_name}{Flybase unique identifiers for transcripts}
   \item{gene_id}{FLybase unique identifiers for the associated genes}
-}}
+}
+}
 \source{
 TxDb.Dmelanogaster.UCSC.dm6.ensGene version 3.4.6
 }
