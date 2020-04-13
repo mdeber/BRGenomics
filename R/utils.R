@@ -22,10 +22,17 @@ mcMap <- function(f, ...) {
 .binVector <- function(x, binsize = NULL, nbins = NULL, FUN = sum) {
     # superimpose evenly spaced bins over a vector, and perform FUN on them
     #   (output length = nbins)
-    if (missing(nbins))
-        nbins <- floor(length(x) / binsize)
-    if (missing(binsize))
-        binsize <- floor(length(x) / nbins)
+    # (all conditions for safety)
+    if (is.null(nbins)) {
+        binsize <- as.integer(binsize)
+        nbins <- as.integer(length(x) / binsize)
+    } else if (is.null(binsize)) {
+        nbins <- as.integer(nbins)
+        binsize <- as.integer(length(x) / nbins)
+    } else {
+        nbins <- as.integer(nbins)
+        binsize <- as.integer(binsize)
+    }
     mat <- matrix(x[seq_len(nbins*binsize)], nrow = binsize)
     apply(mat, 2, FUN)
 }
