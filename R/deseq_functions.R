@@ -257,6 +257,11 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #'   \code{sizeFactors} will be over-written.
 #' @param alpha The significance threshold passed to \code{DESeqResults}, which
 #'   is used for independent filtering of results (see DESeq2 documentation).
+#' @param lfcShrink Logical indicating if log2FoldChanges and their standard
+#'   errors should be shrunk using \code{\link[DESeq2:lfcShrink]{lfcShrink}}.
+#'   LFC shrinkage is very useful for making fold-change values meaningful, as
+#'   low-expression/high variance genes are given low fold-changes.
+#'   Set to \code{FALSE} by default.
 #' @param args.DESeq Additional arguments passed to
 #'   \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
 #'   e.g. \code{list(fitType = "local", useT = TRUE)}. All arguments given here
@@ -268,6 +273,11 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #'   arguments given here will be passed to \code{results} except for
 #'   \code{object}, \code{contrast}, \code{alpha}, and \code{parallel}. If no
 #'   arguments are given, all defaults will be used.
+#' @param args.lfcShrink Additional arguments passed to
+#'   \code{\link[DESeq2:lfcShrink]{lfcShrink}}, given as a list of
+#'   argument-value pairs. All arguments given here will be passed to
+#'   \code{lfcShrink} except for \code{dds}, \code{coef}, \code{contrast}, and
+#'   \code{parallel}. If no arguments are given, all defaults will be used.
 #' @param ncores The number of cores to use for parallel processing. Multicore
 #'   processing is only used if more than one comparison is being made (i.e.
 #'   argument \code{comparisons} is used), and the number of cores utilized will
@@ -352,7 +362,9 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
 #' reslist$B_vs_A
 getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                             comparisons = NULL, sizeFactors = NULL,
-                            alpha = 0.1, args.DESeq = NULL, args.results = NULL,
+                            alpha = 0.1, lfcShrink = FALSE,
+                            args.DESeq = NULL, args.results = NULL,
+                            args.lfcShrink = NULL,
                             ncores = getOption("mc.cores", 2L), quiet = FALSE) {
 
     # check inputs
@@ -370,7 +382,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     if (is.null(comparisons)) {
         res <- .get_deseq_results(
             dds, contrast.numer, contrast.denom, sizeFactors = sizeFactors,
-            alpha = alpha, args.DESeq = args.DESeq, args.results = args.results,
+            alpha = alpha, lfcShrink = lfcShrink, args.DESeq = args.DESeq,
+            args.results = args.results, args.lfcShrink = args.lfcShrink,
             quiet = quiet
         )
         return(res)
@@ -380,7 +393,8 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         results.out <- mclapply(comparisons, function(x) {
             .get_deseq_results(
                 dds, x[1], x[2], sizeFactors = sizeFactors, alpha = alpha,
-                args.DESeq = args.DESeq, args.results = args.results,
+                lfcShrink = lfcShrink, args.DESeq = args.DESeq,
+                args.results = args.results, args.lfcShrink = args.lfcShrink,
                 quiet = TRUE
             )}, mc.cores = ncores)
 
@@ -445,27 +459,29 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
 
 #' @importFrom DESeq2 DESeq results
 .get_deseq_results <- function(dds, contrast.numer, contrast.denom, sizeFactors,
-                               alpha, args.DESeq, args.results, quiet) {
+                               alpha, lfcShrink, args.DESeq, args.results,
+                               args.lfcShrink, quiet) {
 
     # Subset for pairwise comparison
     dds <- dds[, dds$condition %in% c(contrast.numer, contrast.denom)]
-    dds$condition <- factor(dds$condition) # remove unused levels
+    # drop & sort levels (needed for using apeglm shrinkage)
+    dds$condition <- factor(dds$condition, levels = c(contrast.denom,
+                                                      contrast.numer))
 
     # try to apply sizeFactors that weren't the same size as original dds
     dds <- .apply_sf_late(dds, sizeFactors, quiet)
 
-    # ==== Call DESeq2::DESeq()
+    # =============== Call DESeq2::DESeq() =============== #
     # Get args; only use parent function 'quiet' arg if not in args.DESeq
     args.DESeq <- .merge_args(rqd = expression(object = dds, parallel = FALSE),
                               usr = args.DESeq,
                               exclude = c("object", "parallel"))
-
     if (!"quiet" %in% names(args.DESeq))
         args.DESeq$quiet <- quiet
 
     dds <- do.call(DESeq2::DESeq, args.DESeq)
 
-    # ==== Call DESeq2::results()
+    # ============== Call DESeq2::results() ============== #
     # Get args
     rqd = expression(object = dds, alpha = alpha,
                      contrast = c("condition", contrast.numer, contrast.denom))
@@ -473,12 +489,29 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
                                 exclude = c("object", "contrast",
                                             "alpha", "parallel"))
     if (!quiet) {
-        do.call(DESeq2::results, args.results)
+        res <- do.call(DESeq2::results, args.results)
     } else {
-        suppressWarnings(suppressMessages(
+        res <- suppressWarnings(suppressMessages(
             do.call(DESeq2::results, args.results)
         ))
     }
+
+    # ============= Call DESeq2::lfcShrink() ============= #
+    if (lfcShrink) {
+        # Get args
+        rqd = expression(dds = dds,
+                         coef = paste0("condition_", contrast.numer,
+                                       "_vs_", contrast.denom),
+                         res = res)
+        args.lfcShrink <- .merge_args(rqd = rqd, usr = args.lfcShrink,
+                                      exclude = c("dds", "coef", "contrast",
+                                                  "res", "parallel"))
+        if (!"quiet" %in% names(args.lfcShrink))
+            args.lfcShrink$quiet <- quiet
+
+        res <- do.call(DESeq2::lfcShrink, args.lfcShrink)
+    }
+    return(res)
 }
 
 

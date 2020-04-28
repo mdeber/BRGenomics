@@ -1,3 +1,9 @@
+## BRGenomics 0.99.33
+
+* Add support for log fold-change shrinkage in `getDESeqResults()`
+* Minor bugfix generating a warning under some conditions when non-integer 
+binsizes are used 
+
 ## BRGenomics 0.99.30
 
 * Change all `ncores` options to default to `getOption("mc.cores", 2L)`

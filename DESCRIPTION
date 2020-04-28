@@ -16,6 +16,7 @@ Description: This package provides useful and efficient utilites for the
     profiles) with confidence intervals; conveniently calling DESeq2 without 
     using sample-blind estimates of genewise dispersion; among other features.
 License: Artistic-2.0
+URL: https://mdeber.github.io
 BugReports: https://github.com/mdeber/BRGenomics/issues
 Encoding: UTF-8
 LazyData: FALSE
@@ -41,6 +42,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
+    apeglm,
     remotes,
     ggplot2,
     reshape2,

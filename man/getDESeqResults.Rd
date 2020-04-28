@@ -11,8 +11,10 @@ getDESeqResults(
   comparisons = NULL,
   sizeFactors = NULL,
   alpha = 0.1,
+  lfcShrink = FALSE,
   args.DESeq = NULL,
   args.results = NULL,
+  args.lfcShrink = NULL,
   ncores = getOption("mc.cores", 2L),
   quiet = FALSE
 )
@@ -47,6 +49,12 @@ DESeq2 \code{sizeFactor}. A warning will be generated if the
 \item{alpha}{The significance threshold passed to \code{DESeqResults}, which
 is used for independent filtering of results (see DESeq2 documentation).}
 
+\item{lfcShrink}{Logical indicating if log2FoldChanges and their standard
+errors should be shrunk using \code{\link[DESeq2:lfcShrink]{lfcShrink}}.
+LFC shrinkage is very useful for making fold-change values meaningful, as
+low-expression/high variance genes are given low fold-changes.
+Set to \code{FALSE} by default.}
+
 \item{args.DESeq}{Additional arguments passed to
 \code{\link[DESeq2:DESeq]{DESeq}}, given as a list of argument-value pairs,
 e.g. \code{list(fitType = "local", useT = TRUE)}. All arguments given here
@@ -59,6 +67,12 @@ pairs, e.g. \code{list(altHypothesis = "greater", lfcThreshold = 1.5)}. All
 arguments given here will be passed to \code{results} except for
 \code{object}, \code{contrast}, \code{alpha}, and \code{parallel}. If no
 arguments are given, all defaults will be used.}
+
+\item{args.lfcShrink}{Additional arguments passed to
+\code{\link[DESeq2:lfcShrink]{lfcShrink}}, given as a list of
+argument-value pairs. All arguments given here will be passed to
+\code{lfcShrink} except for \code{dds}, \code{coef}, \code{contrast}, and
+\code{parallel}. If no arguments are given, all defaults will be used.}
 
 \item{ncores}{The number of cores to use for parallel processing. Multicore
 processing is only used if more than one comparison is being made (i.e.
