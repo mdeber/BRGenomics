@@ -1,7 +1,7 @@
 Package: BRGenomics
 Type: Package
 Title: Tools for the Efficient Analysis of High-Resolution Genomics Data
-Version: 0.99.31
+Version: 0.99.33
 Authors@R: person("Mike", "DeBerardine", email = "mike.deberardine@gmail.com", 
     role = c("aut", "cre"))
 Description: This package provides useful and efficient utilites for the 
@@ -16,6 +16,7 @@ Description: This package provides useful and efficient utilites for the
     profiles) with confidence intervals; conveniently calling DESeq2 without 
     using sample-blind estimates of genewise dispersion; among other features.
 License: Artistic-2.0
+URL: https://mdeber.github.io
 BugReports: https://github.com/mdeber/BRGenomics/issues
 Encoding: UTF-8
 LazyData: FALSE
@@ -41,6 +42,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
+    apeglm,
     remotes,
     ggplot2,
     reshape2,
