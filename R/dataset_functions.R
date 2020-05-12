@@ -224,7 +224,8 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
                                 ncores = getOption("mc.cores", 2L)) {
 
     if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
-        if (is.null(field))  field <- list(NULL)
+        if (is.null(field))
+            field <- list(NULL)
         return(mcMap(getStrandedCoverage, dataset.gr, field, ncores = 1,
                      mc.cores = ncores))
     }
@@ -249,7 +250,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
     }
     cvg_gr <- GRanges(cvg, seqinfo = seqinfo(dataset.gr))
     strand(cvg_gr) <- strand.i # (setting within GRanges() fails if length=0)
-    cvg_gr[score(cvg_gr) != 0]
+    cvg_gr[abs(score(cvg_gr)) > 1e-14] # precision issues with coverage()
 }
 
 
