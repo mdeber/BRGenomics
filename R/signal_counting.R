@@ -815,9 +815,9 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     # get site of signal
     ir <- ranges(p_int)
-    is_plus <-strand(regions.gr)[x] == "+"
-    sdist <- ifelse(is_plus, 1 + start(ir) - start(regions.gr)[x],
-                    1 + end(regions.gr)[x] - end(ir))
+    is_minus <- strand(regions.gr)[x] == "-"
+    sdist <- ifelse(is_minus, 1 + end(regions.gr)[x] - end(ir),
+                    1 + start(ir) - start(regions.gr)[x])
 
     # populate matrix
     assn <- function(x, start, width, z)
