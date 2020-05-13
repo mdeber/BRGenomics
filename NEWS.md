@@ -1,3 +1,12 @@
+## BRGenomics 1.0.1
+
+* Merge changes from 0.99.33 into release branch
+* Bug workaround for `getStrandedCoverage()` and dependent methods for getting
+coverage of normalized data (apparent bug in `IRanges::coverage()` for 
+weighting by normalized values)
+* Bug fix in `getCountsByPositions()` for getting counts over an unstranded
+region with `expand_ranges=TRUE`
+
 ## BRGenomics 0.99.33
 
 * Add support for log fold-change shrinkage in `getDESeqResults()`
