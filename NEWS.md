@@ -1,4 +1,4 @@
-## BRGenomics 1.0.1
+## BRGenomics 1.0.1 (release) & 1.1.1 (devel)
 
 * Merge changes from 0.99.33 into release branch
 * Bug workaround for `getStrandedCoverage()` and dependent methods for getting
