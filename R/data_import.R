@@ -370,7 +370,6 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
     trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
 
     if (length(file) > 1) {
-        if (is.null(paired_end))  paired_end <- list(NULL)
         return(mclapply(file, import_bam, mapq, revcomp, shift, trim.to,
                         ignore.strand, field, paired_end, yieldSize,
                         ncores = 1, mc.cores = ncores))
