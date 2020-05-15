@@ -1,7 +1,7 @@
 Package: BRGenomics
 Type: Package
 Title: Tools for the Efficient Analysis of High-Resolution Genomics Data
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: person("Mike", "DeBerardine", email = "mike.deberardine@gmail.com", 
     role = c("aut", "cre"))
 Description: This package provides useful and efficient utilites for the 
