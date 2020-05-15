@@ -146,8 +146,8 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
         discont.genes <- length(unique(gene_names)) != length(gene_names)
 
     # Make colData for SummarizedExperiment
-    coldat <- data.frame(condition = sub("_rep.*", "", sample_names),
-                         replicate = sub(".*rep", "rep", sample_names),
+    coldat <- data.frame(condition = factor(sub("_rep.*", "", sample_names)),
+                         replicate = factor(sub(".*rep", "rep", sample_names)),
                          row.names = sample_names)
 
     # Make SummarizedExperiment object
