@@ -34,7 +34,7 @@ mcMap <- function(f, ...) {
         binsize <- as.integer(binsize)
     }
     mat <- matrix(x[seq_len(nbins*binsize)], nrow = binsize)
-    apply(mat, 2, FUN)
+    apply(mat, 2L, FUN)
 }
 
 
@@ -54,7 +54,7 @@ mcMap <- function(f, ...) {
         df <- df.list[[i]]
         df[[col_name]] <- names(df.list)[i]
         if (prepend)
-            df <- df[, c(ncol(df), seq(1, ncol(df) - 1))]
+            df <- df[, c(ncol(df), seq(1L, ncol(df) - 1L))]
         df
     })
     do.call(rbind, df.list)

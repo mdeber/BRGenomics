@@ -173,7 +173,7 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                           keep.nonstandard = FALSE, makeBRG = TRUE,
                           ncores = getOption("mc.cores", 2L)) {
 
-    if (length(plus_file) > 1 || length(minus_file) > 1) {
+    if (length(plus_file) > 1L || length(minus_file) > 1L) {
         if (!is.null(plus_file) && !is.null(minus_file))
             if (length(plus_file) != length(minus_file))
                 stop("plus_file and minus_file are not the same length")
@@ -181,7 +181,7 @@ import_bigWig <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
         if (is.null(minus_file))  minus_file <- list(NULL)
         if (is.null(genome))  genome <- list(NULL)
         return(mcMap(import_bigWig, plus_file, minus_file, genome, keep.X,
-                     keep.Y, keep.M, keep.nonstandard, ncores = 1,
+                     keep.Y, keep.M, keep.nonstandard, ncores = 1L,
                      mc.cores = ncores))
     }
 
@@ -224,7 +224,7 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
                             keep.nonstandard = FALSE,
                             ncores = getOption("mc.cores", 2L)) {
 
-    if (length(plus_file) > 1 || length(minus_file) > 1) {
+    if (length(plus_file) > 1L || length(minus_file) > 1L) {
         if (!is.null(plus_file) && !is.null(minus_file))
             if (length(plus_file) != length(minus_file))
                 stop("plus_file and minus_file are not the same length")
@@ -232,7 +232,7 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
         if (is.null(minus_file))  minus_file <- list(NULL)
         if (is.null(genome))  genome <- list(NULL)
         return(mcMap(import_bedGraph, plus_file, minus_file, genome, keep.X,
-                     keep.Y, keep.M, keep.nonstandard, ncores = 1,
+                     keep.Y, keep.M, keep.nonstandard, ncores = 1L,
                      mc.cores = ncores))
     }
 
@@ -361,36 +361,36 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 #' # will include bona fide TSSes as well as hydrolysis products
 #' import_bam(ps.bam, revcomp = TRUE, trim.to = "5p",
 #'            paired_end = FALSE)
-import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
+import_bam <- function(file, mapq = 20L, revcomp = FALSE, shift = 0L,
                        trim.to = c("whole", "5p", "3p", "center"),
                        ignore.strand = FALSE, field = "score",
                        paired_end = NULL, yieldSize = NA,
-                       ncores = 1) {
+                       ncores = 1L) {
 
     trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
 
-    if (length(file) > 1) {
+    if (length(file) > 1L) {
         return(mclapply(file, import_bam, mapq, revcomp, shift, trim.to,
                         ignore.strand, field, paired_end, yieldSize,
-                        ncores = 1, mc.cores = ncores))
+                        ncores = 1L, mc.cores = ncores))
     }
 
     gr <- .import_bam(file, paired_end, yieldSize, mapq)
 
     # Apply Options
-    if (revcomp || !all(shift == 0))
+    if (revcomp || !all(shift == 0L))
         is_plus <- as.character(strand(gr)) == "+"
     if (revcomp) {
         strand(gr) <- "+"
         strand(gr)[is_plus] <- "-"
         is_plus <- !is_plus
     }
-    if (!all(shift == 0))
+    if (!all(shift == 0L))
         suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
     if (trim.to != "whole") {
         opt <- paste0("opt.", trim.to)
         opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
-        gr <- resize(gr, width = 1, fix = opt.arg[[opt]])
+        gr <- resize(gr, width = 1L, fix = opt.arg[[opt]])
     }
     if (ignore.strand)
         strand(gr) <- "*"
@@ -446,20 +446,20 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 #' @import Rsamtools
 .quick_check_paired <- function(file) {
     # check the first 100k reads
-    bfq <- BamFile(file, yieldSize = 1e5)
+    bfq <- BamFile(file, yieldSize = 1e5L)
     open(bfq)
     on.exit(close(bfq))
     param <- ScanBamParam(what = "flag")
-    flag <- scanBam(bfq, param = param)[[1]]$flag
+    flag <- scanBam(bfq, param = param)[[1L]]$flag
     any(bamFlagTest(flag, "isPaired"))
 }
 
 #' @importFrom GenomicRanges shift
 .shift_gr <- function(gr, is_plus, shift) {
-    if (length(shift) == 1) {
+    if (length(shift) == 1L) {
         shift(gr, ifelse(is_plus, shift, -shift))
-    } else if (length(shift) == 2) {
-        genebodies(gr, shift[1], shift[2], min.window = 0)
+    } else if (length(shift) == 2L) {
+        genebodies(gr, shift[1L], shift[2L], min.window = 0L)
     } else {
         stop(.nicemsg("shift argument must be a single number, or a numeric
                       vector of length 2"))
@@ -477,10 +477,10 @@ import_bam <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 
 #' @rdname import_bam
 #' @export
-import_bam_PROseq <- function(file, mapq = 20, revcomp = TRUE, shift = -1L,
+import_bam_PROseq <- function(file, mapq = 20L, revcomp = TRUE, shift = -1L,
                               trim.to = "3p", ignore.strand = FALSE,
                               field = "score", paired_end = NULL,
-                              yieldSize = NA, ncores = 1) {
+                              yieldSize = NA, ncores = 1L) {
 
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
@@ -489,10 +489,10 @@ import_bam_PROseq <- function(file, mapq = 20, revcomp = TRUE, shift = -1L,
 
 #' @rdname import_bam
 #' @export
-import_bam_PROcap <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
+import_bam_PROcap <- function(file, mapq = 20L, revcomp = FALSE, shift = 0L,
                               trim.to = "5p", ignore.strand = FALSE,
                               field = "score", paired_end = NULL,
-                              yieldSize = NA, ncores = 1) {
+                              yieldSize = NA, ncores = 1L) {
 
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,
@@ -504,11 +504,11 @@ import_bam_PROcap <- function(file, mapq = 20, revcomp = FALSE, shift = 0L,
 
 #' @rdname import_bam
 #' @export
-import_bam_ATACseq <- function(file, mapq = 20, revcomp = FALSE,
-                               shift = c(4, -5), trim.to = "whole",
+import_bam_ATACseq <- function(file, mapq = 20L, revcomp = FALSE,
+                               shift = c(4L, -5L), trim.to = "whole",
                                ignore.strand = TRUE, field = "score",
                                paired_end = TRUE, yieldSize = NA,
-                               ncores = 1) {
+                               ncores = 1L) {
 
     import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
                trim.to = trim.to, ignore.strand = ignore.strand, field = field,

@@ -192,8 +192,8 @@ getDESeqDataSet <- function(dataset.list, regions.gr, sample_names = NULL,
     } else {
         # aggregate counts by gene
         counts.df <- aggregate(counts.df, by = list(gene_names), FUN = sum)
-        rownames(counts.df) <- counts.df[, 1]
-        counts.df <- counts.df[, -1] # alphabatized by aggregate
+        rownames(counts.df) <- counts.df[, 1L]
+        counts.df <- counts.df[, -1L, drop = FALSE] # alphabatized by aggregate
 
         # for rowRanges, use longest range for each gene
         idx.by.width <- order(width(regions.gr), decreasing = TRUE)
@@ -392,22 +392,22 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         args.DESeq <- args.DESeq[names(args.DESeq) != "quiet"]
         results.out <- mclapply(comparisons, function(x) {
             .get_deseq_results(
-                dds, x[1], x[2], sizeFactors = sizeFactors, alpha = alpha,
+                dds, x[1L], x[2L], sizeFactors = sizeFactors, alpha = alpha,
                 lfcShrink = lfcShrink, args.DESeq = args.DESeq,
                 args.results = args.results, args.lfcShrink = args.lfcShrink,
                 quiet = TRUE
             )}, mc.cores = ncores)
 
         names(results.out) <- vapply(comparisons,
-                                     function(x) paste0(x[1], "_vs_", x[2]),
-                                     FUN.VALUE = character(1))
+                                     function(x) paste0(x[1L], "_vs_", x[2L]),
+                                     FUN.VALUE = character(1L))
         return(results.out)
     }
 }
 
 
 .check_args <- function(args, comparisons, quiet) {
-    args <- as.list(args)[-1]
+    args <- as.list(args)[-1L]
     num <- "contrast.numer" %in% names(args)
     denom <- "contrast.denom" %in% names(args)
     clist <- !is.null(comparisons)
@@ -426,9 +426,9 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
         comparisons <- as.list(comparisons)
     }
     class_ok <- if (!is.list(comparisons)) FALSE else {
-        all(vapply(comparisons, is.character, logical(1)))
+        all(vapply(comparisons, is.character, logical(1L)))
     }
-    lengths_ok <- all(lengths(comparisons) == 2)
+    lengths_ok <- all(lengths(comparisons) == 2L)
 
     if (!(class_ok & lengths_ok))
         stop(.nicemsg("comparisons provided as input, but it's not a list of
@@ -451,7 +451,7 @@ getDESeqResults <- function(dds, contrast.numer, contrast.denom,
     if (when_sf == "early" && already_sf && !quiet)
         warning("Overwriting previous sizeFactors", immediate. = TRUE)
 
-    if (when_sf == "late" && length(comparisons) > 1)
+    if (when_sf == "late" && length(comparisons) > 1L)
         stop(message = .nicemsg("Length of sizeFactors not equal to number of
                                 samples in dds"))
 }

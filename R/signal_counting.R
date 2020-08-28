@@ -106,6 +106,9 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 
     FXN <- if (expand_ranges) .getCoverageByRegions else .getCountsByRegions
 
+    if (is.null(field))
+        field <- list(NULL)
+
     FXN(dataset.gr, regions.gr, field = field, NF = NF, blacklist = blacklist,
         melt = melt, region_names = region_names, ncores = ncores)
 }
@@ -139,7 +142,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     # subset to increase performance for large datasets
     dataset.gr <- subsetByOverlaps(dataset.gr, regions.gr)
 
-    if (length(field) > 1) {
+    if (length(field) > 1L) {
         cl <- mcMap(.get_cbr, list(dataset.gr), list(regions.gr), field, NF,
                     mc.cores = ncores)
         names(cl) <- field
@@ -173,7 +176,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
         n <- length(field)
     }
 
-    if (is.null(NF))  NF <- rep(1L, n)
+    if (is.null(NF))  NF <- rep.int(1L, n)
 
     if (length(NF) != n) {
         if (is.list(dataset.gr))
@@ -193,7 +196,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     counts <- aggregate(mcols(dataset.gr)[[field]][to(hits)],
                         by = list(from(hits)), FUN = sum)
     names(counts) <- c("idx", "signal")
-    counts.all <- rep(0L, length(regions.gr)) # include regions without hits
+    counts.all <- rep.int(0L, length(regions.gr)) # include regions without hits
     counts.all[counts$idx] <- counts$signal
     counts.all * NF
 }
@@ -220,8 +223,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     if (is.null(region_names))
         region_names <- seq_len(nr)
 
-    if (length(snames) > 1) {
-        df <- data.frame(region = rep(region_names, ns),
+    if (length(snames) > 1L) {
+        df <- data.frame(region = rep.int(region_names, ns),
                          signal = unlist(df),
                          sample = rep(snames, each = nr))
     } else {
@@ -263,7 +266,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     field <- .check_fields(dataset.gr, field)
     NF <- .check_nfs(dataset.gr, NF, field)
 
-    if (length(field) > 1) {
+    if (length(field) > 1L) {
         cl <- mcMap(.get_cvbr, list(dataset.gr), list(regions.gr), field, NF,
                     mc.cores = ncores)
         names(cl) <- field
@@ -318,7 +321,7 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
     p_int_sig <- mcols(p_int)[[field]] * width(p_int)
     cvg <- aggregate(p_int_sig, by = list(idx), FUN = sum)
     names(cvg) <- c("idx", "signal")
-    cvg.all <- rep(0L, length(regions.gr)) # include regions without hits
+    cvg.all <- rep.int(0L, length(regions.gr)) # include regions without hits
     cvg.all[cvg$idx] <- cvg$signal
     cvg.all * NF
 }
@@ -434,7 +437,8 @@ getCountsByRegions <- function(dataset.gr, regions.gr, field = "score",
 #'
 #' countsmat <- getCountsByPositions(PROseq, txs_pr, binsize = 10, FUN = sd)
 #' round(countsmat[10:15, ], 1)
-getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
+getCountsByPositions <- function(dataset.gr, regions.gr,
+                                 binsize = 1L, FUN = sum,
                                  simplify.multi.widths = c("error", "list",
                                                            "pad 0", "pad NA"),
                                  field = "score", NF = NULL, blacklist = NULL,
@@ -443,6 +447,9 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                                  ncores = getOption("mc.cores", 2L)) {
 
     FXN <- if (expand_ranges) .getCoverageByPositions else .getCountsByPositions
+
+    if (is.null(field))
+        field <- list(NULL)
 
     FXN(dataset.gr, regions.gr, binsize = binsize, FUN = FUN,
         simplify.multi.widths = simplify.multi.widths, field = field, NF = NF,
@@ -513,7 +520,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     hits <- findOverlaps(regions.gr, dataset.gr)
 
     # function dispatch
-    if (length(field) > 1) {
+    if (length(field) > 1L) {
         call_multifield <- function(field.i, NF.i) {
             .split_cbp(hits, dataset.gr, regions.gr, binsize = binsize,
                        FUN = FUN, smw = smw, field = field.i, NF = NF.i,
@@ -534,7 +541,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 .split_cbp <- function(hits, dataset.gr, regions.gr, binsize, FUN, smw, field,
                        NF, melt, blacklist, xy.bl) {
 
-    multi_width <- length(unique(width(regions.gr))) > 1
+    multi_width <- length(unique(width(regions.gr))) > 1L
 
     if (multi_width) {
         .get_cbp_mw(hits, dataset.gr, regions.gr, binsize, FUN, smw, field, NF,
@@ -580,7 +587,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     if (melt | smw == "list") {
         # list of vectors whose lengths determined by width of range i
-        cl <- Map(function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)],
+        cl <- Map(function(row.i, nbins.i) mat[row.i, seq_len(nbins.i),
+                                               drop = FALSE],
                   seq_len(nrow(mat)), nbins)
         if (melt)  return(.meltmw(cl))
         return(cl)
@@ -591,7 +599,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                              FUN.VALUE = logical(ncol(mat)))
         # (transpose as sapply/vapply cbinds the rows)
         arridx_pad <- which( t(arridx_pad), arr.ind = TRUE )
-        mat[arridx_pad] <- ifelse(smw == "pad 0", 0, NA)
+        mat[arridx_pad] <- ifelse(smw == "pad 0", 0L, NA)
         return(mat)
     }
 }
@@ -599,7 +607,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
 .meltmw <- function(cl) {
     lens <- lengths(cl)
-    df <- data.frame(region = rep(seq_along(cl), lens),
+    df <- data.frame(region = rep.int(seq_along(cl), lens),
                      position = unlist(lapply(lens, seq_len)),
                      signal = unlist(cl))
     rownames(df) <- NULL
@@ -613,8 +621,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                             NF, melt, blacklist, xy.bl) {
 
     # initialize signal matrix of dim = (region, position within region)
-    rwidth <- width(regions.gr[1])
-    if (length(rwidth) == 0)
+    rwidth <- width(regions.gr[1L])
+    if (length(rwidth) == 0L)
         stop("Cannot make counts matrix because regions.gr is empty")
 
     mat <- matrix(0L, length(regions.gr), rwidth)
@@ -626,9 +634,9 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     if (!is.null(xy.bl)) # apply NA_blacklisting
         mat[xy.bl] <- NA
 
-    if (binsize > 1) {
-        mat <- apply(mat, 1, function(x) .binVector(x, binsize = binsize,
-                                                    FUN = match.fun(FUN)))
+    if (binsize > 1L) {
+        mat <- apply(mat, 1L, function(x) .binVector(x, binsize = binsize,
+                                                     FUN = match.fun(FUN)))
         mat <- t(mat) # apply will cbind rather than rbind
     }
     mat <- mat * NF # apply normalization
@@ -640,8 +648,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 .get_positions_in_regions <- function(hits, dataset.gr, regions.gr) {
     # (x = from(hits))
     y1 <- start(dataset.gr[to(hits)]) # site of signal
-    y2 <- start(resize(regions.gr, 1))[from(hits)] # beginning of window
-    y <- abs(y1 - y2) + 1 # position of signal within region
+    y2 <- start(resize(regions.gr, 1L))[from(hits)] # beginning of window
+    y <- abs(y1 - y2) + 1L # position of signal within region
     cbind(from(hits), y)
 }
 
@@ -652,7 +660,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     df <- cbind(df, data.frame(as.vector(mat)))
     names(df) <- c("position", "region", "signal")
     rownames(df) <- NULL
-    df[, c(2, 1, 3)]
+    df[, c(2L, 1L, 3L), drop = FALSE]
 }
 
 
@@ -684,7 +692,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
         NF <- .check_nfs(dataset.gr, NF, field)
         cl <- mcMap(.get_cvbp, dataset.gr, list(regions.gr), binsize, list(FUN),
                     smw, field, NF, melt, list(blacklist), list(xy.bl),
-                    ncores = 1, mc.cores = ncores)
+                    ncores = 1L, mc.cores = ncores)
         if (melt)  cl <- .dfList2df(cl, prepend = FALSE)
         return(cl)
 
@@ -718,7 +726,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     p_int <- pintersect(pairs, drop.nohit.ranges = TRUE) # dataset over regions
 
     # function dispatch
-    if (length(field) > 1) {
+    if (length(field) > 1L) {
         call_multifield <- function(field.i, NF.i) {
             .split_cvbp(p_int, x, regions.gr, binsize = binsize,
                         FUN = FUN, smw = smw, field = field.i, NF = NF.i,
@@ -740,7 +748,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 .split_cvbp <- function(p_int, x, regions.gr, binsize, FUN, smw, field, NF,
                         melt, blacklist, xy.bl) {
 
-    multi_width <- length(unique(width(regions.gr))) > 1
+    multi_width <- length(unique(width(regions.gr))) > 1L
 
     if (multi_width) {
         .get_cvbp_mw(p_int, x, regions.gr, binsize, FUN, smw, field, NF, melt,
@@ -786,7 +794,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
 
     if (melt | smw == "list") {
         # list of vectors whose lengths determined by width of range i
-        cl <- Map(function(row.i, nbins.i) mat[row.i, seq_len(nbins.i)],
+        cl <- Map(function(row.i, nbins.i) mat[row.i, seq_len(nbins.i),
+                                               drop = FALSE],
                   seq_len(nrow(mat)), nbins)
         if (melt)  return(.meltmw(cl))
         return(cl)
@@ -797,7 +806,7 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                              FUN.VALUE = logical(ncol(mat)))
         # (transpose as sapply/vapply cbinds the rows)
         arridx_pad <- which( t(arridx_pad), arr.ind = TRUE )
-        mat[arridx_pad] <- ifelse(smw == "pad 0", 0, NA)
+        mat[arridx_pad] <- ifelse(smw == "pad 0", 0L, NA)
         return(mat)
     }
 }
@@ -808,16 +817,16 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
                          NF, melt, blacklist, xy.bl) {
 
     # initialize signal matrix of dim = (region, position within region)
-    rwidth <- width(regions.gr[1])
-    if (length(rwidth) == 0)
+    rwidth <- width(regions.gr[1L])
+    if (length(rwidth) == 0L)
         stop("Cannot make counts matrix because regions.gr is empty")
     mat <- matrix(0L, length(regions.gr), rwidth)
 
     # get site of signal
     ir <- ranges(p_int)
     is_minus <- strand(regions.gr)[x] == "-"
-    sdist <- ifelse(is_minus, 1 + end(regions.gr)[x] - end(ir),
-                    1 + start(ir) - start(regions.gr)[x])
+    sdist <- ifelse(is_minus, 1L + end(regions.gr)[x] - end(ir),
+                    1L + start(ir) - start(regions.gr)[x])
 
     # populate matrix
     assn <- function(x, start, width, z)
@@ -827,8 +836,8 @@ getCountsByPositions <- function(dataset.gr, regions.gr, binsize = 1, FUN = sum,
     if (!is.null(xy.bl)) # apply NA_blacklisting
         mat[xy.bl] <- NA
 
-    if (binsize > 1) {
-        mat <- apply(mat, 1, function(x) .binVector(x, binsize = binsize,
+    if (binsize > 1L) {
+        mat <- apply(mat, 1L, function(x) .binVector(x, binsize = binsize,
                                                     FUN = match.fun(FUN)))
         mat <- t(mat) # apply will cbind rather than rbind
     }
@@ -978,7 +987,7 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
                     names(dataset.gr), length.normalize, remove.empty, melt,
                     region_names, dwidth)
 
-    } else if (length(field) > 1) {
+    } else if (length(field) > 1L) {
         .pidx_multi(counts_pr, counts_gb, promoters.gr, genebodies.gr,
                     field, length.normalize, remove.empty, melt, region_names,
                     dwidth)
@@ -991,7 +1000,7 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
 
 #' @importFrom S4Vectors from to
 .get_dwidth <- function(regions, blacklist) {
-    dwidth <- rep(0L, length(regions))
+    dwidth <- rep.int(0L, length(regions))
     hits <- findOverlaps(regions, blacklist)
     bloverlap <- pintersect(regions[from(hits)], blacklist[to(hits)])
     dwidth[from(hits)] <- width(bloverlap)
@@ -1006,15 +1015,15 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
         pwidths <- GenomicRanges::width(promoters.gr)
         gwidths <- GenomicRanges::width(genebodies.gr)
         if (!is.null(dwidth)) {
-            pwidths <- pwidths - dwidth[[1]]
-            gwidths <- gwidths - dwidth[[2]]
+            pwidths <- pwidths - dwidth[[1L]]
+            gwidths <- gwidths - dwidth[[2L]]
         }
         counts_pr <- counts_pr / pwidths
         counts_gb <- counts_gb / gwidths
     }
 
     if (remove.empty) {
-        idx <- which(counts_pr != 0)
+        idx <- which(counts_pr != 0L)
         counts_pr <- counts_pr[idx]
         counts_gb <- counts_gb[idx]
     }
@@ -1048,7 +1057,7 @@ getPausingIndices <- function(dataset.gr, promoters.gr, genebodies.gr,
 
     if (remove.empty) {
         # idx to drop
-        idx <- lapply(counts_pr, function(x) which(x == 0))
+        idx <- lapply(counts_pr, function(x) which(x == 0L))
         idx <- unique(unlist(idx))
         counts_pr <- counts_pr[-idx, ]
         counts_gb <- counts_gb[-idx, ]

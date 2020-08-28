@@ -113,14 +113,13 @@ makeGRangesBRG <- function(dataset.gr, ncores = getOption("mc.cores", 2L)) {
         stop("Input dataset.gr is not disjoint. See documentation")
 
     # separate wide granges
-    is_wide <- width(dataset.gr) > 1
+    is_wide <- width(dataset.gr) > 1L
     gr_wide <- dataset.gr[is_wide]
 
     # make width 1, reverse map, and add metadata
     gp <- GPos(gr_wide)
     hits <- findOverlaps(gr_wide, gp)
-    mcols(gp) <- mcols(gr_wide)[from(hits), ]
-    names(mcols(gp)) <- names(mcols(gr_wide))
+    mcols(gp) <- mcols(gr_wide)[from(hits), , drop = FALSE]
 
     # combine and sort
     sort(c(dataset.gr[!is_wide], GRanges(gp)))
@@ -132,7 +131,7 @@ makeGRangesBRG <- function(dataset.gr, ncores = getOption("mc.cores", 2L)) {
 #' @importFrom GenomicRanges width isDisjoint
 #' @export
 isBRG <- function(x) {
-    is(x, "GRanges") && all(width(x) == 1) && isDisjoint(x)
+    is(x, "GRanges") && all(width(x) == 1L) && isDisjoint(x)
 }
 
 
@@ -226,7 +225,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
     if (is.list(dataset.gr) || is(dataset.gr, "GRangesList")) {
         if (is.null(field))
             field <- list(NULL)
-        return(mcMap(getStrandedCoverage, dataset.gr, field, ncores = 1,
+        return(mcMap(getStrandedCoverage, dataset.gr, field, ncores = 1L,
                      mc.cores = ncores))
     }
 
@@ -236,7 +235,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
                       each range, set field = NULL"))
 
     cvg_ls <- mclapply(c("+", "-", "*"), .get_stranded_cvg, dataset.gr, field,
-                       mc.cores = min(ncores, 3))
+                       mc.cores = min(ncores, 3L))
     sort(do.call(c, cvg_ls))
 }
 
@@ -250,7 +249,7 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
     }
     cvg_gr <- GRanges(cvg, seqinfo = seqinfo(dataset.gr))
     strand(cvg_gr) <- strand.i # (setting within GRanges() fails if length=0)
-    cvg_gr[abs(score(cvg_gr)) > 1e-14] # precision issues with coverage()
+    cvg_gr[abs(score(cvg_gr)) > 1e-12] # precision issues with coverage()
 }
 
 
@@ -339,14 +338,14 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL,
         if (is.null(prop))  prop <- list(NULL)
 
         mcMap(.subsample_gr, dataset.gr, n, prop, field, expand_ranges,
-              ncores = 1, mc.cores = ncores)
+              ncores = 1L, mc.cores = ncores)
 
-    } else if (length(field) > 1) {
+    } else if (length(field) > 1L) {
         if (is.null(n))  n <- list(NULL)
         if (is.null(prop))  prop <- list(NULL)
 
         grl <- mcMap(.subsample_gr, list(dataset.gr), n, prop, field,
-                     expand_ranges, ncores = 1, mc.cores = ncores)
+                     expand_ranges, ncores = 1L, mc.cores = ncores)
         names(grl) <- field
         mergeGRangesData(grl, field = field, multiplex = TRUE, ncores = ncores)
 
@@ -367,7 +366,7 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL,
     if (expand_ranges)
         signal_counts <- signal_counts * width(dataset.gr)
     if (normed_signal <- !.close_int(signal_counts)) {
-        lcm <- min(signal_counts[signal_counts != 0])
+        lcm <- min(signal_counts[signal_counts != 0L])
         signal_counts <- .try_unnorm_signal(signal_counts, lcm)
     }
     nreads <- sum(signal_counts)
@@ -382,16 +381,16 @@ subsampleGRanges <- function(dataset.gr, n = NULL, prop = NULL,
         #  - Get the associated range index -> idx.range
         #  - Get its number within each range (e.g. "2nd read in that range")
         #  - Get its position within each range (offset from start, in bp)
-        idx.range <- findInterval(samp_reads + 1, csumreads)
-        read_in_range <- samp_reads - ( c(0, csumreads)[idx.range] )
+        idx.range <- findInterval(samp_reads + 1L, csumreads)
+        read_in_range <- samp_reads - ( c(0L, csumreads)[idx.range] )
         pos_in_range <- ceiling( read_in_range / signal_counts[idx.range] )
 
-        gr_sample <- shift(resize(dataset.gr[idx.range], 1), pos_in_range)
+        gr_sample <- shift(resize(dataset.gr[idx.range], 1L), pos_in_range)
         gr_out <- getStrandedCoverage(gr_sample, field = NULL, ncores = ncores)
         names(mcols(gr_out)) <- field
     } else {
         # avoid modifying GRanges, and sample associated indices (w/o replace)
-        idx <- rep(seq_along(dataset.gr), times = signal_counts)
+        idx <- rep.int(seq_along(dataset.gr), times = signal_counts)
         gr_sample <- dataset.gr[sample(idx, n)] # critical to not use 'prob' arg
         gr_out <- unique(gr_sample)
         mcols(gr_out)[field] <- countOverlaps(gr_out, gr_sample)
@@ -519,17 +518,17 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
                              ncores = getOption("mc.cores", 2L)) {
     data_in <- list(...)
     is_list <- function(x) is.list(x) || is(x, "GRangesList")
-    if (any(vapply(data_in, is_list, logical(1))))
+    if (any(vapply(data_in, is_list, logical(1L))))
         data_in <- unlist(data_in)
 
     if (is(data_in, "GRangesList")) # no performance difference w/ unlist, etc.
         data_in <- as(data_in, "list")
 
     # check field names match inputs
-    if (length(field) == 1) {
+    if (length(field) == 1L) {
         if (is.null(field))
             field <- "score"
-        field <- rep(field, length(data_in))
+        field <- rep.int(field, length(data_in))
     } else if (length(field) != length(data_in)) {
         stop("Given fields not equal to number of datasets")
     }
@@ -537,7 +536,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     if (multiplex) {
         if (is.null(names(data_in))) {
             exclude <- c("field", "multiplex", "ncores")
-            in.names <- as.list(match.call())[-1]
+            in.names <- as.list(match.call())[-1L]
             names(data_in) <- in.names[!names(in.names) %in% exclude]
         }
         .multiplex_gr(data_in, field, ncores)
@@ -559,8 +558,8 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
                               field = "score", ncores = ncores)
 
     # keep field name if only one given
-    if (length(unique(field)) == 1)
-        names(mcols(gr)) <- field[1]
+    if (length(unique(field)) == 1L)
+        names(mcols(gr)) <- field[1L]
 
     if (makeBRG) return(makeGRangesBRG(gr, ncores = ncores))
     gr
@@ -602,7 +601,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
 .multiplex_gr <- function(data_in, field, ncores) {
 
     # data must be *sorted*, base-pair resolution coverage data
-    if (all(vapply(data_in, function(x) all(width(x) == 1), logical(1)))) {
+    if (all( vapply(data_in, function(x) all(width(x) == 1L), logical(1L)) )) {
         data_in <- mclapply(data_in, sort, mc.cores = ncores)
     } else {
         warning(.nicemsg("One or more inputs are not 'basepair resolution
@@ -621,7 +620,7 @@ mergeGRangesData <- function(..., field = "score", multiplex = FALSE,
     # get dataframe of signal counts for each dataset in the output GRanges
     idx <- mclapply(data_in, function(x) which(gr %in% x), mc.cores = ncores)
     counts <- mcmapply(function(dat, idx, field) {
-        out <- rep(0L, length(gr))
+        out <- rep.int(0L, length(gr))
         out[idx] <- mcols(dat)[[field]]
         out
     }, data_in, idx, field, mc.cores = ncores, SIMPLIFY = TRUE)
@@ -677,7 +676,7 @@ mergeReplicates <- function(..., field = "score", sample_names = NULL,
         names(data_in) <- sample_names
 
     if (is.null(names(data_in))) {
-        in.names <- as.list(match.call())[-1]
+        in.names <- as.list(match.call())[-1L]
         names(data_in) <- setdiff(in.names, c("field", "multiplex", "ncores"))
     }
 
@@ -685,17 +684,17 @@ mergeReplicates <- function(..., field = "score", sample_names = NULL,
         stop(.nicemsg("All sample names must end with \"_rep\" followed by one
                       or more characters that indicate the replicate"))
 
-    if (length(field) == 1)
-        field <- rep(field, length(data_in))
+    if (length(field) == 1L)
+        field <- rep.int(field, length(data_in))
 
     basenames <- unique(sub("_rep.*", "", names(data_in)))
 
     nreps <- length(data_in) / length(basenames)
     if (length(basenames) > nreps) {
         ncores_out <- ncores
-        ncores_in <- 1
+        ncores_in <- 1L
     } else {
-        ncores_out <- 1
+        ncores_out <- 1L
         ncores_in <- ncores
     }
 

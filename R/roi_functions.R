@@ -75,9 +75,9 @@
 #' #--------------------------------------------------#
 #'
 #' genebodies(txs, 500, 1000, fix.start = "end")
-genebodies <- function(genelist, start = 300, end = -300,
+genebodies <- function(genelist, start = 300L, end = -300L,
                        fix.start = "start", fix.end = "end",
-                       min.window = 0) {
+                       min.window = 0L) {
 
     fix.start <- match.arg(fix.start, c("start", "end", "center"))
     fix.end <- match.arg(fix.end, c("end", "start", "center"))
@@ -99,8 +99,8 @@ genebodies <- function(genelist, start = 300, end = -300,
     genelist <- genelist[width(genelist) >= min.window]
 
     # starts are at strand-specific beginnings of the genebodies
-    sense_starts <- start(resize(genelist, 1, fix = fix.start))
-    sense_ends <- start(resize(genelist, 1, fix = fix.end))
+    sense_starts <- start(resize(genelist, 1L, fix = fix.start))
+    sense_ends <- start(resize(genelist, 1L, fix = fix.end))
 
     # shift with strand-specificity
     is_plus <- as.character(strand(genelist)) == "+"
@@ -279,7 +279,7 @@ intersectByGene <- function(regions.gr, gene_names) {
 
     # remove genes for which no consensus is possible
     idx.drop <- which(max.starts >= min.ends)
-    if (length(idx.drop) > 0) {
+    if (length(idx.drop) > 0L) {
         gr <- gr[-idx.drop]
         grl <- grl[-idx.drop]
         max.starts <- max.starts[-idx.drop]
@@ -395,7 +395,7 @@ reduceByGene <- function(regions.gr, gene_names, disjoin = FALSE) {
 #' #--------------------------------------------------#
 #'
 #' getMaxPositionsBySignal(PROseq, pr[1:3], binsize = 5, keep.signal = TRUE)
-getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
+getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1L,
                                     bin.centers = FALSE, field = "score",
                                     keep.signal = FALSE,
                                     expand_ranges = FALSE) {
@@ -403,8 +403,8 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
     regions.gr <- subsetByOverlaps(regions.gr, dataset.gr)
 
     # if no regions in regions.gr have signal, return an empty GRanges object
-    if (length(regions.gr) == 0) {
-        if (keep.signal)  regions.gr$MaxSiteSignal <- integer(0)
+    if (length(regions.gr) == 0L) {
+        if (keep.signal)  regions.gr$MaxSiteSignal <- integer(0L)
         return(regions.gr)
     }
 
@@ -415,19 +415,19 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 
     # Make new GRanges object with only max site for each gene
     regions.max.gr <- regions.gr
-    if (binsize == 1) {
+    if (binsize == 1L) {
         bin.centers <- maxsites$pos
-        size <- 1
+        size <- 1L
     } else {
         if (bin.centers) {
-            bin.centers <- ceiling(binsize / 2) + (binsize * (maxsites$pos - 1))
-            size <- 1
+            bin.centers <- ceiling(binsize/2L) + (binsize * (maxsites$pos - 1L))
+            size <- 1L
         } else {
             bin.centers <- binsize * maxsites$pos # end of bin
             size <- binsize
         }
     }
-    regions.max.gr <- promoters(regions.gr, 0, bin.centers)
+    regions.max.gr <- promoters(regions.gr, 0L, bin.centers)
     regions.max.gr <- resize(regions.max.gr, size, fix = "end")
 
     if (keep.signal)  regions.max.gr$MaxSiteSignal <- maxsites$score
@@ -440,8 +440,8 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
 
     mat <- getCountsByPositions(dataset.gr, regions.gr, binsize = binsize,
                                 field = field, expand_ranges = expand_ranges)
-    max_pos <- apply(mat, 1, which.max)
-    max_scores <- apply(mat, 1, max)
+    max_pos <- apply(mat, 1L, which.max)
+    max_scores <- apply(mat, 1L, max)
     list(pos = max_pos, score = max_scores)
 }
 
@@ -455,8 +455,8 @@ getMaxPositionsBySignal <- function(dataset.gr, regions.gr, binsize = 1,
         simplify.multi.widths = "list", field = field,
         expand_ranges = expand_ranges
     )
-    max_pos <- vapply(countslist, which.max, integer(1))
-    max_scores <- vapply(countslist, max, numeric(1))
+    max_pos <- vapply(countslist, which.max, integer(1L))
+    max_scores <- vapply(countslist, max, numeric(1L))
     list(pos = max_pos, score = max_scores)
 }
 
@@ -539,8 +539,8 @@ subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
                                   density = FALSE, keep.signal = FALSE,
                                   expand_ranges = FALSE) {
 
-    if (quantiles[1] == 1 || quantiles[2] == 0)
-        return(regions.gr[0])
+    if (quantiles[1L] == 1L || quantiles[2L] == 0L)
+        return(regions.gr[0L])
 
     signal_counts <- getCountsByRegions(dataset.gr, regions.gr, field = field,
                                         expand_ranges = expand_ranges)
@@ -552,7 +552,7 @@ subsetRegionsBySignal <- function(regions.gr, dataset.gr, quantiles = c(0.5, 1),
 
     idx_rank <- order(signal_counts) # increasing
     bounds <- quantile(seq_along(regions.gr), quantiles)
-    idx <- window(idx_rank, bounds[1], bounds[2])
+    idx <- window(idx_rank, bounds[1L], bounds[2L])
 
     if (order.by.rank)
         return(rev(regions.gr[idx]))

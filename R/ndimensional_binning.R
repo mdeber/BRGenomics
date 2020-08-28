@@ -125,12 +125,12 @@
 #' bin2d_cps_med[1:6, ]
 #'
 #' subset(bin2d_cps_med, is.finite(counts_cps))[1:6, ]
-binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
+binNdimensions <- function(dims.df, nbins = 10L, use_bin_numbers = TRUE,
                            ncores = getOption("mc.cores", 2L)) {
 
     # check input bins
     n_dim <- ncol(dims.df)
-    if (length(nbins) > 1 & length(nbins) != n_dim)
+    if (length(nbins) > 1L & length(nbins) != n_dim)
         stop(.nicemsg("User input %d dimensions of data, but length(nbins) = %d.
                       length(nbins) must be equal to ncol(dims.df), or be a
                       single number.", n_dim, length(nbins)))
@@ -138,7 +138,7 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
     # get bin divisions for each dimension, evenly spaced from min to max values
     getBreaks <- function(x, y) {
         xfin <- x[is.finite(x)]
-        seq(min(xfin), max(xfin), length.out = y + 1)
+        seq(min(xfin), max(xfin), length.out = y + 1L)
     }
     breaks <- mcMap(getBreaks, dims.df, nbins, mc.cores = ncores)
 
@@ -148,15 +148,15 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
 
     # address infinite values
     bin_idx <- lapply(bin_idx, function(x) {
-        x[x == 0] <- NA
+        x[x == 0L] <- NA
         x
     })
 
     if (!use_bin_numbers) {
         # get center value for each bin in each dimensions
-        get_centers <- function(x) vapply(seq_len(length(x) - 1),
-                                          function(i) mean(x[i:(i+1)]),
-                                          numeric(1))
+        get_centers <- function(x) vapply(seq_len(length(x) - 1L),
+                                          function(i) mean(x[i:(i + 1L)]),
+                                          numeric(1L))
         break_centers <- mclapply(breaks, get_centers, mc.cores = ncores)
         bin_idx <- mcMap("[", break_centers, bin_idx) # get values for data
     }
@@ -169,7 +169,7 @@ binNdimensions <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
 
 #' @rdname binNdimensions
 #' @export
-aggregateByNdimBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
+aggregateByNdimBins <- function(x, dims.df, nbins = 10L, FUN = mean, ...,
                                 ignore.na = TRUE, drop = FALSE, empty = NA,
                                 use_bin_numbers = TRUE,
                                 ncores = getOption("mc.cores", 2L)) {
@@ -187,7 +187,7 @@ aggregateByNdimBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
     }
 
     if (ignore.na) {
-        idx <- apply(x.df, 1, function(x) all(!is.na(x)))
+        idx <- apply(x.df, 1L, function(x) all(!is.na(x)))
         x.df <- x.df[idx, , drop = FALSE]
         dims.df <- dims.df[idx, , drop = FALSE]
     }
@@ -244,13 +244,13 @@ aggregateByNdimBins <- function(x, dims.df, nbins = 10, FUN = mean, ...,
 
 #' @rdname binNdimensions
 #' @export
-densityInNdimBins <- function(dims.df, nbins = 10, use_bin_numbers = TRUE,
+densityInNdimBins <- function(dims.df, nbins = 10L, use_bin_numbers = TRUE,
                               ncores = getOption("mc.cores", 2L)) {
     # avoid unnecessary evaluations in the aggregate function
-    x <- rep(0L, nrow(dims.df))
+    x <- rep.int(0L, nrow(dims.df))
     bins.df <- binNdimensions(dims.df, nbins, use_bin_numbers, ncores)
     ag.bins <- aggregate(data.frame(value = x), by = bins.df, FUN = length,
                          drop = FALSE)
-    ag.bins$value[is.na(ag.bins$value)] <- 0
+    ag.bins$value[is.na(ag.bins$value)] <- 0L
     ag.bins
 }
