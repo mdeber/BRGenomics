@@ -134,13 +134,13 @@ NULL
 #' @importFrom parallel mcMap
 #' @importFrom GenomicRanges width
 metaSubsample <- function(
-    dataset.gr, regions.gr, binsize = 1, first.output.xval = 1,
-    sample.name = deparse(substitute(dataset.gr)), n.iter = 1000,
+    dataset.gr, regions.gr, binsize = 1L, first.output.xval = 1L,
+    sample.name = deparse(substitute(dataset.gr)), n.iter = 1000L,
     prop.sample = 0.1, lower = 0.125, upper = 0.875, field = "score",
     NF = NULL, remove.empty = FALSE, blacklist = NULL, zero_blacklisted = FALSE,
     expand_ranges = FALSE, ncores = getOption("mc.cores", 2L)
 ) {
-    if (length(unique(width(regions.gr))) > 1) # check ranges all same width
+    if (length(unique(width(regions.gr))) > 1L) # check ranges all same width
         stop(message = "Not all ranges in regions.gr are the same width")
 
     # Signal in each gene; matrix of dim = (ngenes, nbins), or list of matrices
@@ -153,28 +153,28 @@ metaSubsample <- function(
     if (is.list(signal.bins)) { # (if length(dataset.gr) > 1)
         if (length(sample.name) != length(signal.bins))
             sample.name <- names(signal.bins)
-        if (length(sample.name) == 0)
+        if (length(sample.name) == 0L)
             sample.name <- as.character(seq_along(signal.bins))
         if (remove.empty)
             warning("remove.empty set with multiple fields/datasets")
-        ncores_in <- 1
+        ncores_in <- 1L
         ncores_out <- ncores
     } else {
         ncores_in <- ncores
-        ncores_out <- 1
+        ncores_out <- 1L
         signal.bins <- list(signal.bins)
     }
-    if (is.null(NF))  NF <- rep(1L, length(signal.bins))
+    if (is.null(NF))  NF <- rep.int(1L, length(signal.bins))
 
-    cl <- mcMap(metaSubsampleMatrix, signal.bins, binsize = 1,
+    cl <- mcMap(metaSubsampleMatrix, signal.bins, binsize = 1L,
                 sample.name = sample.name, n.iter = n.iter,
                 prop.sample = prop.sample, lower = lower, upper = upper,
                 NF = NF, remove.empty = remove.empty, ncores = ncores_in,
                 mc.cores = ncores_out, mc.set.seed = FALSE)
 
     # fix x-values to match bins, and binsize-normalize the returned values
-    if (length(cl) == 1) {
-        .fixbins(cl[[1]], binsize, first.output.xval)
+    if (length(cl) == 1L) {
+        .fixbins(cl[[1L]], binsize, first.output.xval)
     } else {
         cl <- lapply(cl, .fixbins, binsize, first.output.xval)
         do.call(rbind, c(cl, make.row.names = FALSE))
@@ -184,8 +184,8 @@ metaSubsample <- function(
 
 .fixbins <- function(df, binsize, first.output.xval) {
     nbins <- nrow(df)
-    if (binsize == 1) {
-        df$x <- seq(0, nbins - 1) + first.output.xval
+    if (binsize == 1L) {
+        df$x <- seq(0L, nbins - 1L) + first.output.xval
     } else {
         df$x <- .binxval(nbins, binsize, first.output.xval)
         y_vals <- c("mean", "lower", "upper")
@@ -198,7 +198,7 @@ metaSubsample <- function(
 
 #' @importFrom stats median
 .binxval <- function(nbins, binsize, first.output.xval) {
-    firstbin <- seq(first.output.xval, by = 1, length.out = binsize)
+    firstbin <- seq(first.output.xval, by = 1L, length.out = binsize)
     binstart <- median(firstbin) # center of first bin
     seq(binstart, by = binsize, length.out = nbins)
 }
@@ -209,23 +209,26 @@ metaSubsample <- function(
 #' @export
 #' @importFrom parallel mclapply
 #' @importFrom stats quantile
-metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
-                                sample.name = NULL, n.iter = 1000,
+metaSubsampleMatrix <- function(counts.mat, binsize = 1L, first.output.xval = 1L,
+                                sample.name = NULL, n.iter = 1000L,
                                 prop.sample = 0.1, lower = 0.125, upper = 0.875,
-                                NF = 1, remove.empty = FALSE,
+                                NF = 1L, remove.empty = FALSE,
                                 ncores = getOption("mc.cores", 2L)) {
     # Check that enough iterations are given for meaningful quantiles
-    if (n.iter != 1) .check_iter(n.iter, lower, upper)
-    if (remove.empty) counts.mat <- counts.mat[rowSums(counts.mat) > 0, ]
+    if (n.iter != 1L) .check_iter(n.iter, lower, upper)
+    if (remove.empty)
+        counts.mat <- counts.mat[rowSums(counts.mat) > 0L, , drop = FALSE]
     if (is.null(sample.name)) sample.name <- deparse(substitute(counts.mat))
 
     nbins <- floor(ncol(counts.mat) / binsize)
     ngenes <- nrow(counts.mat)
-    nsample <- round(prop.sample*ngenes)
+    nsample <- ceiling(prop.sample*ngenes)
 
-    if (binsize > 1) # transpose as apply will cbind rather than rbind
-        counts.mat <- t( apply(counts.mat, 1, .binVector, binsize = binsize) )
-
+    if (binsize > 1L) {
+        counts.mat <- apply(counts.mat, 1L, .binVector, binsize = binsize)
+        counts.mat <- if (is.array(counts.mat)) t(counts.mat) else
+            matrix(counts.mat) # (for single column matrices)
+    }
     # 1. Randomly subsample rows of the counts.mat
     #    -> List of length = n.iter, containing vectors of length = nsample
     # 2. For each iteration, get average signal in each bin
@@ -234,29 +237,30 @@ metaSubsampleMatrix <- function(counts.mat, binsize = 1, first.output.xval = 1,
     #    -> Matrix of dim = (nbins, n.iter)
     idx.list <- replicate(n.iter, sample(ngenes, nsample), simplify = FALSE)
     binavg <- mclapply(idx.list,
-                       function(idx) colMeans(counts.mat[idx, ], na.rm = TRUE),
+                       function(idx) colMeans(counts.mat[idx, , drop = FALSE],
+                                              na.rm = TRUE),
                        mc.cores = ncores)
     binavg.mat <- matrix(unlist(binavg), ncol = n.iter)
 
     # calculate final outputs
-    if (n.iter == 1) {
+    if (n.iter == 1L) {
         message(.nicemsg("With n.iter = 1, output means and quantiles are not
                          bootstrapped"))
         idx <- unlist(idx.list)
-        mean <- NF * binavg.mat
-        lower <- NF * apply(counts.mat[idx, ], 2, quantile, lower, na.rm = TRUE)
-        upper <- NF * apply(counts.mat[idx, ], 2, quantile, upper, na.rm = TRUE)
+        mean <- NF*binavg.mat
+        lower <- NF*apply(counts.mat[idx, ], 2L, quantile, lower, na.rm = TRUE)
+        upper <- NF*apply(counts.mat[idx, ], 2L, quantile, upper, na.rm = TRUE)
     } else {
-        mean <- NF * apply(binavg.mat, 1, median, na.rm = TRUE)
-        lower <- NF * apply(binavg.mat, 1, quantile, lower,
-                            na.rm = TRUE, names = FALSE)
-        upper <- NF * apply(binavg.mat, 1, quantile, upper,
-                            na.rm = TRUE, names = FALSE)
+        mean <- NF*apply(binavg.mat, 1L, median, na.rm = TRUE)
+        lower <- NF*apply(binavg.mat, 1L, quantile, lower,
+                          na.rm = TRUE, names = FALSE)
+        upper <- NF*apply(binavg.mat, 1L, quantile, upper,
+                          na.rm = TRUE, names = FALSE)
     }
 
     # Also return x-values, sample names for plotting; x-vals centered in bins
-    if (binsize == 1) x <- first.output.xval + seq(0, nbins - 1)
-    if (binsize > 1) x <- .binxval(nbins, binsize, first.output.xval)
+    if (binsize == 1L) x <- first.output.xval + seq(0L, nbins - 1L)
+    if (binsize > 1L) x <- .binxval(nbins, binsize, first.output.xval)
     return(data.frame(x, mean, lower, upper, sample.name))
 }
 

@@ -208,7 +208,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
     } else if (method == "SNR") {
         .get_nf_snr(counts.df, ctrl_pattern, ctrl_names, batch_norm)
     } else {
-        1e6 / counts.df$exp_reads # RPM normalize
+        1e6L / counts.df$exp_reads # RPM normalize
     }
 }
 
@@ -224,8 +224,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
         # 1. get spike-in NFs within each replicate;
         # 2. normalize the replicates to one another, based on the controls
-        snf <- rep(NA, nrow(df)) # initialize
-        repnf <- rep(NA, nrow(df))
+        repnf <- snf <- rep.int(NA, nrow(df)) # initialize
 
         idx_ctrl <- .get_idx_ctrl(df, ctrl_pattern, ctrl_names)
         min_ctrl <- idx_ctrl[ which.min(df$exp_reads[idx_ctrl]) ]
@@ -258,7 +257,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 
     if (batch_norm) {
         srep <- sub(".*rep", "rep", counts.df$sample)
-        ratio_ctrl <- rep(NA, nrow(counts.df))
+        ratio_ctrl <- rep.int(NA, nrow(counts.df))
         for (i in unique(srep)) {
             idx_i <- which(srep == i)
             idx_ci <- intersect(idx_i, idx_ctrl)
@@ -269,7 +268,7 @@ getSpikeInNFs <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
         ratio_ctrl <- rps / ctrl_avg
     }
 
-    nf_rpm <- 1e6 / counts.df$exp_reads
+    nf_rpm <- 1e6L / counts.df$exp_reads
     return(ratio_ctrl * nf_rpm)
 }
 
@@ -371,14 +370,14 @@ applyNFsGRanges <- function(dataset.gr, NF, field = "score",
         message(.nicemsg("With field = NULL, will calculate stranded coverage
                          before returning normalized GRanges"))
         dataset.gr <- mclapply(dataset.gr, getStrandedCoverage, field = NULL,
-                               ncores = 1, mc.cores = ncores)
+                               ncores = 1L, mc.cores = ncores)
         field <- "score"
     }
 
-    if (length(dataset.gr) == 1)
-        return(.norm_gr(dataset.gr[[1]], field, NF, ncores))
+    if (length(dataset.gr) == 1L)
+        return(.norm_gr(dataset.gr[[1L]], field, NF, ncores))
 
-    mcMap(.norm_gr, dataset.gr, field, NF, ncores = 1, mc.cores = ncores)
+    mcMap(.norm_gr, dataset.gr, field, NF, ncores = 1L, mc.cores = ncores)
 }
 
 #' @importFrom parallel mcmapply
@@ -497,9 +496,9 @@ subsampleBySpikeIn <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
                           if using the RPM_units option"))
         # get RPM NF for negative controls
         idx_ctrl <- .get_idx_ctrl(counts.df, ctrl_pattern, ctrl_names)
-        nf_rpm <- 1e6 / mean(nreads[idx_ctrl])
+        nf_rpm <- 1e6L / mean(nreads[idx_ctrl])
         samples.gr <- applyNFsGRanges(samples.gr, NF = nf_rpm, field = field,
                                       ncores = ncores)
     }
-    if (length(samples.gr) == 1) samples.gr[[1]] else samples.gr
+    if (length(samples.gr) == 1L) samples.gr[[1L]] else samples.gr
 }

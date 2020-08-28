@@ -93,7 +93,7 @@ getSpikeInCounts <- function(dataset.gr, si_pattern = NULL, si_names = NULL,
 #' @importFrom methods is
 #' @importFrom parallel mclapply
 #' @importFrom GenomicRanges seqinfo
-.get_spike_chrom <- function(X, si_pattern, si_names, ncores = 1) {
+.get_spike_chrom <- function(X, si_pattern, si_names, ncores = 1L) {
 
     if (is.list(X) || is(X, "GRangesList")) {
         chrom <- mclapply(X, function(x) names(seqinfo(x)), mc.cores = ncores)

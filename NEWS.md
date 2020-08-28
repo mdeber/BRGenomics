@@ -1,3 +1,13 @@
+## BRGenomics 1.0.3 (release) & 1.1.3 (devel)
+
+* Increased safeguards against automatic vector coercion of matrices and 
+dataframes
+* Increased tolerance of the precision workaround in `getStrandedCoverage()`
+(workaround releveant to GenomicRanges [issue #39](
+https://github.com/Bioconductor/GenomicRanges/issues/39); will be obviated in 
+next major Bioconductor release)
+* Various minor efficiency & formatting changes
+
 ## BRGenomics 1.0.1 (release) & 1.1.1 (devel)
 
 * Merge changes from 0.99.33 into release branch
