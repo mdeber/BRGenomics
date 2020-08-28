@@ -50,17 +50,18 @@ data<sup>\[1\]</sup>.
   - No support for parallel/multicore processing
   - No support for import bigWig files
 
-## To Do
+## Possible future changes
 
   - Convert several functions into S4 generics
       - *Note that in future versions, the names of the first argument
         of certain functions may change, but their order/utility will
         not. I.e., functions with with the first argument `dataset.gr`
         may become `x`*
-  - Formalize support for `GRangesList` objects (progress underway)
+  - Formalize support for `GRangesList` objects (should be already complete)
   - Write methods for `BigWigFile`/`BigWigFileList` objects (to avoid
     loading data into memory)
   - (Possibly) use `GPos` objects by default
+  - Vectorize `genebodies()` function (like many `GenomicRanges` functions are)
 
 -----
 
