@@ -22,7 +22,7 @@ Encoding: UTF-8
 LazyData: FALSE
 RoxygenNote: 7.1.0
 Depends:
-    R (>= 4.0),
+    R (>= 3.5),
     rtracklayer,
     GenomeInfoDb,
     S4Vectors
