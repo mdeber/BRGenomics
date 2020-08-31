@@ -23,7 +23,7 @@ r_check_args: --no-build-vignettes --no-manual --timings
 r_packages:
  - covr
 
-bioc_required: true
+# bioc_required: true
 
 # only report coverage for the release version
 after_success:
