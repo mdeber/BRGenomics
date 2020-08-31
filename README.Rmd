@@ -19,10 +19,11 @@ knitr::opts_chunk$set(
 
 [![platforms](https://img.shields.io/badge/platforms-linux%20%7C%20osx%20%7C%20win-yellow.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/BRGenomics/)
 [![release](https://img.shields.io/badge/release%20version-1.0.3-navy.svg)](https://www.bioconductor.org/packages/BRGenomics)
+[![updated](http://www.bioconductor.org/shields/lastcommit/release/bioc/BRGenomics.svg)](http://bioconductor.org/checkResults/devel/bioc-LATEST/BRGenomics/)
 [![devel](https://img.shields.io/badge/devel%20version-1.1.3-orange.svg)](https://github.com/mdeber/BRGenomics)
-[![updated](http://www.bioconductor.org/shields/lastcommit/devel/bioc/BRGenomics.svg)](http://bioconductor.org/checkResults/devel/bioc-LATEST/BRGenomics/)
 [![last commit](https://img.shields.io/github/last-commit/mdeber/BRGenomics.svg)](https://github.com/mdeber/BRGenomics/commits/master)
 [![BioC status](http://www.bioconductor.org/shields/build/release/bioc/BRGenomics.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/BRGenomics/)
+[![test coverage](https://codecov.io/gh/mdeber/BRGenomics/branch/master/graph/badge.svg)](https://codecov.io/gh/mdeber/BRGenomics)
 
 <!-- badges: end -->
 
