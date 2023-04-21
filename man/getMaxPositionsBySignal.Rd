@@ -7,7 +7,7 @@
 getMaxPositionsBySignal(
   dataset.gr,
   regions.gr,
-  binsize = 1,
+  binsize = 1L,
   bin.centers = FALSE,
   field = "score",
   keep.signal = FALSE,

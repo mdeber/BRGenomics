@@ -9,10 +9,10 @@
 metaSubsample(
   dataset.gr,
   regions.gr,
-  binsize = 1,
-  first.output.xval = 1,
+  binsize = 1L,
+  first.output.xval = 1L,
   sample.name = deparse(substitute(dataset.gr)),
-  n.iter = 1000,
+  n.iter = 1000L,
   prop.sample = 0.1,
   lower = 0.125,
   upper = 0.875,
@@ -27,14 +27,14 @@ metaSubsample(
 
 metaSubsampleMatrix(
   counts.mat,
-  binsize = 1,
-  first.output.xval = 1,
+  binsize = 1L,
+  first.output.xval = 1L,
   sample.name = NULL,
-  n.iter = 1000,
+  n.iter = 1000L,
   prop.sample = 0.1,
   lower = 0.125,
   upper = 0.875,
-  NF = 1,
+  NF = 1L,
   remove.empty = FALSE,
   ncores = getOption("mc.cores", 2L)
 )

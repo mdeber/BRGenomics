@@ -56,9 +56,9 @@
 #'   ends of reads).
 #'
 #'   This is in contrast to standard run-length compressed GRanges object, as
-#'   imported using \code{\link[rtracklayer:export]{rtracklayer::import.bw}}, in
-#'   which a single range can represent multiple contiguous positions that share
-#'   the same signal information.
+#'   imported using \code{\link[rtracklayer:import.bw]{rtracklayer::import.bw}},
+#'   in which a single range can represent multiple contiguous positions that
+#'   share the same signal information.
 #'
 #'   As an example, a range of covering 10 bp with a score of 2 is treated as 2
 #'   reads (each spanning the same 10 bases), not 20 reads.

@@ -1,7 +1,7 @@
 Package: BRGenomics
 Type: Package
 Title: Tools for the Efficient Analysis of High-Resolution Genomics Data
-Version: 1.1.3
+Version: 1.2.0
 Authors@R: person("Mike", "DeBerardine", email = "mike.deberardine@gmail.com", 
     role = c("aut", "cre"))
 Description: This package provides useful and efficient utilites for the 
@@ -20,7 +20,7 @@ URL: https://mdeber.github.io
 BugReports: https://github.com/mdeber/BRGenomics/issues
 Encoding: UTF-8
 LazyData: FALSE
-RoxygenNote: 7.1.0
+RoxygenNote: 7.2.1
 Depends:
     R (>= 4.0),
     rtracklayer,

@@ -270,5 +270,5 @@ test_that("bam helper fxns evaluate", {
 
     ps_atac <- import_bam_ATACseq(ps_bam, paired_end = FALSE)
     expect_true(is(ps_atac, "GRanges"))
-    expect_true(!isBRG(ps_atac))
+    expect_true(isBRG(ps_atac))
 })

@@ -8,7 +8,7 @@
 \usage{
 binNdimensions(
   dims.df,
-  nbins = 10,
+  nbins = 10L,
   use_bin_numbers = TRUE,
   ncores = getOption("mc.cores", 2L)
 )
@@ -16,7 +16,7 @@ binNdimensions(
 aggregateByNdimBins(
   x,
   dims.df,
-  nbins = 10,
+  nbins = 10L,
   FUN = mean,
   ...,
   ignore.na = TRUE,
@@ -28,7 +28,7 @@ aggregateByNdimBins(
 
 densityInNdimBins(
   dims.df,
-  nbins = 10,
+  nbins = 10L,
   use_bin_numbers = TRUE,
   ncores = getOption("mc.cores", 2L)
 )

@@ -9,7 +9,7 @@
 \usage{
 import_bam(
   file,
-  mapq = 20,
+  mapq = 20L,
   revcomp = FALSE,
   shift = 0L,
   trim.to = c("whole", "5p", "3p", "center"),
@@ -17,12 +17,12 @@ import_bam(
   field = "score",
   paired_end = NULL,
   yieldSize = NA,
-  ncores = 1
+  ncores = 1L
 )
 
 import_bam_PROseq(
   file,
-  mapq = 20,
+  mapq = 20L,
   revcomp = TRUE,
   shift = -1L,
   trim.to = "3p",
@@ -30,12 +30,12 @@ import_bam_PROseq(
   field = "score",
   paired_end = NULL,
   yieldSize = NA,
-  ncores = 1
+  ncores = 1L
 )
 
 import_bam_PROcap(
   file,
-  mapq = 20,
+  mapq = 20L,
   revcomp = FALSE,
   shift = 0L,
   trim.to = "5p",
@@ -43,20 +43,22 @@ import_bam_PROcap(
   field = "score",
   paired_end = NULL,
   yieldSize = NA,
-  ncores = 1
+  ncores = 1L
 )
 
 import_bam_ATACseq(
   file,
-  mapq = 20,
+  mapq = 20L,
   revcomp = FALSE,
-  shift = c(4, -5),
-  trim.to = "whole",
+  shift = 0L,
+  plus_offset = 4,
+  minus_offset = -4,
+  trim.to = "5p",
   ignore.strand = TRUE,
   field = "score",
   paired_end = TRUE,
   yieldSize = NA,
-  ncores = 1
+  ncores = 1L
 )
 }
 \arguments{
@@ -104,6 +106,13 @@ multicore is only implemented for simultaneously importing multiple bam
 files. For smaller datasets or machines with higher memory, this can
 increase performance, but can otherwise lead to substantial performance
 penalties.}
+
+\item{plus_offset}{For importing ATAC-seq, the shift to apply to plus strand
+alignments. By default, plus strand reads are shifted 4 bp downstream.}
+
+\item{minus_offset}{For importing ATAC-seq, the shift to apply to minus
+strand alignments. By default, minus strand reads are shifted 4 bp upstream
+(in terms of the genomic coordinates).}
 }
 \value{
 A GRanges object.
@@ -112,6 +121,38 @@ A GRanges object.
 Import single-end or paired-end bam files as GRanges objects, with various
 processing options. It is highly recommend to index the BAM file first.
 }
+\section{ATAC-seq data import}{
+ By default, \code{import_bam_ATACseq} will
+shift plus-aligned reads downstream 4 bp, minus-aligned reads upstream 4 bp,
+and then take the strand-specific start site of the reads before removing
+strand information and collapsing identical reads. These steps account for
+the 9bp gap between opposing fragments generated from the same Tn5 reaction,
+selecting the central base in the 9bp duplication.
+
+While other sources often state that the offset should be +4 on plus strand
+and -5 on minus strand alignments (or alternatively +5, -4), this does not
+result in the two positions overlapping. I have verified that this is true
+based on the expected result of the Tn5 reaction and adapter ligation and
+sequencing steps, and also using real sequencing data, which confirms that
+only the +4/-4 shift results in a significant increase in the number
+positions that overlap. However, these arguments are left to the user if they
+insist on doing it differently.
+
+Note that the order of operations performed is the same as the order of the
+associated arguments in the function proper, but not in the argument
+documentation i.e., the \code{plus_offset} and \code{minus_offset} arguments
+are applied \emph{after} the \code{shift} argument and before the
+\code{trim.to} argument.
+
+While this single-base precision analysis of ATAC-seq may be useful in some
+cases, for most users it is unlikely to be useful. Instead, you might use the
+\code{plus_offset} and \code{minus_offset} arguments correctly, but set
+\code{trim.to = "whole"} (and keep \code{ignore.strand = TRUE}). This will
+keep the entire ATAC-seq reads, which is the most common analysis approach.
+It is also common to use coverage data with ATAC-seq, but this eliminates
+read count information.
+}
+
 \examples{
 # get local address for included bam file
 ps.bam <- system.file("extdata", "PROseq_dm6_chr4.bam",
