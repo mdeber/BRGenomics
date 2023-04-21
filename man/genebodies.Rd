@@ -6,11 +6,11 @@
 \usage{
 genebodies(
   genelist,
-  start = 300,
-  end = -300,
+  start = 300L,
+  end = -300L,
   fix.start = "start",
   fix.end = "end",
-  min.window = 0
+  min.window = 0L
 )
 }
 \arguments{

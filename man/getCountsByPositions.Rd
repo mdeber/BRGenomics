@@ -7,7 +7,7 @@
 getCountsByPositions(
   dataset.gr,
   regions.gr,
-  binsize = 1,
+  binsize = 1L,
   FUN = sum,
   simplify.multi.widths = c("error", "list", "pad 0", "pad NA"),
   field = "score",

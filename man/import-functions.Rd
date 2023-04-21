@@ -107,7 +107,8 @@ PROseq_paired
 }
 \seealso{
 \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
-  \code{\link[rtracklayer:export]{rtracklayer::import}}
+  \code{\link[rtracklayer:import.bw]{rtracklayer::import.bw}},
+  \code{\link[rtracklayer:import.bedGraph]{rtracklayer::import.bedGraph}}
 }
 \author{
 Mike DeBerardine

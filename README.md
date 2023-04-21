@@ -3,7 +3,18 @@
 
 # BRGenomics
 
-<!-- badges: start -->
+<!-- badges: start (versions currently manual...) -->
+
+[![platforms](https://img.shields.io/badge/platforms-linux%20%7C%20osx%20%7C%20win-yellow.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/BRGenomics/)
+[![release](https://img.shields.io/badge/release%20version-1.0.3-navy.svg)](https://www.bioconductor.org/packages/BRGenomics)
+[![updated](http://www.bioconductor.org/shields/lastcommit/release/bioc/BRGenomics.svg)](http://bioconductor.org/checkResults/devel/bioc-LATEST/BRGenomics/)
+[![devel](https://img.shields.io/badge/devel%20version-1.1.3-orange.svg)](https://github.com/mdeber/BRGenomics)
+[![last
+commit](https://img.shields.io/github/last-commit/mdeber/BRGenomics.svg)](https://github.com/mdeber/BRGenomics/commits/master)
+[![BioC
+status](http://www.bioconductor.org/shields/build/release/bioc/BRGenomics.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/BRGenomics/)
+[![test
+coverage](https://codecov.io/gh/mdeber/BRGenomics/branch/master/graph/badge.svg)](https://codecov.io/gh/mdeber/BRGenomics)
 
 <!-- badges: end -->
 
@@ -57,11 +68,13 @@ data<sup>\[1\]</sup>.
         of certain functions may change, but their order/utility will
         not. I.e., functions with with the first argument `dataset.gr`
         may become `x`*
-  - Formalize support for `GRangesList` objects (should be already complete)
+  - Formalize support for `GRangesList` objects (should be already
+    complete)
   - Write methods for `BigWigFile`/`BigWigFileList` objects (to avoid
     loading data into memory)
   - (Possibly) use `GPos` objects by default
-  - Vectorize `genebodies()` function (like many `GenomicRanges` functions are)
+  - Vectorize `genebodies()` function (like many `GenomicRanges`
+    functions are)
 
 -----
 

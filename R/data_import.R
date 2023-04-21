@@ -124,7 +124,8 @@ tidyChromosomes <- function(gr, keep.X = TRUE, keep.Y = TRUE, keep.M = FALSE,
 #'
 #' @author Mike DeBerardine
 #' @seealso \code{\link[BRGenomics:tidyChromosomes]{tidyChromosomes}},
-#'   \code{\link[rtracklayer:export]{rtracklayer::import}}
+#'   \code{\link[rtracklayer:import.bw]{rtracklayer::import.bw}},
+#'   \code{\link[rtracklayer:import.bedGraph]{rtracklayer::import.bedGraph}}
 #' @name import-functions
 #' @examples
 #' #--------------------------------------------------#
@@ -314,6 +315,37 @@ import_bedGraph <- function(plus_file = NULL, minus_file = NULL, genome = NULL,
 #'   \url{https://doi.org/10.1038/nmeth.2688}
 #'
 #' @return A GRanges object.
+#'
+#' @section ATAC-seq data import: By default, \code{import_bam_ATACseq} will
+#' shift plus-aligned reads downstream 4 bp, minus-aligned reads upstream 4 bp,
+#' and then take the strand-specific start site of the reads before removing
+#' strand information and collapsing identical reads. These steps account for
+#' the 9bp gap between opposing fragments generated from the same Tn5 reaction,
+#' selecting the central base in the 9bp duplication.
+#'
+#' While other sources often state that the offset should be +4 on plus strand
+#' and -5 on minus strand alignments (or alternatively +5, -4), this does not
+#' result in the two positions overlapping. I have verified that this is true
+#' based on the expected result of the Tn5 reaction and adapter ligation and
+#' sequencing steps, and also using real sequencing data, which confirms that
+#' only the +4/-4 shift results in a significant increase in the number
+#' positions that overlap. However, these arguments are left to the user if they
+#' insist on doing it differently.
+#'
+#' Note that the order of operations performed is the same as the order of the
+#' associated arguments in the function proper, but not in the argument
+#' documentation i.e., the \code{plus_offset} and \code{minus_offset} arguments
+#' are applied \emph{after} the \code{shift} argument and before the
+#' \code{trim.to} argument.
+#'
+#' While this single-base precision analysis of ATAC-seq may be useful in some
+#' cases, for most users it is unlikely to be useful. Instead, you might use the
+#' \code{plus_offset} and \code{minus_offset} arguments correctly, but set
+#' \code{trim.to = "whole"} (and keep \code{ignore.strand = TRUE}). This will
+#' keep the entire ATAC-seq reads, which is the most common analysis approach.
+#' It is also common to use coverage data with ATAC-seq, but this eliminates
+#' read count information.
+#'
 #' @author Mike DeBerardine
 #' @export
 #' @importFrom GenomicRanges GRanges strand strand<- resize
@@ -499,18 +531,55 @@ import_bam_PROcap <- function(file, mapq = 20L, revcomp = FALSE, shift = 0L,
                paired_end = paired_end, yieldSize = yieldSize, ncores = ncores)
 }
 
-# must also mention that people should not use these options if their ATAC-seq
-# pipeline has already trimmed the read overhangs down
+
 
 #' @rdname import_bam
+#' @param plus_offset For importing ATAC-seq, the shift to apply to plus strand
+#'   alignments. By default, plus strand reads are shifted 4 bp downstream.
+#' @param minus_offset For importing ATAC-seq, the shift to apply to minus
+#'   strand alignments. By default, minus strand reads are shifted 4 bp upstream
+#'   (in terms of the genomic coordinates).
 #' @export
-import_bam_ATACseq <- function(file, mapq = 20L, revcomp = FALSE,
-                               shift = c(4L, -5L), trim.to = "whole",
-                               ignore.strand = TRUE, field = "score",
-                               paired_end = TRUE, yieldSize = NA,
-                               ncores = 1L) {
+#' @importFrom GenomicRanges GRanges strand strand<- resize shift
+import_bam_ATACseq <- function(file, mapq = 20L, revcomp = FALSE, shift = 0L,
+                               plus_offset = 4, minus_offset = -4,
+                               trim.to = "5p", ignore.strand = TRUE,
+                               field = "score", paired_end = TRUE,
+                               yieldSize = NA, ncores = 1L) {
 
-    import_bam(file = file, mapq = mapq, revcomp = revcomp, shift = shift,
-               trim.to = trim.to, ignore.strand = ignore.strand, field = field,
-               paired_end = paired_end, yieldSize = yieldSize, ncores = ncores)
+    trim.to <- match.arg(trim.to, c("whole", "5p", "3p", "center"))
+
+    if (length(file) > 1L) {
+        return(mclapply(file, import_bam_ATACseq, mapq, revcomp, shift,
+                        plus_offset, minus_offset, trim.to, ignore.strand,
+                        field, paired_end, yieldSize, ncores = 1L,
+                        mc.cores = ncores))
+    }
+
+    gr <- .import_bam(file, paired_end, yieldSize, mapq)
+
+    # Apply Options
+    is_plus <- as.character(strand(gr)) == "+"
+    if (revcomp) {
+        strand(gr) <- "+"
+        strand(gr)[is_plus] <- "-"
+        is_plus <- !is_plus
+    }
+    if (!all(shift == 0L))
+        suppressWarnings(gr <- .shift_gr(gr, is_plus, shift))
+    # plus_offset and minus_offset args for ATAC-seq
+    gr <- shift(gr, ifelse(is_plus, plus_offset, minus_offset))
+    if (trim.to != "whole") {
+        opt <- paste0("opt.", trim.to)
+        opt.arg <- list(opt.5p = "start", opt.3p = "end", opt.center = "center")
+        gr <- resize(gr, width = 1L, fix = opt.arg[[opt]])
+    }
+    if (ignore.strand)
+        strand(gr) <- "*"
+
+    gr <- sort(gr)
+    if (!is.null(field))
+        gr <- .collapse_reads(gr, field)
+    return(gr)
 }
+
