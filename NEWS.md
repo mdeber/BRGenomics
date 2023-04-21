@@ -1,3 +1,9 @@
+## BRGenomics 1.10.1 (release) & 1.11.1 (devel)
+
+* Updated the `import_bam_ATAC()` function with slightly revised options and 
+operations
+* Fixed broken links in documentation
+
 ## BRGenomics 1.0.3 (release) & 1.1.3 (devel)
 
 * Increased safeguards against automatic vector coercion of matrices and 
