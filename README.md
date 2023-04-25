@@ -6,9 +6,9 @@
 <!-- badges: start (versions currently manual...) -->
 
 [![platforms](https://img.shields.io/badge/platforms-linux%20%7C%20osx%20%7C%20win-yellow.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/BRGenomics/)
-[![release](https://img.shields.io/badge/release%20version-1.10.1-navy.svg)](https://www.bioconductor.org/packages/BRGenomics)
+[![release](https://img.shields.io/badge/release%20version-1.12.0-navy.svg)](https://www.bioconductor.org/packages/BRGenomics)
 [![updated](http://www.bioconductor.org/shields/lastcommit/release/bioc/BRGenomics.svg)](http://bioconductor.org/checkResults/devel/bioc-LATEST/BRGenomics/)
-[![devel](https://img.shields.io/badge/devel%20version-1.11.1-orange.svg)](https://github.com/mdeber/BRGenomics)
+[![devel](https://img.shields.io/badge/devel%20version-1.13.0-orange.svg)](https://github.com/mdeber/BRGenomics)
 [![last
 commit](https://img.shields.io/github/last-commit/mdeber/BRGenomics.svg)](https://github.com/mdeber/BRGenomics/commits/master)
 [![BioC
