@@ -247,7 +247,8 @@ getStrandedCoverage <- function(dataset.gr, field = "score",
     } else {
         cvg <- coverage(gr, weight = mcols(gr)[[field]])
     }
-    cvg_gr <- GRanges(cvg, seqinfo = seqinfo(dataset.gr))
+    cvg_gr <- GRanges(cvg)
+    seqinfo(cvg_gr) <- seqinfo(dataset.gr) # setting in GRanges fails sometimes
     strand(cvg_gr) <- strand.i # (setting within GRanges() fails if length=0)
     cvg_gr[abs(score(cvg_gr)) > 1e-12] # precision issues with coverage()
 }
