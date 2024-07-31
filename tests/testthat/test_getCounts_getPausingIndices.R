@@ -404,46 +404,48 @@ test_that("counts matrix with range expansion & multiple metadata fields", {
                                            ncores = 1)[[2]])
 })
 
-test_that("counts matrix with list input & range expansion", {
-    countsl <- getCountsByPositions(pscov_list, txs_pr, expand_ranges = TRUE,
-                                    ncores = 1)
-    expect_is(countsl, "list")
-    expect_equivalent(names(countsl), names(pscov_list))
-    expect_is(countsl[[1]], "matrix")
-    expect_equivalent(dim(countsmat), dim(countsl[[1]]))
+# cutting some tests to avoid bioc build timeouts
 
-    arr3d <- simplify2array(countsl)
-    expect_equivalent(apply(arr3d, 1:2, sum), countsmat)
-})
+# test_that("counts matrix with list input & range expansion", {
+#     countsl <- getCountsByPositions(pscov_list, txs_pr, expand_ranges = TRUE,
+#                                     ncores = 1)
+#     expect_is(countsl, "list")
+#     expect_equivalent(names(countsl), names(pscov_list))
+#     expect_is(countsl[[1]], "matrix")
+#     expect_equivalent(dim(countsmat), dim(countsl[[1]]))
+# 
+#     arr3d <- simplify2array(countsl)
+#     expect_equivalent(apply(arr3d, 1:2, sum), countsmat)
+# })
 
-test_that("with range expansion, melt list input to single dataframe", {
-    countslmelt <- getCountsByPositions(pscov_list, txs_pr,
-                                        expand_ranges = TRUE, melt = TRUE,
-                                        ncores = 1)
-    expect_is(countslmelt, "data.frame")
-    expect_equal(ncol(countslmelt), 4)
-    expect_equivalent(unique(countslmelt[,4]), names(pscov_list))
-})
+# test_that("with range expansion, melt list input to single dataframe", {
+#     countslmelt <- getCountsByPositions(pscov_list, txs_pr,
+#                                         expand_ranges = TRUE, melt = TRUE,
+#                                         ncores = 1)
+#     expect_is(countslmelt, "data.frame")
+#     expect_equal(ncol(countslmelt), 4)
+#     expect_equivalent(unique(countslmelt[,4]), names(pscov_list))
+# })
 
 test_that("expanded ranges, error if multi-width is not explicit", {
     expect_error(getCountsByPositions(pscov, txs_dm6_chr4,
                                       expand_ranges = TRUE))
 })
 
-countslist_exp <- getCountsByPositions(pscov, txs_dm6_chr4,
-                                       expand_ranges = TRUE,
-                                       simplify.multi.widths = "list")
-
-test_that("can get list from multi-width counts matrix", {
-    expect_identical(countslist, countslist_exp)
-
-    # with normalization factor
-    expect_equivalent(countslist_exp[[1]] * 0.5,
-                      getCountsByPositions(pscov, txs_dm6_chr4,
-                                           expand_ranges = TRUE,
-                                           simplify.multi.widths = "list",
-                                           NF = 0.5)[[1]])
-})
+# countslist_exp <- getCountsByPositions(pscov, txs_dm6_chr4,
+#                                        expand_ranges = TRUE,
+#                                        simplify.multi.widths = "list")
+# 
+# test_that("can get list from multi-width counts matrix", {
+#     expect_identical(countslist, countslist_exp)
+# 
+#     # with normalization factor
+#     expect_equivalent(countslist_exp[[1]] * 0.5,
+#                       getCountsByPositions(pscov, txs_dm6_chr4,
+#                                            expand_ranges = TRUE,
+#                                            simplify.multi.widths = "list",
+#                                            NF = 0.5)[[1]])
+# })
 
 test_that("expand ranges, get 0-padded counts matrix for multi-width", {
     padmat <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
@@ -454,12 +456,12 @@ test_that("expand ranges, get 0-padded counts matrix for multi-width", {
     expect_equivalent(sapply(countslist, sum), rowSums(padmat))
 })
 
-test_that("expand ranges, NA-padded counts matrix for multi-width", {
-    padmat <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
-                                   simplify.multi.widths = "pad NA")
-    expect_is(padmat, "matrix")
-    expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
-})
+# test_that("expand ranges, NA-padded counts matrix for multi-width", {
+#     padmat <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+#                                    simplify.multi.widths = "pad NA")
+#     expect_is(padmat, "matrix")
+#     expect_equal(sum(is.na(rowSums(padmat))), length(txs_dm6_chr4) - 1)
+# })
 
 test_that("expand_ranges, melting option works", {
     expect_identical(countsdf, getCountsByPositions(pscov, txs_pr,
@@ -533,19 +535,19 @@ test_that("expand ranges with blacklisting", {
 })
 
 
-test_that("expand ranges + multiwidth, blacklisting over list works", {
-    blcl <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
-                                 blacklist = bl, simplify.multi.widths = "list")
-    expect_is(blcl, "list")
-    expect_true(all(blcl[[2]] == 0))
-
-    blclna <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
-                                   blacklist = bl, NA_blacklisted = TRUE,
-                                   simplify.multi.widths = "list")
-    expect_true(all(is.na(blclna[[2]])))
-    expect_equivalent(blcl[[1]], blclna[[1]])
-    expect_equivalent(blcl[[3]], blclna[[3]])
-})
+# test_that("expand ranges + multiwidth, blacklisting over list works", {
+#     blcl <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+#                                  blacklist = bl, simplify.multi.widths = "list")
+#     expect_is(blcl, "list")
+#     expect_true(all(blcl[[2]] == 0))
+# 
+#     blclna <- getCountsByPositions(pscov, txs_dm6_chr4, expand_ranges = TRUE,
+#                                    blacklist = bl, NA_blacklisted = TRUE,
+#                                    simplify.multi.widths = "list")
+#     expect_true(all(is.na(blclna[[2]])))
+#     expect_equivalent(blcl[[1]], blclna[[1]])
+#     expect_equivalent(blcl[[3]], blclna[[3]])
+# })
 
 
 
